@@ -255,6 +255,21 @@ function InvestigatePage() {
                   <ObjectivesPanel objectives={objectives} />
                 </InvestigationSection>
 
+                <InvestigationSection
+                  icon={Users}
+                  title="Suspect Database"
+                  subtitle={
+                    primeSuspectCount > 0
+                      ? `${suspectDossiers.length}명 프로파일 · 유력 용의자 ${primeSuspectCount}명`
+                      : `${suspectDossiers.length}명 프로파일 등록`
+                  }
+                >
+                  <SuspectDatabase
+                    dossiers={suspectDossiers}
+                    onOpen={setOpenSuspect}
+                  />
+                </InvestigationSection>
+
                 {data.crimeScene && (
                   <InvestigationSection
                     icon={Footprints}

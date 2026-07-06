@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Clock, Gauge, ArrowRight } from "lucide-react";
-import type { CaseData } from "@/lib/mock-cases";
+import type { Case } from "@/types";
+import { CaseEngine } from "@/engine";
 
 const statusStyles: Record<string, string> = {
   무료: "bg-secondary text-secondary-foreground border-border",
@@ -8,7 +9,7 @@ const statusStyles: Record<string, string> = {
   프리미엄: "bg-blood/20 text-primary border-primary/40",
 };
 
-export function CaseCard({ data }: { data: CaseData }) {
+export function CaseCard({ data }: { data: Case }) {
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-noir)] transition-all hover:border-primary/40 hover:-translate-y-0.5">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-60" />
@@ -29,7 +30,7 @@ export function CaseCard({ data }: { data: CaseData }) {
         </h3>
 
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-          {data.shortDescription}
+          {data.subtitle}
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
@@ -39,13 +40,13 @@ export function CaseCard({ data }: { data: CaseData }) {
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 text-primary/80" />
-            {data.playTime}
+            {CaseEngine.formatPlayTime(data)}
           </span>
         </div>
 
         <Link
           to="/case/$caseId"
-          params={{ caseId: data.id }}
+          params={{ caseId: data.slug }}
           className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
         >
           사건 시작

@@ -8,6 +8,7 @@ import {
   HelpCircle,
   LayoutGrid,
   Lightbulb,
+  ListChecks,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -29,10 +30,12 @@ import { TheoriesPanel } from "@/components/TheoriesPanel";
 import { CaseSidebar } from "@/components/workspace/CaseSidebar";
 import { PartnerPanel } from "@/components/workspace/PartnerPanel";
 import { InvestigationHUD } from "@/components/InvestigationHUD";
+import { ObjectivesPanel } from "@/components/ObjectivesPanel";
 
 import {
   CaseEngine,
   IntelligenceEngine,
+  ObjectivesEngine,
   StoryRuntime,
   createBoardState,
   type EvidenceSortMode,

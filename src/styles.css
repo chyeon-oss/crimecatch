@@ -148,5 +148,11 @@
   0% { transform: translateX(-100%); }
   100% { transform: translateX(500%); }
 }
+@keyframes obj-sweep {
+  0% { transform: translateX(-100%); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
 
 

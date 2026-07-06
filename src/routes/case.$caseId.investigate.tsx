@@ -409,6 +409,11 @@ function InvestigatePage() {
         remaining={Math.max(0, discoveryQueue.length - 1)}
         onContinue={continueDiscovery}
       />
+
+      <SuspectProfileModal
+        dossier={openSuspect}
+        onClose={() => setOpenSuspect(null)}
+      />
     </div>
   );
 }

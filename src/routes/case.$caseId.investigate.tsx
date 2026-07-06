@@ -33,14 +33,18 @@ import { CaseSidebar } from "@/components/workspace/CaseSidebar";
 import { PartnerPanel } from "@/components/workspace/PartnerPanel";
 import { InvestigationHUD } from "@/components/InvestigationHUD";
 import { ObjectivesPanel } from "@/components/ObjectivesPanel";
+import { SuspectDatabase } from "@/components/SuspectDatabase";
+import { SuspectProfileModal } from "@/components/SuspectProfileModal";
 
 import {
   CaseEngine,
   IntelligenceEngine,
   ObjectivesEngine,
   StoryRuntime,
+  SuspectIntelEngine,
   createBoardState,
   type EvidenceSortMode,
+  type SuspectDossier,
 } from "@/engine";
 import type { Case, Evidence, CrimeSceneHotspot, BoardState } from "@/types";
 

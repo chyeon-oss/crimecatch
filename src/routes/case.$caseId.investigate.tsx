@@ -2,7 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { FileText, Archive, Users, NotebookPen, Lock } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { InvestigationSection } from "@/components/InvestigationSection";
-import { getCaseById } from "@/lib/mock-cases";
+import { getCaseById, type CaseData } from "@/lib/mock-cases";
 
 export const Route = createFileRoute("/case/$caseId/investigate")({
   loader: ({ params }) => {
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/case/$caseId/investigate")({
 });
 
 function InvestigatePage() {
-  const { data } = Route.useLoaderData();
+  const { data } = Route.useLoaderData() as { data: CaseData };
   const params = Route.useParams();
 
   return (

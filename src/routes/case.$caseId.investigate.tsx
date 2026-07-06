@@ -51,7 +51,7 @@ function InvestigatePage() {
   );
 
   const evidenceById = useMemo(
-    () => new Map(data.evidence.map((e) => [e.id, e])),
+    () => new Map<string, Evidence>(data.evidence.map((e: Evidence) => [e.id, e])),
     [data.evidence],
   );
 

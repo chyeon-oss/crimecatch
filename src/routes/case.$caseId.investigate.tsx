@@ -21,9 +21,11 @@ import { ActiveQuestions } from "@/components/ActiveQuestions";
 import { EvidenceSortBar } from "@/components/EvidenceSortBar";
 import { InvestigationBoard } from "@/components/InvestigationBoard";
 import { TheoriesPanel } from "@/components/TheoriesPanel";
+import { PhaseIndicator } from "@/components/PhaseIndicator";
 import {
   CaseEngine,
   IntelligenceEngine,
+  StoryRuntime,
   createBoardState,
   type EvidenceSortMode,
 } from "@/engine";
@@ -124,6 +126,21 @@ function InvestigatePage() {
     intelligenceState,
   ).filter((q) => q.status === "active").length;
 
+  const storyState = useMemo(
+    () =>
+      StoryRuntime.derive({
+        case: data,
+        discoveredIds: discoveredSet,
+        readIds,
+        investigatedHotspotIds,
+        board: boardState,
+      }),
+    [data, discoveredSet, readIds, investigatedHotspotIds, boardState],
+  );
+  const currentObjective =
+    StoryRuntime.defaultObjectives().find((o) => o.phase === storyState.phase)
+      ?.text ?? undefined;
+
   return (
     <div className="min-h-screen noir-grain">
       <TopBar
@@ -148,6 +165,9 @@ function InvestigatePage() {
         </div>
 
         <div className="grid gap-4">
+          <PhaseIndicator state={storyState} objectiveText={currentObjective} />
+
+
           {data.crimeScene && (
             <InvestigationSection
               icon={Footprints}

@@ -16,4 +16,6 @@ export type {
 } from "./IntelligenceEngine";
 export { BoardEngine, createBoardState } from "./BoardEngine";
 export type { BoardPinLabel } from "./BoardEngine";
+export { StoryRuntime, PHASES } from "./StoryRuntime";
+export type { StoryRuntimeInputs } from "./StoryRuntime";
 

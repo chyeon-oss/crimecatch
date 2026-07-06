@@ -7,4 +7,5 @@ export * from "./solution";
 export * from "./hotspot";
 export * from "./question";
 export * from "./board";
+export * from "./story";
 

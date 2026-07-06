@@ -154,6 +154,19 @@ function InvestigatePage() {
     StoryRuntime.defaultObjectives().find((o) => o.phase === storyState.phase)
       ?.text ?? undefined;
 
+  const objectives = useMemo(
+    () =>
+      ObjectivesEngine.derive({
+        case: data,
+        discoveredIds: discoveredSet,
+        readIds,
+        investigatedHotspotIds,
+        board: boardState,
+      }),
+    [data, discoveredSet, readIds, investigatedHotspotIds, boardState],
+  );
+  const objectivesSummary = ObjectivesEngine.summary(objectives);
+
   return (
     <div className="flex h-screen flex-col noir-grain">
       <TopBar

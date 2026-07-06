@@ -87,6 +87,17 @@ export const inheritanceParty: Case = {
       unlockCondition: { requiresEvidenceIds: ["e1", "e2"] },
     },
   ],
+  crimeScene: {
+    imagePrompt: "고급 저택 대응접실, 넘어진 와인잔과 어두운 조명",
+    hotspots: [
+      { id: "wine-cart", label: "와인 카트", hint: "잔이 하나 비어 있다", revealsEvidenceIds: ["e3"] },
+      { id: "bathroom", label: "1층 화장실", hint: "쓰레기통이 열려 있다", revealsEvidenceIds: ["e1"] },
+      { id: "fireplace", label: "벽난로", hint: "타다 남은 종이 조각", revealsEvidenceIds: ["e2"] },
+      { id: "study", label: "2층 서재", hint: "책상 위 서류", revealsEvidenceIds: [], emptyMessage: "특이한 흔적은 없다." },
+      { id: "garden", label: "정원", hint: "담배꽁초가 놓여 있다", revealsEvidenceIds: [], emptyMessage: "누군가 오래 앉아 있었던 흔적뿐." },
+      { id: "kitchen", label: "주방", hint: "상차림 준비 중", revealsEvidenceIds: [], emptyMessage: "집사와 계모의 흔적만 남아 있다." },
+    ],
+  },
   timeline: [
     { time: "20:00", description: "파티 시작" },
     { time: "21:10", description: "유언장 공개" },

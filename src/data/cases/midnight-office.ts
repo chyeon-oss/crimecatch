@@ -135,6 +135,55 @@ export const midnightOffice: Case = {
       unlockCondition: { requiresEvidenceIds: ["e2"] },
     },
   ],
+  crimeScene: {
+    imagePrompt: "심야의 12층 개발팀 사무실, 어질러진 책상과 깜빡이는 형광등",
+    hotspots: [
+      {
+        id: "desk",
+        label: "피해자 책상",
+        hint: "노트북과 서류가 널려 있다",
+        revealsEvidenceIds: ["e1", "e3"],
+      },
+      {
+        id: "door",
+        label: "출입문",
+        hint: "안쪽에서 잠긴 흔적",
+        revealsEvidenceIds: ["e4"],
+      },
+      {
+        id: "under-desk",
+        label: "책상 아래",
+        hint: "무언가 떨어져 있는 듯하다",
+        revealsEvidenceIds: ["e5"],
+      },
+      {
+        id: "cctv",
+        label: "천장 CCTV",
+        hint: "렌즈에 먼지가 앉아 있다",
+        revealsEvidenceIds: ["e2"],
+      },
+      {
+        id: "breaker",
+        label: "복도 배전반",
+        hint: "커버가 살짝 어긋나 있다",
+        revealsEvidenceIds: ["e6"],
+      },
+      {
+        id: "bookshelf",
+        label: "책장",
+        hint: "가지런히 정돈된 기술서적",
+        revealsEvidenceIds: [],
+        emptyMessage: "특이한 점은 발견되지 않았다.",
+      },
+      {
+        id: "window",
+        label: "창문",
+        hint: "12층 야경이 보인다",
+        revealsEvidenceIds: [],
+        emptyMessage: "창은 잠겨 있고 손댄 흔적이 없다.",
+      },
+    ],
+  },
   timeline: [
     { time: "19:20", description: "피해자 김도현이 사무실에 들어감" },
     { time: "20:05", description: "12층 정전 발생", relatedSuspectId: "s1" },

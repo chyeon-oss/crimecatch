@@ -4,11 +4,17 @@ import type { Evidence } from "@/types";
 interface Props {
   evidence: Evidence;
   onOpen: (e: Evidence) => void;
+  isNew?: boolean;
 }
 
-export function EvidenceCard({ evidence, onOpen }: Props) {
+export function EvidenceCard({ evidence, onOpen, isNew }: Props) {
   return (
-    <div className="flex flex-col rounded-xl border border-border/70 bg-surface-elevated p-4 shadow-[var(--shadow-noir)]">
+    <div className="relative flex flex-col rounded-xl border border-border/70 bg-surface-elevated p-4 shadow-[var(--shadow-noir)]">
+      {isNew && (
+        <span className="absolute -right-1.5 -top-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-foreground shadow-[var(--shadow-gold)]">
+          NEW
+        </span>
+      )}
       <p className="text-[11px] uppercase tracking-widest text-primary/70">
         {evidence.category}
       </p>

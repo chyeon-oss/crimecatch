@@ -4,3 +4,4 @@ export * from "./evidence";
 export * from "./timeline";
 export * from "./fact";
 export * from "./solution";
+export * from "./hotspot";

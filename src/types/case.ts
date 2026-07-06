@@ -3,6 +3,7 @@ import type { Suspect } from "./suspect";
 import type { TimelineEvent } from "./timeline";
 import type { HiddenFact } from "./fact";
 import type { Solution } from "./solution";
+import type { CrimeScene } from "./hotspot";
 
 export type CaseDifficulty = "쉬움" | "보통" | "어려움";
 export type CaseStatus = "무료" | "신규" | "프리미엄";
@@ -50,6 +51,7 @@ export interface Case {
   victim: Victim;
   suspects: Suspect[];
   evidence: Evidence[];
+  crimeScene?: CrimeScene;
   timeline: TimelineEvent[];
   hiddenFacts: HiddenFact[];
   solution: Solution;

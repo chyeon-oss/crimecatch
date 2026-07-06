@@ -20,4 +20,12 @@ export { StoryRuntime, PHASES } from "./StoryRuntime";
 export type { StoryRuntimeInputs } from "./StoryRuntime";
 export { ObjectivesEngine } from "./ObjectivesEngine";
 export type { ObjectivesInputs } from "./ObjectivesEngine";
+export { SuspectIntelEngine } from "./SuspectIntelEngine";
+export type {
+  SuspectDossier,
+  SuspectStatus,
+  SuspectFact,
+  SuspectContradiction,
+  SuspectIntelInputs,
+} from "./SuspectIntelEngine";
 

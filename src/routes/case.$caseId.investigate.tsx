@@ -162,7 +162,7 @@ function InvestigatePage() {
         }
       />
 
-      <ResizablePanelGroup direction="horizontal" className="flex-1">
+      <ResizablePanelGroup orientation="horizontal" className="flex-1">
         {/* LEFT: Case briefing */}
         <ResizablePanel defaultSize={22} minSize={16} maxSize={30}>
           <CaseSidebar

@@ -8,4 +8,5 @@ export * from "./hotspot";
 export * from "./question";
 export * from "./board";
 export * from "./story";
+export * from "./objective";
 

@@ -91,6 +91,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "CaseNote — 당신은 탐정입니다" },
+      { name: "description", content: "CaseNote는 사건 파일을 열람하고, 증거를 조사하고, 용의자를 심문해 진실을 밝혀내는 싱글 플레이어 추리 게임입니다." },
+      { property: "og:description", content: "CaseNote는 사건 파일을 열람하고, 증거를 조사하고, 용의자를 심문해 진실을 밝혀내는 싱글 플레이어 추리 게임입니다." },
+      { name: "twitter:description", content: "CaseNote는 사건 파일을 열람하고, 증거를 조사하고, 용의자를 심문해 진실을 밝혀내는 싱글 플레이어 추리 게임입니다." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5c8ddcfb-3ebc-4ca7-8465-7b308406bba0/id-preview-1a33686b--b5a035b8-8981-4221-9685-9d94f3ece9c2.lovable.app-1783328089719.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5c8ddcfb-3ebc-4ca7-8465-7b308406bba0/id-preview-1a33686b--b5a035b8-8981-4221-9685-9d94f3ece9c2.lovable.app-1783328089719.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

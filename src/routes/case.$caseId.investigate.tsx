@@ -270,19 +270,14 @@ function InvestigatePage() {
                   ) : (
                     <div className="space-y-3">
                       <EvidenceSortBar value={sortMode} onChange={setSortMode} />
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        {discoveredEvidence.map((e) => (
-                          <EvidenceCard
-                            key={e.id}
-                            evidence={e}
-                            onOpen={openEvidenceAndMarkRead}
-                            state={IntelligenceEngine.stateOf(
-                              e,
-                              intelligenceState,
-                            )}
-                          />
-                        ))}
-                      </div>
+                      <EvidenceLocker
+                        evidence={discoveredEvidence}
+                        discoveredAt={discoveredAt}
+                        onOpen={openEvidenceAndMarkRead}
+                        stateOf={(e) =>
+                          IntelligenceEngine.stateOf(e, intelligenceState)
+                        }
+                      />
                     </div>
                   )}
                 </InvestigationSection>

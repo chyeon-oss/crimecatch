@@ -95,7 +95,7 @@ export const ObjectivesEngine = {
 
     // Specific "priority" evidence — e.g. blood / cctv / camera keywords.
     for (const e of c.evidence) {
-      const name = e.name?.toLowerCase() ?? "";
+      const name = e.title?.toLowerCase() ?? "";
       const isPriority =
         /blood|혈흔|dna|cctv|카메라|camera|security|보안/.test(name);
       if (!isPriority) continue;
@@ -104,7 +104,7 @@ export const ObjectivesEngine = {
       const progress = read ? 1 : found ? 0.5 : 0;
       list.push({
         id: `obj-ev-${e.id}`,
-        title: `Analyze ${e.name}`,
+        title: `Analyze ${e.title}`,
         category: "EVIDENCE",
         priority: "critical",
         phase: "EVIDENCE_ANALYSIS",

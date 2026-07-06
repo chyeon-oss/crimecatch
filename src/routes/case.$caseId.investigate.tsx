@@ -65,6 +65,7 @@ export const Route = createFileRoute("/case/$caseId/investigate")({
 function InvestigatePage() {
   const { data } = Route.useLoaderData() as { data: Case };
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
+  const [openSuspect, setOpenSuspect] = useState<SuspectDossier | null>(null);
 
   const [discoveredIds, setDiscoveredIds] = useState<string[]>([]);
   const [discoveredAt, setDiscoveredAt] = useState<Map<string, number>>(

@@ -185,6 +185,19 @@ function InvestigatePage() {
   );
   const objectivesSummary = ObjectivesEngine.summary(objectives);
 
+  const suspectDossiers = useMemo(
+    () =>
+      SuspectIntelEngine.all({
+        case: data,
+        discoveredIds: discoveredSet,
+        readIds,
+      }),
+    [data, discoveredSet, readIds],
+  );
+  const primeSuspectCount = suspectDossiers.filter(
+    (d) => d.status === "PRIME_SUSPECT",
+  ).length;
+
   return (
     <div className="flex h-screen flex-col noir-grain">
       <TopBar

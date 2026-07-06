@@ -28,6 +28,8 @@ import { InvestigationBoard } from "@/components/InvestigationBoard";
 import { TheoriesPanel } from "@/components/TheoriesPanel";
 import { CaseSidebar } from "@/components/workspace/CaseSidebar";
 import { PartnerPanel } from "@/components/workspace/PartnerPanel";
+import { InvestigationHUD } from "@/components/InvestigationHUD";
+
 import {
   CaseEngine,
   IntelligenceEngine,
@@ -162,7 +164,15 @@ function InvestigatePage() {
         }
       />
 
+      <InvestigationHUD
+        case={data}
+        storyState={storyState}
+        discoveredCount={discoveredIds.length}
+        totalEvidence={data.evidence.length}
+      />
+
       <ResizablePanelGroup orientation="horizontal" className="flex-1">
+
         {/* LEFT: Case briefing */}
         <ResizablePanel defaultSize={22} minSize={16} maxSize={30}>
           <CaseSidebar

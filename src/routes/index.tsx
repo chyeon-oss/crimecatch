@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
+import { Shield } from "lucide-react";
 import { CaseCard } from "@/components/CaseCard";
 import { CaseEngine } from "@/engine";
 
@@ -19,9 +21,18 @@ function HomePage() {
           }}
         />
         <div className="relative mx-auto max-w-3xl px-4 pb-10 pt-14 sm:pt-20">
-          <div className="flex items-center gap-2 text-xs tracking-[0.3em] text-primary">
-            <span className="h-px w-8 bg-primary/60" />
-            CASENOTE
+          <div className="flex items-center justify-between gap-2 text-xs tracking-[0.3em] text-primary">
+            <div className="flex items-center gap-2">
+              <span className="h-px w-8 bg-primary/60" />
+              CASENOTE
+            </div>
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-medium tracking-widest text-primary transition-colors hover:bg-primary/20"
+            >
+              <Shield className="h-3 w-3" />
+              탐정 사무실
+            </Link>
           </div>
           <h1 className="mt-4 font-display text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
             당신은 탐정입니다.

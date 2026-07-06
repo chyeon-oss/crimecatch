@@ -8,6 +8,7 @@ import {
   HelpCircle,
   LayoutGrid,
   Lightbulb,
+  ListChecks,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -29,10 +30,12 @@ import { TheoriesPanel } from "@/components/TheoriesPanel";
 import { CaseSidebar } from "@/components/workspace/CaseSidebar";
 import { PartnerPanel } from "@/components/workspace/PartnerPanel";
 import { InvestigationHUD } from "@/components/InvestigationHUD";
+import { ObjectivesPanel } from "@/components/ObjectivesPanel";
 
 import {
   CaseEngine,
   IntelligenceEngine,
+  ObjectivesEngine,
   StoryRuntime,
   createBoardState,
   type EvidenceSortMode,
@@ -151,6 +154,19 @@ function InvestigatePage() {
     StoryRuntime.defaultObjectives().find((o) => o.phase === storyState.phase)
       ?.text ?? undefined;
 
+  const objectives = useMemo(
+    () =>
+      ObjectivesEngine.derive({
+        case: data,
+        discoveredIds: discoveredSet,
+        readIds,
+        investigatedHotspotIds,
+        board: boardState,
+      }),
+    [data, discoveredSet, readIds, investigatedHotspotIds, boardState],
+  );
+  const objectivesSummary = ObjectivesEngine.summary(objectives);
+
   return (
     <div className="flex h-screen flex-col noir-grain">
       <TopBar
@@ -200,6 +216,14 @@ function InvestigatePage() {
               </div>
 
               <div className="grid gap-4">
+                <InvestigationSection
+                  icon={ListChecks}
+                  title="Investigation Objectives"
+                  subtitle={`${objectivesSummary.completed} / ${objectivesSummary.total} 완료 · ${objectivesSummary.active} 진행 중`}
+                >
+                  <ObjectivesPanel objectives={objectives} />
+                </InvestigationSection>
+
                 {data.crimeScene && (
                   <InvestigationSection
                     icon={Footprints}

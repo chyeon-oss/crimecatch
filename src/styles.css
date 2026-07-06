@@ -115,3 +115,33 @@
 @utility text-gold {
   color: var(--gold);
 }
+
+@utility paper-texture {
+  background-image:
+    radial-gradient(rgba(200, 168, 108, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 1px;
+}
+
+@keyframes cc-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(20px, -30px, 0); }
+}
+@keyframes cc-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(30vw, 20vh, 0) scale(1.15); }
+}
+@keyframes cc-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-25vw, -15vh, 0) scale(1.2); }
+}
+@keyframes cc-pulse-dot {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+@keyframes cc-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+

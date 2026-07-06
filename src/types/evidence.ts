@@ -6,12 +6,17 @@ export type EvidenceCategory =
   | "CCTV"
   | "OBJECT";
 
+export type EvidenceImportance =
+  | "COMMON"
+  | "UNCOMMON"
+  | "IMPORTANT"
+  | "CRITICAL";
+
+export type EvidenceState = "NEW" | "READ" | "CONNECTED";
+
 export interface UnlockCondition {
-  /** Requires these evidence ids to be read first. */
   requiresEvidenceIds?: string[];
-  /** Requires these suspects to have been interrogated. */
   requiresSuspectIds?: string[];
-  /** Free-form key that a future AI interrogation flow can flip. */
   requiresFlag?: string;
 }
 
@@ -22,8 +27,14 @@ export interface Evidence {
   summary: string;
   detail: string;
   imagePlaceholder?: string;
-  /** Lower numbers unlock earlier. `0` = always unlocked. */
   unlockOrder: number;
   unlockCondition?: UnlockCondition;
   location?: string;
+  /** Defaults to COMMON when unspecified. */
+  importance?: EvidenceImportance;
+  /** Cross-references surfaced in the evidence modal as clickable chips. */
+  relatedEvidenceIds?: string[];
+  relatedSuspectIds?: string[];
+  /** TimelineEvent.time values this evidence is tied to. */
+  relatedTimelineTimes?: string[];
 }

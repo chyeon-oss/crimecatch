@@ -4,6 +4,8 @@ import type { TimelineEvent } from "./timeline";
 import type { HiddenFact } from "./fact";
 import type { Solution } from "./solution";
 import type { CrimeScene } from "./hotspot";
+import type { InvestigationQuestion } from "./question";
+
 
 export type CaseDifficulty = "쉬움" | "보통" | "어려움";
 export type CaseStatus = "무료" | "신규" | "프리미엄";
@@ -57,4 +59,7 @@ export interface Case {
   solution: Solution;
   unlockRules: UnlockRules;
   achievements: Achievement[];
+  /** Investigation intelligence: questions surfaced during the case. */
+  questions?: InvestigationQuestion[];
 }
+

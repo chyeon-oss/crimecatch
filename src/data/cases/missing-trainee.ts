@@ -65,6 +65,8 @@ export const missingTrainee: Case = {
       detail: "피해자의 것으로 확인. 저항의 흔적일 수 있다.",
       location: "302호 창가",
       unlockOrder: 0,
+      importance: "UNCOMMON",
+      relatedTimelineTimes: ["02:40"],
     },
     {
       id: "e2",
@@ -76,6 +78,8 @@ export const missingTrainee: Case = {
       location: "피해자 휴대폰 백업",
       unlockOrder: 1,
       unlockCondition: { requiresEvidenceIds: ["e1"] },
+      importance: "IMPORTANT",
+      relatedSuspectIds: ["s2"],
     },
     {
       id: "e3",
@@ -86,8 +90,13 @@ export const missingTrainee: Case = {
       location: "숙소 앞 도로",
       unlockOrder: 2,
       unlockCondition: { requiresEvidenceIds: ["e2"] },
+      importance: "CRITICAL",
+      relatedEvidenceIds: ["e2"],
+      relatedSuspectIds: ["s2", "s3"],
+      relatedTimelineTimes: ["03:00", "03:15"],
     },
   ],
+
   crimeScene: {
     imagePrompt: "새벽의 아이돌 연습생 숙소, 흐트러진 침대와 열린 창문",
     hotspots: [
@@ -138,4 +147,24 @@ export const missingTrainee: Case = {
       trigger: "PERFECT_DETECTIVE",
     },
   ],
+  questions: [
+    {
+      id: "q1",
+      text: "안쪽에서 잠긴 방에서 어떻게 흔적 없이 사라졌는가?",
+      generatedByEvidenceIds: ["e1"],
+    },
+    {
+      id: "q2",
+      text: "피해자는 무엇을 폭로하려 했는가?",
+      generatedByEvidenceIds: ["e2"],
+      solvedByEvidenceIds: ["e2"],
+    },
+    {
+      id: "q3",
+      text: "새벽 3시에 숙소 앞에 차량을 대기시킨 사람은 누구인가?",
+      generatedByEvidenceIds: ["e3"],
+      solvedByEvidenceIds: ["e3"],
+    },
+  ],
 };
+

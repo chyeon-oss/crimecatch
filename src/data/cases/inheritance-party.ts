@@ -66,6 +66,9 @@ export const inheritanceParty: Case = {
       detail: "1층 화장실 쓰레기통에서 발견. 내부에서 청산가리 잔유물이 검출됨.",
       location: "1층 화장실 쓰레기통",
       unlockOrder: 0,
+      importance: "IMPORTANT",
+      relatedEvidenceIds: ["e3"],
+      relatedTimelineTimes: ["21:18"],
     },
     {
       id: "e2",
@@ -75,6 +78,9 @@ export const inheritanceParty: Case = {
       detail: "‘차녀 한지원은 상속에서 제외한다’ 는 문구가 명확히 남아 있다.",
       location: "벽난로 재 속",
       unlockOrder: 0,
+      importance: "UNCOMMON",
+      relatedSuspectIds: ["s1"],
+      relatedTimelineTimes: ["21:10"],
     },
     {
       id: "e3",
@@ -85,8 +91,12 @@ export const inheritanceParty: Case = {
       location: "와인 잔",
       unlockOrder: 1,
       unlockCondition: { requiresEvidenceIds: ["e1", "e2"] },
+      importance: "CRITICAL",
+      relatedEvidenceIds: ["e1", "e2"],
+      relatedSuspectIds: ["s1"],
     },
   ],
+
   crimeScene: {
     imagePrompt: "고급 저택 대응접실, 넘어진 와인잔과 어두운 조명",
     hotspots: [
@@ -137,4 +147,23 @@ export const inheritanceParty: Case = {
       trigger: "PERFECT_DETECTIVE",
     },
   ],
+  questions: [
+    {
+      id: "q1",
+      text: "축배에 독을 넣을 수 있었던 사람은 누구인가?",
+      generatedByEvidenceIds: ["e1"],
+      solvedByEvidenceIds: ["e3"],
+    },
+    {
+      id: "q2",
+      text: "유언장은 왜 벽난로에서 불태워지고 있었는가?",
+      generatedByEvidenceIds: ["e2"],
+    },
+    {
+      id: "q3",
+      text: "상속에서 배제된 인물은 어떤 동기를 품고 있었을까?",
+      generatedByEvidenceIds: ["e2"],
+    },
+  ],
 };
+

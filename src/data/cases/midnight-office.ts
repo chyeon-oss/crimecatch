@@ -264,4 +264,29 @@ export const midnightOffice: Case = {
       trigger: "WRONG_ACCUSATION",
     },
   ],
+  questions: [
+    {
+      id: "q1",
+      text: "누가 사건 직전 12층의 전원을 내렸는가?",
+      generatedByEvidenceIds: ["e2"],
+      solvedByEvidenceIds: ["e6"],
+    },
+    {
+      id: "q2",
+      text: "안쪽에서 잠긴 사무실에 어떻게 진입했는가?",
+      generatedByEvidenceIds: ["e4"],
+    },
+    {
+      id: "q3",
+      text: "책상 아래 남겨진 낯선 혈흔의 주인은 누구인가?",
+      generatedByEvidenceIds: ["e5"],
+      solvedByEvidenceIds: ["e5"],
+    },
+    {
+      id: "q4",
+      text: "피해자와 마지막으로 대화한 인물은 누구인가?",
+      generatedByEvidenceIds: ["e3"],
+    },
+  ],
 };
+

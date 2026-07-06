@@ -1,5 +1,14 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Archive, NotebookPen, Gavel, Lock, Footprints, HelpCircle } from "lucide-react";
+import {
+  Archive,
+  NotebookPen,
+  Gavel,
+  Lock,
+  Footprints,
+  HelpCircle,
+  LayoutGrid,
+  Lightbulb,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { TopBar } from "@/components/TopBar";
 import { InvestigationSection } from "@/components/InvestigationSection";
@@ -10,8 +19,16 @@ import { CrimeScene } from "@/components/CrimeScene";
 import { DiscoveryModal } from "@/components/DiscoveryModal";
 import { ActiveQuestions } from "@/components/ActiveQuestions";
 import { EvidenceSortBar } from "@/components/EvidenceSortBar";
-import { CaseEngine, IntelligenceEngine, type EvidenceSortMode } from "@/engine";
-import type { Case, Evidence, CrimeSceneHotspot } from "@/types";
+import { InvestigationBoard } from "@/components/InvestigationBoard";
+import { TheoriesPanel } from "@/components/TheoriesPanel";
+import {
+  CaseEngine,
+  IntelligenceEngine,
+  createBoardState,
+  type EvidenceSortMode,
+} from "@/engine";
+import type { Case, Evidence, CrimeSceneHotspot, BoardState } from "@/types";
+
 
 export const Route = createFileRoute("/case/$caseId/investigate")({
   loader: ({ params }) => {

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Archive, NotebookPen, Gavel, Lock, Footprints } from "lucide-react";
+import { Archive, NotebookPen, Gavel, Lock, Footprints, HelpCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { TopBar } from "@/components/TopBar";
 import { InvestigationSection } from "@/components/InvestigationSection";
@@ -7,7 +7,10 @@ import { EvidenceCard } from "@/components/EvidenceCard";
 import { EvidenceModal } from "@/components/EvidenceModal";
 import { DetectiveNote } from "@/components/DetectiveNote";
 import { CrimeScene } from "@/components/CrimeScene";
-import { CaseEngine } from "@/engine";
+import { DiscoveryModal } from "@/components/DiscoveryModal";
+import { ActiveQuestions } from "@/components/ActiveQuestions";
+import { EvidenceSortBar } from "@/components/EvidenceSortBar";
+import { CaseEngine, IntelligenceEngine, type EvidenceSortMode } from "@/engine";
 import type { Case, Evidence, CrimeSceneHotspot } from "@/types";
 
 export const Route = createFileRoute("/case/$caseId/investigate")({
@@ -29,23 +32,31 @@ function InvestigatePage() {
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
 
   const [discoveredIds, setDiscoveredIds] = useState<string[]>([]);
-  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [investigatedHotspotIds, setInvestigatedHotspotIds] = useState<Set<string>>(
     new Set(),
   );
+  const [discoveryQueue, setDiscoveryQueue] = useState<string[]>([]);
+  const [sortMode, setSortMode] = useState<EvidenceSortMode>("discovery");
 
   const evidenceById = useMemo(
     () => new Map<string, Evidence>(data.evidence.map((e) => [e.id, e])),
     [data.evidence],
   );
 
-  const discoveredEvidence = useMemo(
-    () =>
-      discoveredIds
-        .map((id) => evidenceById.get(id))
-        .filter((e): e is Evidence => !!e),
-    [discoveredIds, evidenceById],
+  const discoveredSet = useMemo(() => new Set(discoveredIds), [discoveredIds]);
+
+  const intelligenceState = useMemo(
+    () => ({ discoveredIds: discoveredSet, readIds }),
+    [discoveredSet, readIds],
   );
+
+  const discoveredEvidence = useMemo(() => {
+    const list = discoveredIds
+      .map((id) => evidenceById.get(id))
+      .filter((e): e is Evidence => !!e);
+    return IntelligenceEngine.sortEvidence(list, discoveredIds, sortMode);
+  }, [discoveredIds, evidenceById, sortMode]);
 
   const handleInvestigate = (h: CrimeSceneHotspot) => {
     setInvestigatedHotspotIds((prev) => {
@@ -54,38 +65,45 @@ function InvestigatePage() {
       return next;
     });
     if (h.revealsEvidenceIds.length === 0) return;
+    const added: string[] = [];
     setDiscoveredIds((prev) => {
       const set = new Set(prev);
-      const added: string[] = [];
       for (const id of h.revealsEvidenceIds) {
         if (!set.has(id) && evidenceById.has(id)) {
           set.add(id);
           added.push(id);
         }
       }
-      if (added.length) {
-        setNewIds((n) => {
-          const nn = new Set(n);
-          added.forEach((id) => nn.add(id));
-          return nn;
-        });
-      }
       return Array.from(set);
+    });
+    if (added.length) {
+      setDiscoveryQueue((q) => [...q, ...added]);
+    }
+  };
+
+  const openEvidenceAndMarkRead = (e: Evidence) => {
+    setOpenEvidence(e);
+    setReadIds((prev) => {
+      if (prev.has(e.id)) return prev;
+      const next = new Set(prev);
+      next.add(e.id);
+      return next;
     });
   };
 
-  const openEvidenceAndClearNew = (e: Evidence) => {
-    setOpenEvidence(e);
-    setNewIds((n) => {
-      if (!n.has(e.id)) return n;
-      const nn = new Set(n);
-      nn.delete(e.id);
-      return nn;
-    });
-  };
+  const currentDiscovery = discoveryQueue[0]
+    ? evidenceById.get(discoveryQueue[0]) ?? null
+    : null;
+  const continueDiscovery = () =>
+    setDiscoveryQueue((q) => q.slice(1));
 
   const totalHotspots = data.crimeScene?.hotspots.length ?? 0;
   const investigatedCount = investigatedHotspotIds.size;
+
+  const activeQuestionsCount = IntelligenceEngine.visibleQuestions(
+    data,
+    intelligenceState,
+  ).filter((q) => q.status === "active").length;
 
   return (
     <div className="min-h-screen noir-grain">
@@ -143,17 +161,32 @@ function InvestigatePage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {discoveredEvidence.map((e) => (
-                  <EvidenceCard
-                    key={e.id}
-                    evidence={e}
-                    onOpen={openEvidenceAndClearNew}
-                    isNew={newIds.has(e.id)}
-                  />
-                ))}
+              <div className="space-y-3">
+                <EvidenceSortBar value={sortMode} onChange={setSortMode} />
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {discoveredEvidence.map((e) => (
+                    <EvidenceCard
+                      key={e.id}
+                      evidence={e}
+                      onOpen={openEvidenceAndMarkRead}
+                      state={IntelligenceEngine.stateOf(e, intelligenceState)}
+                    />
+                  ))}
+                </div>
               </div>
             )}
+          </InvestigationSection>
+
+          <InvestigationSection
+            icon={HelpCircle}
+            title="Active Questions"
+            subtitle={
+              activeQuestionsCount > 0
+                ? `${activeQuestionsCount}개의 의문이 남아 있습니다`
+                : "지금은 새로운 의문이 없습니다"
+            }
+          >
+            <ActiveQuestions case={data} state={intelligenceState} />
           </InvestigationSection>
 
           <InvestigationSection
@@ -181,7 +214,19 @@ function InvestigatePage() {
         </div>
       </main>
 
-      <EvidenceModal evidence={openEvidence} onClose={() => setOpenEvidence(null)} />
+      <EvidenceModal
+        evidence={openEvidence}
+        case={data}
+        discoveredIds={discoveredSet}
+        onClose={() => setOpenEvidence(null)}
+        onOpenEvidence={openEvidenceAndMarkRead}
+      />
+
+      <DiscoveryModal
+        evidence={currentDiscovery}
+        remaining={Math.max(0, discoveryQueue.length - 1)}
+        onContinue={continueDiscovery}
+      />
     </div>
   );
 }

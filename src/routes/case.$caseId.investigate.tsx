@@ -197,8 +197,37 @@ function InvestigatePage() {
           </InvestigationSection>
 
           <InvestigationSection
+            icon={LayoutGrid}
+            title="Investigation Board"
+            subtitle={
+              boardState.pins.length
+                ? `${boardState.pins.length}개 핀 · ${boardState.connections.length}개 연결`
+                : "증거·용의자·시간대를 핀 하여 관계를 시각화하세요"
+            }
+          >
+            <InvestigationBoard
+              case={data}
+              state={boardState}
+              onChange={setBoardState}
+              discoveredEvidenceIds={discoveredSet}
+            />
+          </InvestigationSection>
+
+          <InvestigationSection
+            icon={Lightbulb}
+            title="Current Theories"
+            subtitle={
+              boardState.theories.length
+                ? `${boardState.theories.length}개의 가설`
+                : "아직 세워진 가설이 없습니다"
+            }
+          >
+            <TheoriesPanel state={boardState} onChange={setBoardState} />
+          </InvestigationSection>
+
+          <InvestigationSection
             icon={HelpCircle}
-            title="Active Questions"
+            title="Open Questions"
             subtitle={
               activeQuestionsCount > 0
                 ? `${activeQuestionsCount}개의 의문이 남아 있습니다`
@@ -207,6 +236,7 @@ function InvestigatePage() {
           >
             <ActiveQuestions case={data} state={intelligenceState} />
           </InvestigationSection>
+
 
           <InvestigationSection
             icon={NotebookPen}

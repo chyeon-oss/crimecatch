@@ -55,6 +55,8 @@ function InvestigatePage() {
   );
   const [discoveryQueue, setDiscoveryQueue] = useState<string[]>([]);
   const [sortMode, setSortMode] = useState<EvidenceSortMode>("discovery");
+  const [boardState, setBoardState] = useState<BoardState>(() => createBoardState());
+
 
   const evidenceById = useMemo(
     () => new Map<string, Evidence>(data.evidence.map((e) => [e.id, e])),

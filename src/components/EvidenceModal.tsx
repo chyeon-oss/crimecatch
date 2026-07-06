@@ -1,6 +1,6 @@
 import { X, MapPin } from "lucide-react";
 import { useEffect } from "react";
-import type { Evidence } from "@/lib/mock-cases";
+import type { Evidence } from "@/types";
 
 interface Props {
   evidence: Evidence | null;
@@ -30,8 +30,10 @@ export function EvidenceModal({ evidence, onClose }: Props) {
       >
         <div className="flex items-start justify-between gap-3 border-b border-border/60 p-5">
           <div>
-            <p className="text-[11px] uppercase tracking-widest text-primary/80">증거 상세</p>
-            <h2 className="mt-1 font-display text-xl text-foreground">{evidence.name}</h2>
+            <p className="text-[11px] uppercase tracking-widest text-primary/80">
+              {evidence.category} · 증거 상세
+            </p>
+            <h2 className="mt-1 font-display text-xl text-foreground">{evidence.title}</h2>
           </div>
           <button
             onClick={onClose}
@@ -43,7 +45,8 @@ export function EvidenceModal({ evidence, onClose }: Props) {
         </div>
 
         <div className="space-y-4 p-5">
-          <p className="text-sm leading-relaxed text-foreground/90">{evidence.description}</p>
+          <p className="text-sm leading-relaxed text-foreground/90">{evidence.summary}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{evidence.detail}</p>
           {evidence.location && (
             <div className="flex items-center gap-2 rounded-md border border-border/60 bg-surface-elevated px-3 py-2 text-xs text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-primary/70" />

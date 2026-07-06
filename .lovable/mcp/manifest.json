@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "casenote-mcp",
+      "version": "0.1.0",
+      "title": "CaseNote Detective MCP"
+    },
+    "tools": [
+      {
+        "name": "list_cases",
+        "title": "List detective cases",
+        "description": "List every detective case available in this app, with id, slug, title, subtitle, difficulty, status, and estimated play time in minutes.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_case",
+        "title": "Get case briefing",
+        "description": "Return the full case briefing (description, victim, incident time & location, suspects, evidence, timeline) for a given case id or slug. Does NOT reveal the solution.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "caseId": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Case id or slug (e.g. 'midnight-office')"
+            }
+          },
+          "required": [
+            "caseId"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "investigate_hotspot",
+        "title": "Investigate a crime scene hotspot",
+        "description": "Simulate investigating a hotspot in a case's crime scene. Returns the evidence revealed at that hotspot (or an empty-scene message).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "caseId": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Case id or slug"
+            },
+            "hotspotId": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Hotspot id from the case's crime scene"
+            }
+          },
+          "required": [
+            "caseId",
+            "hotspotId"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "accuse_suspect",
+        "title": "Accuse a suspect",
+        "description": "Submit a final accusation for a case. Returns whether the suspect is the culprit and the full solution once submitted.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "caseId": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Case id or slug"
+            },
+            "suspectId": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Suspect id being accused"
+            }
+          },
+          "required": [
+            "caseId",
+            "suspectId"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

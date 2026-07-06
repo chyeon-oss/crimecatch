@@ -1,6 +1,5 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
 import { TopBar } from "@/components/TopBar";
-import { CaseDetail } from "@/components/CaseDetail";
 import { getCaseById } from "@/lib/mock-cases";
 
 export const Route = createFileRoute("/case/$caseId")({
@@ -17,7 +16,7 @@ export const Route = createFileRoute("/case/$caseId")({
         ]
       : [{ title: "사건을 찾을 수 없음 — CaseNote" }, { name: "robots", content: "noindex" }],
   }),
-  component: CaseDetailPage,
+  component: () => <Outlet />,
   notFoundComponent: () => (
     <div className="min-h-screen">
       <TopBar to="/" label="목록으로" />
@@ -27,13 +26,3 @@ export const Route = createFileRoute("/case/$caseId")({
     </div>
   ),
 });
-
-function CaseDetailPage() {
-  const { data } = Route.useLoaderData();
-  return (
-    <div className="min-h-screen noir-grain">
-      <TopBar to="/" label="사건 목록" />
-      <CaseDetail data={data} />
-    </div>
-  );
-}

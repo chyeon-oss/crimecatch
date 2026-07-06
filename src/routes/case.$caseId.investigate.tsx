@@ -116,6 +116,14 @@ function InvestigatePage() {
       return Array.from(set);
     });
     if (added.length) {
+      const now = Date.now();
+      setDiscoveredAt((prev) => {
+        const next = new Map(prev);
+        added.forEach((id, i) => {
+          if (!next.has(id)) next.set(id, now + i);
+        });
+        return next;
+      });
       setDiscoveryQueue((q) => [...q, ...added]);
     }
   };

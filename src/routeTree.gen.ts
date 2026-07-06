@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CaseCaseIdRouteImport } from './routes/case.$caseId'
 import { Route as CaseCaseIdIndexRouteImport } from './routes/case.$caseId.index'
 import { Route as CaseCaseIdInvestigateRouteImport } from './routes/case.$caseId.investigate'
 import { Route as CaseCaseIdAccuseRouteImport } from './routes/case.$caseId.accuse'
 
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const CaseCaseIdAccuseRoute = CaseCaseIdAccuseRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
   '/case/$caseId': typeof CaseCaseIdRouteWithChildren
   '/case/$caseId/accuse': typeof CaseCaseIdAccuseRoute
   '/case/$caseId/investigate': typeof CaseCaseIdInvestigateRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
   '/case/$caseId/accuse': typeof CaseCaseIdAccuseRoute
   '/case/$caseId/investigate': typeof CaseCaseIdInvestigateRoute
   '/case/$caseId': typeof CaseCaseIdIndexRoute
@@ -57,6 +65,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
   '/case/$caseId': typeof CaseCaseIdRouteWithChildren
   '/case/$caseId/accuse': typeof CaseCaseIdAccuseRoute
   '/case/$caseId/investigate': typeof CaseCaseIdInvestigateRoute
@@ -66,6 +75,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dashboard'
     | '/case/$caseId'
     | '/case/$caseId/accuse'
     | '/case/$caseId/investigate'
@@ -73,12 +83,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dashboard'
     | '/case/$caseId/accuse'
     | '/case/$caseId/investigate'
     | '/case/$caseId'
   id:
     | '__root__'
     | '/'
+    | '/dashboard'
     | '/case/$caseId'
     | '/case/$caseId/accuse'
     | '/case/$caseId/investigate'
@@ -87,11 +99,19 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRoute
   CaseCaseIdRoute: typeof CaseCaseIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -148,6 +168,7 @@ const CaseCaseIdRouteWithChildren = CaseCaseIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRoute: DashboardRoute,
   CaseCaseIdRoute: CaseCaseIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport

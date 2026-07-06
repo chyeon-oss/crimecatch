@@ -289,8 +289,6 @@ function ReasoningLine({
 }
 
 function StoryRuntimePhaseLabel(state: StoryRuntimeState) {
-  // Local helper to avoid a circular import; StoryRuntime.phaseDef gives us the label.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { StoryRuntime } = require("@/engine") as typeof import("@/engine");
   return StoryRuntime.phaseDef(state.phase).koreanTitle;
 }
+

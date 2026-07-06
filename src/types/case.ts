@@ -51,6 +51,7 @@ export interface Case {
   victim: Victim;
   suspects: Suspect[];
   evidence: Evidence[];
+  crimeScene?: CrimeScene;
   timeline: TimelineEvent[];
   hiddenFacts: HiddenFact[];
   solution: Solution;

@@ -216,6 +216,14 @@ function InvestigatePage() {
               </div>
 
               <div className="grid gap-4">
+                <InvestigationSection
+                  icon={ListChecks}
+                  title="Investigation Objectives"
+                  subtitle={`${objectivesSummary.completed} / ${objectivesSummary.total} 완료 · ${objectivesSummary.active} 진행 중`}
+                >
+                  <ObjectivesPanel objectives={objectives} />
+                </InvestigationSection>
+
                 {data.crimeScene && (
                   <InvestigationSection
                     icon={Footprints}

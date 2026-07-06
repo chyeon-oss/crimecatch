@@ -164,7 +164,15 @@ function InvestigatePage() {
         }
       />
 
+      <InvestigationHUD
+        case={data}
+        storyState={storyState}
+        discoveredCount={discoveredIds.length}
+        totalEvidence={data.evidence.length}
+      />
+
       <ResizablePanelGroup orientation="horizontal" className="flex-1">
+
         {/* LEFT: Case briefing */}
         <ResizablePanel defaultSize={22} minSize={16} maxSize={30}>
           <CaseSidebar

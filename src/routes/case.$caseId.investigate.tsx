@@ -62,6 +62,9 @@ function InvestigatePage() {
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
 
   const [discoveredIds, setDiscoveredIds] = useState<string[]>([]);
+  const [discoveredAt, setDiscoveredAt] = useState<Map<string, number>>(
+    () => new Map(),
+  );
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [investigatedHotspotIds, setInvestigatedHotspotIds] = useState<
     Set<string>

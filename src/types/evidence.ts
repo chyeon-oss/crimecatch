@@ -37,4 +37,6 @@ export interface Evidence {
   relatedSuspectIds?: string[];
   /** TimelineEvent.time values this evidence is tied to. */
   relatedTimelineTimes?: string[];
+  /** Free-form tags surfaced by the evidence locker for filtering. */
+  tags?: string[];
 }

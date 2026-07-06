@@ -28,6 +28,8 @@ import { InvestigationBoard } from "@/components/InvestigationBoard";
 import { TheoriesPanel } from "@/components/TheoriesPanel";
 import { CaseSidebar } from "@/components/workspace/CaseSidebar";
 import { PartnerPanel } from "@/components/workspace/PartnerPanel";
+import { InvestigationHUD } from "@/components/InvestigationHUD";
+
 import {
   CaseEngine,
   IntelligenceEngine,

@@ -21,9 +21,11 @@ import { ActiveQuestions } from "@/components/ActiveQuestions";
 import { EvidenceSortBar } from "@/components/EvidenceSortBar";
 import { InvestigationBoard } from "@/components/InvestigationBoard";
 import { TheoriesPanel } from "@/components/TheoriesPanel";
+import { PhaseIndicator } from "@/components/PhaseIndicator";
 import {
   CaseEngine,
   IntelligenceEngine,
+  StoryRuntime,
   createBoardState,
   type EvidenceSortMode,
 } from "@/engine";

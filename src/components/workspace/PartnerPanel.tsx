@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Lightbulb, Send, Sparkles, Brain } from "lucide-react";
-import { IntelligenceEngine } from "@/engine";
-import type { Case, IntelligenceState, StoryRuntimeState } from "@/types";
+import { IntelligenceEngine, StoryRuntime, type IntelligenceState } from "@/engine";
+import type { Case, StoryRuntimeState } from "@/types";
+
 
 interface PartnerMessage {
   id: string;

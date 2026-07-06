@@ -1,24 +1,55 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CaseCard } from "@/components/CaseCard";
+import { CASES } from "@/lib/mock-cases";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: HomePage,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function HomePage() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen noir-grain">
+      <section className="relative overflow-hidden border-b border-border/60">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            background:
+              "radial-gradient(1200px 500px at 50% -20%, color-mix(in oklab, var(--gold) 12%, transparent), transparent 60%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-3xl px-4 pb-10 pt-14 sm:pt-20">
+          <div className="flex items-center gap-2 text-xs tracking-[0.3em] text-primary">
+            <span className="h-px w-8 bg-primary/60" />
+            CASENOTE
+          </div>
+          <h1 className="mt-4 font-display text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
+            당신은 탐정입니다.
+            <br />
+            <span className="text-primary">사건의 진실</span>을 밝혀내세요.
+          </h1>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+            사건 파일을 열고, 증거를 조사하고, 용의자를 심문하세요.
+            마지막에는 당신이 지목한 범인을 제출합니다.
+          </p>
+        </div>
+      </section>
+
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+        <div className="mb-5 flex items-end justify-between">
+          <h2 className="font-display text-xl text-foreground sm:text-2xl">사건 파일</h2>
+          <span className="text-xs text-muted-foreground">총 {CASES.length}건</span>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {CASES.map((c) => (
+            <CaseCard key={c.id} data={c} />
+          ))}
+        </div>
+
+        <footer className="mt-16 border-t border-border/60 pt-6 text-center text-xs text-muted-foreground">
+          © CaseNote · 모든 사건은 허구입니다.
+        </footer>
+      </main>
     </div>
   );
 }

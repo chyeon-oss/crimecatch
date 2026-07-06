@@ -126,6 +126,21 @@ function InvestigatePage() {
     intelligenceState,
   ).filter((q) => q.status === "active").length;
 
+  const storyState = useMemo(
+    () =>
+      StoryRuntime.derive({
+        case: data,
+        discoveredIds: discoveredSet,
+        readIds,
+        investigatedHotspotIds,
+        board: boardState,
+      }),
+    [data, discoveredSet, readIds, investigatedHotspotIds, boardState],
+  );
+  const currentObjective =
+    StoryRuntime.defaultObjectives().find((o) => o.phase === storyState.phase)
+      ?.text ?? undefined;
+
   return (
     <div className="min-h-screen noir-grain">
       <TopBar
@@ -150,6 +165,9 @@ function InvestigatePage() {
         </div>
 
         <div className="grid gap-4">
+          <PhaseIndicator state={storyState} objectiveText={currentObjective} />
+
+
           {data.crimeScene && (
             <InvestigationSection
               icon={Footprints}

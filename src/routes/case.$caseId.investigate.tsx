@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   Lightbulb,
   ListChecks,
+  Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -32,14 +33,18 @@ import { CaseSidebar } from "@/components/workspace/CaseSidebar";
 import { PartnerPanel } from "@/components/workspace/PartnerPanel";
 import { InvestigationHUD } from "@/components/InvestigationHUD";
 import { ObjectivesPanel } from "@/components/ObjectivesPanel";
+import { SuspectDatabase } from "@/components/SuspectDatabase";
+import { SuspectProfileModal } from "@/components/SuspectProfileModal";
 
 import {
   CaseEngine,
   IntelligenceEngine,
   ObjectivesEngine,
   StoryRuntime,
+  SuspectIntelEngine,
   createBoardState,
   type EvidenceSortMode,
+  type SuspectDossier,
 } from "@/engine";
 import type { Case, Evidence, CrimeSceneHotspot, BoardState } from "@/types";
 
@@ -60,6 +65,7 @@ export const Route = createFileRoute("/case/$caseId/investigate")({
 function InvestigatePage() {
   const { data } = Route.useLoaderData() as { data: Case };
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
+  const [openSuspect, setOpenSuspect] = useState<SuspectDossier | null>(null);
 
   const [discoveredIds, setDiscoveredIds] = useState<string[]>([]);
   const [discoveredAt, setDiscoveredAt] = useState<Map<string, number>>(
@@ -179,6 +185,19 @@ function InvestigatePage() {
   );
   const objectivesSummary = ObjectivesEngine.summary(objectives);
 
+  const suspectDossiers = useMemo(
+    () =>
+      SuspectIntelEngine.all({
+        case: data,
+        discoveredIds: discoveredSet,
+        readIds,
+      }),
+    [data, discoveredSet, readIds],
+  );
+  const primeSuspectCount = suspectDossiers.filter(
+    (d) => d.status === "PRIME_SUSPECT",
+  ).length;
+
   return (
     <div className="flex h-screen flex-col noir-grain">
       <TopBar
@@ -234,6 +253,21 @@ function InvestigatePage() {
                   subtitle={`${objectivesSummary.completed} / ${objectivesSummary.total} 완료 · ${objectivesSummary.active} 진행 중`}
                 >
                   <ObjectivesPanel objectives={objectives} />
+                </InvestigationSection>
+
+                <InvestigationSection
+                  icon={Users}
+                  title="Suspect Database"
+                  subtitle={
+                    primeSuspectCount > 0
+                      ? `${suspectDossiers.length}명 프로파일 · 유력 용의자 ${primeSuspectCount}명`
+                      : `${suspectDossiers.length}명 프로파일 등록`
+                  }
+                >
+                  <SuspectDatabase
+                    dossiers={suspectDossiers}
+                    onOpen={setOpenSuspect}
+                  />
                 </InvestigationSection>
 
                 {data.crimeScene && (
@@ -374,6 +408,11 @@ function InvestigatePage() {
         evidence={currentDiscovery}
         remaining={Math.max(0, discoveryQueue.length - 1)}
         onContinue={continueDiscovery}
+      />
+
+      <SuspectProfileModal
+        dossier={openSuspect}
+        onClose={() => setOpenSuspect(null)}
       />
     </div>
   );

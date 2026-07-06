@@ -88,6 +88,17 @@ export const missingTrainee: Case = {
       unlockCondition: { requiresEvidenceIds: ["e2"] },
     },
   ],
+  crimeScene: {
+    imagePrompt: "새벽의 아이돌 연습생 숙소, 흐트러진 침대와 열린 창문",
+    hotspots: [
+      { id: "window", label: "창가", hint: "창틀에 무언가 걸려 있다", revealsEvidenceIds: ["e1"] },
+      { id: "phone", label: "피해자 휴대폰", hint: "화면이 잠겨 있다", revealsEvidenceIds: ["e2"] },
+      { id: "street", label: "숙소 앞 도로", hint: "블랙박스 영상 확인 가능", revealsEvidenceIds: ["e3"] },
+      { id: "closet", label: "옷장", hint: "옷은 그대로다", revealsEvidenceIds: [], emptyMessage: "옷과 소지품은 그대로 남아 있다." },
+      { id: "desk", label: "책상", hint: "노트와 다이어리", revealsEvidenceIds: [], emptyMessage: "일정표만 남아 있다." },
+      { id: "door", label: "방문", hint: "안에서 잠긴 흔적", revealsEvidenceIds: [], emptyMessage: "잠금 장치에 강제 흔적은 없다." },
+    ],
+  },
   timeline: [
     { time: "02:40", description: "피해자, 마지막으로 방에서 통화" },
     { time: "03:00", description: "숙소 앞 차량 정차" },

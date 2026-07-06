@@ -140,33 +140,9 @@ export const midnightOffice: Case = {
     hotspots: [
       {
         id: "desk",
-        label: "피해자 책상",
+        label: "책상",
         hint: "노트북과 서류가 널려 있다",
         revealsEvidenceIds: ["e1", "e3"],
-      },
-      {
-        id: "door",
-        label: "출입문",
-        hint: "안쪽에서 잠긴 흔적",
-        revealsEvidenceIds: ["e4"],
-      },
-      {
-        id: "under-desk",
-        label: "책상 아래",
-        hint: "무언가 떨어져 있는 듯하다",
-        revealsEvidenceIds: ["e5"],
-      },
-      {
-        id: "cctv",
-        label: "천장 CCTV",
-        hint: "렌즈에 먼지가 앉아 있다",
-        revealsEvidenceIds: ["e2"],
-      },
-      {
-        id: "breaker",
-        label: "복도 배전반",
-        hint: "커버가 살짝 어긋나 있다",
-        revealsEvidenceIds: ["e6"],
       },
       {
         id: "bookshelf",
@@ -181,6 +157,30 @@ export const midnightOffice: Case = {
         hint: "12층 야경이 보인다",
         revealsEvidenceIds: [],
         emptyMessage: "창은 잠겨 있고 손댄 흔적이 없다.",
+      },
+      {
+        id: "victim-area",
+        label: "피해자 주변",
+        hint: "천장 CCTV의 붉은 표시등이 꺼져 있다",
+        revealsEvidenceIds: ["e2"],
+      },
+      {
+        id: "floor",
+        label: "바닥",
+        hint: "책상 아래로 무언가 번져 있다",
+        revealsEvidenceIds: ["e5"],
+      },
+      {
+        id: "breaker",
+        label: "배전함",
+        hint: "커버가 살짝 어긋나 있다",
+        revealsEvidenceIds: ["e6"],
+      },
+      {
+        id: "door",
+        label: "출입문",
+        hint: "안쪽에서 잠긴 흔적",
+        revealsEvidenceIds: ["e4"],
       },
     ],
   },

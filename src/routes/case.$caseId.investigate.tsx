@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/resizable";
 import { TopBar } from "@/components/TopBar";
 import { InvestigationSection } from "@/components/InvestigationSection";
-import { EvidenceCard } from "@/components/EvidenceCard";
+
 import { EvidenceModal } from "@/components/EvidenceModal";
+import { EvidenceLocker } from "@/components/EvidenceLocker";
 import { DetectiveNote } from "@/components/DetectiveNote";
 import { CrimeScene } from "@/components/CrimeScene";
 import { DiscoveryModal } from "@/components/DiscoveryModal";
@@ -61,6 +62,9 @@ function InvestigatePage() {
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
 
   const [discoveredIds, setDiscoveredIds] = useState<string[]>([]);
+  const [discoveredAt, setDiscoveredAt] = useState<Map<string, number>>(
+    () => new Map(),
+  );
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [investigatedHotspotIds, setInvestigatedHotspotIds] = useState<
     Set<string>
@@ -112,6 +116,14 @@ function InvestigatePage() {
       return Array.from(set);
     });
     if (added.length) {
+      const now = Date.now();
+      setDiscoveredAt((prev) => {
+        const next = new Map(prev);
+        added.forEach((id, i) => {
+          if (!next.has(id)) next.set(id, now + i);
+        });
+        return next;
+      });
       setDiscoveryQueue((q) => [...q, ...added]);
     }
   };
@@ -258,19 +270,14 @@ function InvestigatePage() {
                   ) : (
                     <div className="space-y-3">
                       <EvidenceSortBar value={sortMode} onChange={setSortMode} />
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        {discoveredEvidence.map((e) => (
-                          <EvidenceCard
-                            key={e.id}
-                            evidence={e}
-                            onOpen={openEvidenceAndMarkRead}
-                            state={IntelligenceEngine.stateOf(
-                              e,
-                              intelligenceState,
-                            )}
-                          />
-                        ))}
-                      </div>
+                      <EvidenceLocker
+                        evidence={discoveredEvidence}
+                        discoveredAt={discoveredAt}
+                        onOpen={openEvidenceAndMarkRead}
+                        stateOf={(e) =>
+                          IntelligenceEngine.stateOf(e, intelligenceState)
+                        }
+                      />
                     </div>
                   )}
                 </InvestigationSection>

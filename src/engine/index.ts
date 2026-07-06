@@ -14,3 +14,6 @@ export type {
   EvidenceSortMode,
   ImportanceStyle,
 } from "./IntelligenceEngine";
+export { BoardEngine, createBoardState } from "./BoardEngine";
+export type { BoardPinLabel } from "./BoardEngine";
+

@@ -1,5 +1,14 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Archive, NotebookPen, Gavel, Lock, Footprints, HelpCircle } from "lucide-react";
+import {
+  Archive,
+  NotebookPen,
+  Gavel,
+  Lock,
+  Footprints,
+  HelpCircle,
+  LayoutGrid,
+  Lightbulb,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { TopBar } from "@/components/TopBar";
 import { InvestigationSection } from "@/components/InvestigationSection";
@@ -10,8 +19,16 @@ import { CrimeScene } from "@/components/CrimeScene";
 import { DiscoveryModal } from "@/components/DiscoveryModal";
 import { ActiveQuestions } from "@/components/ActiveQuestions";
 import { EvidenceSortBar } from "@/components/EvidenceSortBar";
-import { CaseEngine, IntelligenceEngine, type EvidenceSortMode } from "@/engine";
-import type { Case, Evidence, CrimeSceneHotspot } from "@/types";
+import { InvestigationBoard } from "@/components/InvestigationBoard";
+import { TheoriesPanel } from "@/components/TheoriesPanel";
+import {
+  CaseEngine,
+  IntelligenceEngine,
+  createBoardState,
+  type EvidenceSortMode,
+} from "@/engine";
+import type { Case, Evidence, CrimeSceneHotspot, BoardState } from "@/types";
+
 
 export const Route = createFileRoute("/case/$caseId/investigate")({
   loader: ({ params }) => {
@@ -38,6 +55,8 @@ function InvestigatePage() {
   );
   const [discoveryQueue, setDiscoveryQueue] = useState<string[]>([]);
   const [sortMode, setSortMode] = useState<EvidenceSortMode>("discovery");
+  const [boardState, setBoardState] = useState<BoardState>(() => createBoardState());
+
 
   const evidenceById = useMemo(
     () => new Map<string, Evidence>(data.evidence.map((e) => [e.id, e])),
@@ -178,8 +197,37 @@ function InvestigatePage() {
           </InvestigationSection>
 
           <InvestigationSection
+            icon={LayoutGrid}
+            title="Investigation Board"
+            subtitle={
+              boardState.pins.length
+                ? `${boardState.pins.length}개 핀 · ${boardState.connections.length}개 연결`
+                : "증거·용의자·시간대를 핀 하여 관계를 시각화하세요"
+            }
+          >
+            <InvestigationBoard
+              case={data}
+              state={boardState}
+              onChange={setBoardState}
+              discoveredEvidenceIds={discoveredSet}
+            />
+          </InvestigationSection>
+
+          <InvestigationSection
+            icon={Lightbulb}
+            title="Current Theories"
+            subtitle={
+              boardState.theories.length
+                ? `${boardState.theories.length}개의 가설`
+                : "아직 세워진 가설이 없습니다"
+            }
+          >
+            <TheoriesPanel state={boardState} onChange={setBoardState} />
+          </InvestigationSection>
+
+          <InvestigationSection
             icon={HelpCircle}
-            title="Active Questions"
+            title="Open Questions"
             subtitle={
               activeQuestionsCount > 0
                 ? `${activeQuestionsCount}개의 의문이 남아 있습니다`
@@ -188,6 +236,7 @@ function InvestigatePage() {
           >
             <ActiveQuestions case={data} state={intelligenceState} />
           </InvestigationSection>
+
 
           <InvestigationSection
             icon={NotebookPen}

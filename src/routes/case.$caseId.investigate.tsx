@@ -20,6 +20,7 @@ import { TopBar } from "@/components/TopBar";
 import { InvestigationSection } from "@/components/InvestigationSection";
 import { EvidenceCard } from "@/components/EvidenceCard";
 import { EvidenceModal } from "@/components/EvidenceModal";
+import { EvidenceLocker } from "@/components/EvidenceLocker";
 import { DetectiveNote } from "@/components/DetectiveNote";
 import { CrimeScene } from "@/components/CrimeScene";
 import { DiscoveryModal } from "@/components/DiscoveryModal";

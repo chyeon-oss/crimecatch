@@ -1,27 +1,20 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Gavel } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
-import { getCaseById, type CaseData } from "@/lib/mock-cases";
+import { Route as CaseRoute } from "./case.$caseId";
 
 export const Route = createFileRoute("/case/$caseId/accuse")({
-  loader: ({ params }) => {
-    const data = getCaseById(params.caseId);
-    if (!data) throw notFound();
-    return { data };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `최종 추리: ${loaderData.data.title} — CaseNote` },
-          { name: "robots", content: "noindex" },
-        ]
-      : [{ title: "최종 추리 — CaseNote" }, { name: "robots", content: "noindex" }],
+  head: () => ({
+    meta: [
+      { title: "최종 추리 — CaseNote" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: AccusePage,
 });
 
 function AccusePage() {
-  const { data } = Route.useLoaderData() as { data: CaseData };
+  const { data } = CaseRoute.useLoaderData();
 
   return (
     <div className="min-h-screen noir-grain">
@@ -44,8 +37,8 @@ function AccusePage() {
             범인, 동기, 범행 방법을 선택하는 기능은 다음 단계에서 구현됩니다.
           </p>
           <p className="mt-3 text-xs text-muted-foreground">
-            현재는 수사 단계까지의 UI 흐름을 검증하는 단계입니다. 곧 용의자 지목,
-            동기 선택, 범행 방법 재구성, 결과 화면이 연결됩니다.
+            엔진 계층에는 이미 <code>AccusationEngine.submit()</code>{" "}
+            검증과 업적 판정 로직이 준비되어 있으며, UI만 연결하면 됩니다.
           </p>
         </div>
       </main>

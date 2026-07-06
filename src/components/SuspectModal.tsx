@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
-import type { Suspect } from "@/lib/mock-cases";
+import type { Suspect } from "@/types";
 
 interface Props {
   suspect: Suspect | null;
@@ -56,9 +56,11 @@ export function SuspectModal({ suspect, onClose }: Props) {
           </div>
           <div className="rounded-md border border-border/60 bg-surface-elevated p-3 text-xs text-muted-foreground">
             <p className="text-[11px] uppercase tracking-wider text-primary/70">관계</p>
-            <p className="mt-1 text-foreground/90">{suspect.relation}</p>
-            <p className="mt-3 text-[11px] uppercase tracking-wider text-primary/70">진술 알리바이</p>
-            <p className="mt-1 italic text-foreground/80">"{suspect.alibi}"</p>
+            <p className="mt-1 text-foreground/90">{suspect.relationship}</p>
+            <p className="mt-3 text-[11px] uppercase tracking-wider text-primary/70">첫 진술</p>
+            <p className="mt-1 italic text-foreground/80">"{suspect.initialStatement}"</p>
+            <p className="mt-3 text-[11px] uppercase tracking-wider text-primary/70">알리바이</p>
+            <p className="mt-1 text-foreground/80">{suspect.alibi}</p>
           </div>
         </div>
 

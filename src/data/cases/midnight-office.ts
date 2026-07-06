@@ -1,0 +1,203 @@
+import type { Case } from "@/types";
+
+export const midnightOffice: Case = {
+  id: "midnight-office",
+  slug: "midnight-office",
+  title: "한밤의 사무실 살인사건",
+  subtitle:
+    "야근 중이던 팀장이 잠긴 사무실에서 숨진 채 발견되었다. 목격자는 없다.",
+  difficulty: "보통",
+  status: "무료",
+  estimatedMinutes: 30,
+  description:
+    "서울 강남의 한 IT 기업. 자정 무렵, 야근 중이던 팀장 김도현이 자신의 사무실에서 둔기에 맞아 사망한 채 발견되었다. 사무실 문은 안쪽에서 잠겨 있었고, CCTV는 사건 직전 30분간 원인 모를 정전으로 꺼져 있었다.",
+  incidentTime: "2025년 3월 14일 오후 11시 50분경",
+  incidentLocation: "서울 강남구 스카이빌딩 12층 개발팀 사무실",
+  victim: {
+    name: "김도현",
+    age: 42,
+    occupation: "개발팀장",
+    causeOfDeath: "둔기에 의한 두부 손상",
+  },
+  suspects: [
+    {
+      id: "s1",
+      name: "박민수",
+      age: 38,
+      occupation: "부팀장",
+      relationship: "피해자와 승진 경쟁 관계. 최근 인사평가에서 밀린 것으로 알려짐.",
+      personality: "차분하지만 야심이 강함",
+      initialStatement: "그 시간엔 회의실에 혼자 있었습니다. 아무 소리도 못 들었어요.",
+      alibi: "회의실에서 혼자 보고서를 작성 중이었다고 진술",
+      hiddenTruth:
+        "정전 직전 12층 배전반에 접근한 사람은 그였다. 피해자가 자신의 승진 탈락을 조작했다고 믿고 있었다.",
+      isCulprit: true,
+    },
+    {
+      id: "s2",
+      name: "이서연",
+      age: 31,
+      occupation: "기획자",
+      relationship: "사건 당일 피해자와 회의실에서 크게 다툼. 목격자가 다수.",
+      personality: "감정 표현이 직설적",
+      initialStatement: "다툰 건 사실이지만, 그 사람을 해칠 이유는 없어요.",
+      alibi: "탕비실에서 커피를 내리고 있었다고 진술",
+      hiddenTruth: "탕비실 CCTV에 실제로 잡혔지만 5분간 자리를 비운 구간이 있다.",
+      isCulprit: false,
+    },
+    {
+      id: "s3",
+      name: "최지훈",
+      age: 29,
+      occupation: "개발자",
+      relationship: "피해자에게 최근 업무상 강하게 질책을 받음.",
+      personality: "소심하고 회피적",
+      initialStatement: "제 자리에서 코드 리뷰만 하고 있었어요.",
+      alibi: "본인 자리에서 코드 리뷰 중이었다고 진술",
+      hiddenTruth: "당시 커밋 로그가 자리를 지켰음을 증명한다.",
+      isCulprit: false,
+    },
+    {
+      id: "s4",
+      name: "한유리",
+      age: 35,
+      occupation: "인사팀장",
+      relationship: "피해자의 인사평가 자료를 보관 중. 열람 기록이 남아 있음.",
+      personality: "냉정하고 원칙주의",
+      initialStatement: "인사팀 사무실에서 서류 정리를 하고 있었습니다.",
+      alibi: "인사팀 사무실에서 서류를 정리하고 있었다고 진술",
+      hiddenTruth:
+        "박민수의 승진 탈락을 통보한 당사자. 사건 전 그에게서 이상한 전화를 받았다.",
+      isCulprit: false,
+    },
+  ],
+  evidence: [
+    {
+      id: "e1",
+      title: "깨진 머그컵",
+      category: "OBJECT",
+      summary: "피해자 책상 옆에서 산산조각 난 채 발견.",
+      detail:
+        "커피 자국이 벽까지 튀어 있다. 다툼이 있었음을 시사한다.",
+      location: "피해자 책상 옆",
+      unlockOrder: 0,
+    },
+    {
+      id: "e2",
+      title: "꺼진 CCTV 기록",
+      category: "CCTV",
+      summary: "사건 직전 30분간 12층 전체 CCTV가 정전으로 꺼져 있었다.",
+      detail:
+        "정전은 12층에만 국한되었고, 배전반에 수동 조작 흔적이 남아 있다.",
+      location: "관제실 서버",
+      unlockOrder: 0,
+    },
+    {
+      id: "e3",
+      title: "피해자의 노트북",
+      category: "PHONE",
+      summary: "화면은 열린 채였고, 사건 직전 메시지가 일부 삭제된 흔적이 있다.",
+      detail:
+        "복구된 로그에서 '박' 으로 시작하는 이름과의 대화 일부가 확인된다.",
+      location: "피해자 책상",
+      unlockOrder: 1,
+      unlockCondition: { requiresEvidenceIds: ["e1", "e2"] },
+    },
+    {
+      id: "e4",
+      title: "잠긴 사무실 문",
+      category: "OBJECT",
+      summary: "사무실 문은 안쪽에서 잠겨 있었다.",
+      detail: "예비 열쇠 소지자는 팀장, 부팀장, 총무팀 3명뿐이다.",
+      location: "사무실 출입문",
+      unlockOrder: 1,
+    },
+    {
+      id: "e5",
+      title: "책상 아래 혈흔",
+      category: "FORENSIC",
+      summary: "책상 아래에서 소량의 혈흔 발견.",
+      detail:
+        "감식 결과 피해자의 것이 아닌 제3자의 혈흔. 부팀장 박민수의 손등 상처와 일치한다.",
+      location: "책상 아래",
+      unlockOrder: 2,
+      unlockCondition: { requiresEvidenceIds: ["e3"] },
+    },
+    {
+      id: "e6",
+      title: "정전 기록",
+      category: "DOCUMENT",
+      summary: "12층 배전반에 수동 조작 흔적.",
+      detail:
+        "정전 시각 직전 배전반 앞에 접근한 인물은 박민수. 출입 카드 로그로 확인됨.",
+      location: "12층 배전반",
+      unlockOrder: 2,
+      unlockCondition: { requiresEvidenceIds: ["e2"] },
+    },
+  ],
+  timeline: [
+    { time: "19:20", description: "피해자 김도현이 사무실에 들어감" },
+    { time: "20:05", description: "12층 정전 발생", relatedSuspectId: "s1" },
+    { time: "20:18", description: "미확인 인물이 사무실 방향으로 이동" },
+    { time: "20:30", description: "정전 복구, CCTV 재가동" },
+    { time: "23:50", description: "청소원이 사무실에서 피해자를 발견" },
+  ],
+  hiddenFacts: [
+    {
+      id: "h1",
+      title: "박민수의 승진 탈락",
+      description:
+        "박민수는 피해자가 자신의 승진 평가를 의도적으로 낮췄다고 믿고 있었다.",
+      relatedSuspects: ["s1", "s4"],
+    },
+    {
+      id: "h2",
+      title: "배전반 접근자",
+      description: "정전 직전 12층 배전반에 접근한 카드 로그는 박민수의 것이었다.",
+      relatedSuspects: ["s1"],
+    },
+  ],
+  solution: {
+    culpritId: "s1",
+    motive: "승진 탈락에 대한 원한과 인사 조작 폭로 위협",
+    murderMethod: "정전을 유도한 뒤 사무실에 진입, 머그컵으로 가격",
+    murderTime: "20:18 ~ 20:28",
+    requiredEvidence: ["e2", "e5", "e6"],
+    contradictionPairs: [
+      {
+        evidenceId: "e6",
+        suspectId: "s1",
+        explanation: "회의실에 있었다는 진술과 배전반 카드 로그가 모순된다.",
+      },
+      {
+        evidenceId: "e5",
+        suspectId: "s1",
+        explanation: "혈흔이 박민수의 손등 상처와 일치한다.",
+      },
+    ],
+  },
+  unlockRules: {
+    minEvidenceReadBeforeAccusation: 3,
+    minSuspectsInterrogatedBeforeAccusation: 2,
+  },
+  achievements: [
+    {
+      id: "a1",
+      title: "모든 디테일을 관찰하다",
+      description: "모든 증거를 열람했습니다.",
+      trigger: "READ_ALL_EVIDENCE",
+    },
+    {
+      id: "a2",
+      title: "완벽한 탐정",
+      description: "모든 증거와 심문을 마치고 정답을 맞혔습니다.",
+      trigger: "PERFECT_DETECTIVE",
+    },
+    {
+      id: "a3",
+      title: "잘못된 지목",
+      description: "잘못된 범인을 지목했습니다.",
+      trigger: "WRONG_ACCUSATION",
+    },
+  ],
+};

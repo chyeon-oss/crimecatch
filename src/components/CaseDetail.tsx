@@ -1,8 +1,17 @@
 import { Link } from "@tanstack/react-router";
 import { Calendar, Clock, Gauge, MapPin, User, ArrowRight } from "lucide-react";
-import type { CaseData } from "@/lib/mock-cases";
+import type { Case } from "@/types";
+import { CaseEngine } from "@/engine";
 
-function Row({ icon: Icon, label, value }: { icon: any; label: string; value: string | number }) {
+function Row({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof User;
+  label: string;
+  value: string | number;
+}) {
   return (
     <div className="flex items-start gap-3 border-t border-border/60 py-3 first:border-t-0">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" />
@@ -14,7 +23,7 @@ function Row({ icon: Icon, label, value }: { icon: any; label: string; value: st
   );
 }
 
-export function CaseDetail({ data }: { data: CaseData }) {
+export function CaseDetail({ data }: { data: Case }) {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-28 pt-6 sm:pt-10">
       <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium tracking-wide text-primary">
@@ -28,18 +37,22 @@ export function CaseDetail({ data }: { data: CaseData }) {
       <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-noir)] sm:p-6">
         <h2 className="font-display text-lg text-primary">사건 개요</h2>
         <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-          {data.overview}
+          {data.description}
         </p>
       </section>
 
       <section className="mt-4 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-noir)] sm:p-6">
         <h2 className="font-display text-lg text-primary">사건 정보</h2>
         <div className="mt-3">
-          <Row icon={User} label="피해자" value={`${data.victim.name} (${data.victim.age}세, ${data.victim.occupation})`} />
+          <Row
+            icon={User}
+            label="피해자"
+            value={`${data.victim.name} (${data.victim.age}세, ${data.victim.occupation})`}
+          />
           <Row icon={Calendar} label="사건 시각" value={data.incidentTime} />
           <Row icon={MapPin} label="사건 장소" value={data.incidentLocation} />
           <Row icon={Gauge} label="난이도" value={data.difficulty} />
-          <Row icon={Clock} label="예상 소요" value={data.playTime} />
+          <Row icon={Clock} label="예상 소요" value={CaseEngine.formatPlayTime(data)} />
         </div>
       </section>
 
@@ -47,7 +60,7 @@ export function CaseDetail({ data }: { data: CaseData }) {
         <div className="mx-auto max-w-3xl px-4 py-3">
           <Link
             to="/case/$caseId/investigate"
-            params={{ caseId: data.id }}
+            params={{ caseId: data.slug }}
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)] transition-transform hover:scale-[1.01]"
           >
             수사 시작

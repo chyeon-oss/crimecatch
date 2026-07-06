@@ -1,6 +1,16 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { FileText, Archive, Users, NotebookPen, Gavel, User, Calendar, MapPin } from "lucide-react";
-import { useState } from "react";
+import {
+  FileText,
+  Archive,
+  Users,
+  NotebookPen,
+  Gavel,
+  User,
+  Calendar,
+  MapPin,
+  Clock,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { TopBar } from "@/components/TopBar";
 import { InvestigationSection } from "@/components/InvestigationSection";
 import { EvidenceCard } from "@/components/EvidenceCard";
@@ -8,11 +18,12 @@ import { EvidenceModal } from "@/components/EvidenceModal";
 import { SuspectCard } from "@/components/SuspectCard";
 import { SuspectModal } from "@/components/SuspectModal";
 import { DetectiveNote } from "@/components/DetectiveNote";
-import { getCaseById, type CaseData, type Evidence, type Suspect } from "@/lib/mock-cases";
+import { CaseEngine, InvestigationEngine } from "@/engine";
+import type { Evidence, Suspect } from "@/types";
 
 export const Route = createFileRoute("/case/$caseId/investigate")({
   loader: ({ params }) => {
-    const data = getCaseById(params.caseId);
+    const data = CaseEngine.get(params.caseId);
     if (!data) throw notFound();
     return { data };
   },
@@ -25,9 +36,11 @@ export const Route = createFileRoute("/case/$caseId/investigate")({
 });
 
 function InvestigatePage() {
-  const { data } = Route.useLoaderData() as { data: CaseData };
+  const { data } = Route.useLoaderData();
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
   const [openSuspect, setOpenSuspect] = useState<Suspect | null>(null);
+
+  const view = useMemo(() => InvestigationEngine.view(data), [data]);
 
   return (
     <div className="min-h-screen noir-grain">
@@ -55,10 +68,14 @@ function InvestigatePage() {
         <div className="grid gap-4">
           <InvestigationSection icon={FileText} title="사건 개요" subtitle="지금까지 확인된 사실">
             <p className="text-sm leading-relaxed text-muted-foreground">
-              {data.shortDescription}
+              {data.subtitle}
             </p>
             <dl className="mt-4 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
-              <InfoTile icon={User} label="피해자" value={`${data.victim.name} (${data.victim.age}세)`} />
+              <InfoTile
+                icon={User}
+                label="피해자"
+                value={`${data.victim.name} (${data.victim.age}세)`}
+              />
               <InfoTile icon={Calendar} label="사건 시각" value={data.incidentTime} />
               <InfoTile icon={MapPin} label="사건 장소" value={data.incidentLocation} />
             </dl>
@@ -67,10 +84,10 @@ function InvestigatePage() {
           <InvestigationSection
             icon={Archive}
             title="증거 보관함"
-            subtitle={`${data.evidence.length}개의 증거`}
+            subtitle={`${view.evidence.length}개의 증거`}
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {data.evidence.map((e) => (
+              {view.evidence.map((e) => (
                 <EvidenceCard key={e.id} evidence={e} onOpen={setOpenEvidence} />
               ))}
             </div>
@@ -79,13 +96,31 @@ function InvestigatePage() {
           <InvestigationSection
             icon={Users}
             title="용의자 목록"
-            subtitle={`${data.suspects.length}명의 용의자`}
+            subtitle={`${view.suspects.length}명의 용의자`}
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {data.suspects.map((s) => (
+              {view.suspects.map((s) => (
                 <SuspectCard key={s.id} suspect={s} onInterrogate={setOpenSuspect} />
               ))}
             </div>
+          </InvestigationSection>
+
+          <InvestigationSection
+            icon={Clock}
+            title="사건 타임라인"
+            subtitle={`${view.timeline.length}개의 확인된 사건`}
+          >
+            <ol className="relative space-y-3 border-l border-border/60 pl-4">
+              {view.timeline.map((t, i) => (
+                <li key={i} className="text-sm">
+                  <span className="absolute -left-1 mt-1.5 h-2 w-2 rounded-full bg-primary" />
+                  <p className="text-[11px] uppercase tracking-wider text-primary/70">
+                    {t.time}
+                  </p>
+                  <p className="text-foreground/90">{t.description}</p>
+                </li>
+              ))}
+            </ol>
           </InvestigationSection>
 
           <InvestigationSection
@@ -102,7 +137,7 @@ function InvestigatePage() {
         <div className="mx-auto max-w-3xl px-4 py-3">
           <Link
             to="/case/$caseId/accuse"
-            params={{ caseId: data.id }}
+            params={{ caseId: data.slug }}
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)] transition-transform hover:scale-[1.01]"
           >
             <Gavel className="h-4 w-4" />

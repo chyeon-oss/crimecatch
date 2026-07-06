@@ -1,5 +1,5 @@
 import { MessageCircle, User } from "lucide-react";
-import type { Suspect } from "@/lib/mock-cases";
+import type { Suspect } from "@/types";
 
 interface Props {
   suspect: Suspect;
@@ -21,7 +21,7 @@ export function SuspectCard({ suspect, onInterrogate }: Props) {
             </span>
           </p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            {suspect.relation}
+            {suspect.relationship}
           </p>
         </div>
       </div>

@@ -9,6 +9,8 @@ import {
   Calendar,
   MapPin,
   Clock,
+  Footprints,
+  Lock,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { TopBar } from "@/components/TopBar";
@@ -18,8 +20,9 @@ import { EvidenceModal } from "@/components/EvidenceModal";
 import { SuspectCard } from "@/components/SuspectCard";
 import { SuspectModal } from "@/components/SuspectModal";
 import { DetectiveNote } from "@/components/DetectiveNote";
-import { CaseEngine, InvestigationEngine } from "@/engine";
-import type { Evidence, Suspect } from "@/types";
+import { CrimeScene } from "@/components/CrimeScene";
+import { CaseEngine } from "@/engine";
+import type { Evidence, Suspect, CrimeSceneHotspot } from "@/types";
 
 export const Route = createFileRoute("/case/$caseId/investigate")({
   loader: ({ params }) => {
@@ -40,7 +43,65 @@ function InvestigatePage() {
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
   const [openSuspect, setOpenSuspect] = useState<Suspect | null>(null);
 
-  const view = useMemo(() => InvestigationEngine.view(data), [data]);
+  // Discovery state — local only, ready for a future sync/AI layer.
+  const [discoveredIds, setDiscoveredIds] = useState<string[]>([]);
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const [investigatedHotspotIds, setInvestigatedHotspotIds] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const evidenceById = useMemo(
+    () => new Map(data.evidence.map((e) => [e.id, e])),
+    [data.evidence],
+  );
+
+  const discoveredEvidence = useMemo(
+    () =>
+      discoveredIds
+        .map((id) => evidenceById.get(id))
+        .filter((e): e is Evidence => !!e),
+    [discoveredIds, evidenceById],
+  );
+
+  const handleInvestigate = (h: CrimeSceneHotspot) => {
+    setInvestigatedHotspotIds((prev) => {
+      const next = new Set(prev);
+      next.add(h.id);
+      return next;
+    });
+    if (h.revealsEvidenceIds.length === 0) return;
+    setDiscoveredIds((prev) => {
+      const set = new Set(prev);
+      const added: string[] = [];
+      for (const id of h.revealsEvidenceIds) {
+        if (!set.has(id) && evidenceById.has(id)) {
+          set.add(id);
+          added.push(id);
+        }
+      }
+      if (added.length) {
+        setNewIds((n) => {
+          const nn = new Set(n);
+          added.forEach((id) => nn.add(id));
+          return nn;
+        });
+      }
+      return Array.from(set);
+    });
+  };
+
+  const openEvidenceAndClearNew = (e: Evidence) => {
+    setOpenEvidence(e);
+    setNewIds((n) => {
+      if (!n.has(e.id)) return n;
+      const nn = new Set(n);
+      nn.delete(e.id);
+      return nn;
+    });
+  };
+
+  const totalHotspots = data.crimeScene?.hotspots.length ?? 0;
+  const investigatedCount = investigatedHotspotIds.size;
 
   return (
     <div className="min-h-screen noir-grain">
@@ -81,25 +142,58 @@ function InvestigatePage() {
             </dl>
           </InvestigationSection>
 
+          {data.crimeScene && (
+            <InvestigationSection
+              icon={Footprints}
+              title="사건 현장"
+              subtitle={`${investigatedCount} / ${totalHotspots} 지점 조사 완료`}
+            >
+              <CrimeScene
+                scene={data.crimeScene}
+                evidenceById={evidenceById}
+                investigatedIds={investigatedHotspotIds}
+                onInvestigate={handleInvestigate}
+              />
+            </InvestigationSection>
+          )}
+
           <InvestigationSection
             icon={Archive}
             title="증거 보관함"
-            subtitle={`${view.evidence.length}개의 증거`}
+            subtitle={
+              discoveredEvidence.length
+                ? `${discoveredEvidence.length}개의 증거 확보`
+                : "아직 발견된 증거가 없습니다"
+            }
           >
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {view.evidence.map((e) => (
-                <EvidenceCard key={e.id} evidence={e} onOpen={setOpenEvidence} />
-              ))}
-            </div>
+            {discoveredEvidence.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border/60 bg-surface-elevated/50 py-8 text-center">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">
+                  현장을 조사하면 증거가 이곳에 보관됩니다.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {discoveredEvidence.map((e) => (
+                  <EvidenceCard
+                    key={e.id}
+                    evidence={e}
+                    onOpen={openEvidenceAndClearNew}
+                    isNew={newIds.has(e.id)}
+                  />
+                ))}
+              </div>
+            )}
           </InvestigationSection>
 
           <InvestigationSection
             icon={Users}
             title="용의자 목록"
-            subtitle={`${view.suspects.length}명의 용의자`}
+            subtitle={`${data.suspects.length}명의 용의자`}
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {view.suspects.map((s) => (
+              {data.suspects.map((s) => (
                 <SuspectCard key={s.id} suspect={s} onInterrogate={setOpenSuspect} />
               ))}
             </div>
@@ -108,10 +202,10 @@ function InvestigatePage() {
           <InvestigationSection
             icon={Clock}
             title="사건 타임라인"
-            subtitle={`${view.timeline.length}개의 확인된 사건`}
+            subtitle={`${data.timeline.length}개의 확인된 사건`}
           >
             <ol className="relative space-y-3 border-l border-border/60 pl-4">
-              {view.timeline.map((t, i) => (
+              {data.timeline.map((t, i) => (
                 <li key={i} className="text-sm">
                   <span className="absolute -left-1 mt-1.5 h-2 w-2 rounded-full bg-primary" />
                   <p className="text-[11px] uppercase tracking-wider text-primary/70">

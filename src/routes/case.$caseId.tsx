@@ -1,10 +1,10 @@
 import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
 import { TopBar } from "@/components/TopBar";
-import { getCaseById } from "@/lib/mock-cases";
+import { CaseEngine } from "@/engine";
 
 export const Route = createFileRoute("/case/$caseId")({
   loader: ({ params }) => {
-    const data = getCaseById(params.caseId);
+    const data = CaseEngine.get(params.caseId);
     if (!data) throw notFound();
     return { data };
   },
@@ -12,9 +12,12 @@ export const Route = createFileRoute("/case/$caseId")({
     meta: loaderData
       ? [
           { title: `${loaderData.data.title} — CaseNote` },
-          { name: "description", content: loaderData.data.shortDescription },
+          { name: "description", content: loaderData.data.subtitle },
         ]
-      : [{ title: "사건을 찾을 수 없음 — CaseNote" }, { name: "robots", content: "noindex" }],
+      : [
+          { title: "사건을 찾을 수 없음 — CaseNote" },
+          { name: "robots", content: "noindex" },
+        ],
   }),
   component: () => <Outlet />,
   notFoundComponent: () => (

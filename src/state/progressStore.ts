@@ -87,11 +87,15 @@ class ProgressStore {
 
 export const progressStore = new ProgressStore(new LocalStorageAdapter());
 
+// Stable default used for SSR + first hydration render to avoid mismatches.
+const SSR_SNAPSHOT: ProgressState = ProgressEngine.createInitial();
+const getServerSnapshot = (): ProgressState => SSR_SNAPSHOT;
+
 export function useProgress(): ProgressState {
   return useSyncExternalStore(
     progressStore.subscribe,
     progressStore.getState,
-    progressStore.getState,
+    getServerSnapshot,
   );
 }
 

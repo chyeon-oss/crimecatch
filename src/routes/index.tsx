@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CaseCard } from "@/components/CaseCard";
-import { CASES } from "@/lib/mock-cases";
+import { CaseEngine } from "@/engine";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
 function HomePage() {
+  const cases = CaseEngine.list();
   return (
     <div className="min-h-screen noir-grain">
       <section className="relative overflow-hidden border-b border-border/60">
@@ -37,11 +38,11 @@ function HomePage() {
       <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
         <div className="mb-5 flex items-end justify-between">
           <h2 className="font-display text-xl text-foreground sm:text-2xl">사건 파일</h2>
-          <span className="text-xs text-muted-foreground">총 {CASES.length}건</span>
+          <span className="text-xs text-muted-foreground">총 {cases.length}건</span>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {CASES.map((c) => (
+          {cases.map((c) => (
             <CaseCard key={c.id} data={c} />
           ))}
         </div>

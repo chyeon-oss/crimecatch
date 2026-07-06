@@ -39,7 +39,8 @@ export const Route = createFileRoute("/case/$caseId/investigate")({
 });
 
 function InvestigatePage() {
-  const { data } = Route.useLoaderData();
+  const loaderData = Route.useLoaderData() as { data: import("@/types").Case };
+  const { data } = loaderData;
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
   const [openSuspect, setOpenSuspect] = useState<Suspect | null>(null);
 

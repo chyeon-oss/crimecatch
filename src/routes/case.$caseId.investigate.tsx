@@ -45,6 +45,7 @@ import {
   ObjectivesEngine,
   StoryRuntime,
   SuspectIntelEngine,
+  TimelineEngine,
   createBoardState,
   type EvidenceSortMode,
   type SuspectDossier,

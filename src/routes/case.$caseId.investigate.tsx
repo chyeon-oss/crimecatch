@@ -37,6 +37,7 @@ import { InvestigationHUD } from "@/components/InvestigationHUD";
 import { ObjectivesPanel } from "@/components/ObjectivesPanel";
 import { SuspectDatabase } from "@/components/SuspectDatabase";
 import { SuspectProfileModal } from "@/components/SuspectProfileModal";
+import { InvestigationTimeline } from "@/components/InvestigationTimeline";
 
 import {
   CaseEngine,

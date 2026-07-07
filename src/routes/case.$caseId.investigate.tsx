@@ -9,8 +9,10 @@ import {
   LayoutGrid,
   Lightbulb,
   ListChecks,
+  Clock,
   Users,
 } from "lucide-react";
+
 import { useMemo, useState } from "react";
 import {
   ResizableHandle,
@@ -35,6 +37,7 @@ import { InvestigationHUD } from "@/components/InvestigationHUD";
 import { ObjectivesPanel } from "@/components/ObjectivesPanel";
 import { SuspectDatabase } from "@/components/SuspectDatabase";
 import { SuspectProfileModal } from "@/components/SuspectProfileModal";
+import { InvestigationTimeline } from "@/components/InvestigationTimeline";
 
 import {
   CaseEngine,
@@ -42,6 +45,7 @@ import {
   ObjectivesEngine,
   StoryRuntime,
   SuspectIntelEngine,
+  TimelineEngine,
   createBoardState,
   type EvidenceSortMode,
   type SuspectDossier,
@@ -198,6 +202,13 @@ function InvestigatePage() {
     (d) => d.status === "PRIME_SUSPECT",
   ).length;
 
+  const timelineEntries = useMemo(
+    () => TimelineEngine.derive({ case: data, discoveredIds: discoveredSet }),
+    [data, discoveredSet],
+  );
+  const timelineSummary = TimelineEngine.summary(timelineEntries);
+
+
   return (
     <div className="flex h-screen flex-col noir-grain">
       <TopBar
@@ -269,6 +280,23 @@ function InvestigatePage() {
                     onOpen={setOpenSuspect}
                   />
                 </InvestigationSection>
+
+                <InvestigationSection
+                  icon={Clock}
+                  title="Investigation Timeline"
+                  subtitle={`${timelineSummary.revealed} / ${timelineSummary.total} 시간대 확인${
+                    timelineSummary.hidden > 0
+                      ? ` · ${timelineSummary.hidden}개 미확인`
+                      : ""
+                  }`}
+                >
+                  <InvestigationTimeline
+                    entries={timelineEntries}
+                    onOpenEvidence={openEvidenceAndMarkRead}
+                  />
+                </InvestigationSection>
+
+
 
                 {data.crimeScene && (
                   <InvestigationSection

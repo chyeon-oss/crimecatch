@@ -28,4 +28,8 @@ export type {
   SuspectContradiction,
   SuspectIntelInputs,
 } from "./SuspectIntelEngine";
+export { TimelineEngine } from "./TimelineEngine";
+export type { TimelineEntry, TimelineInputs } from "./TimelineEngine";
+
+
 

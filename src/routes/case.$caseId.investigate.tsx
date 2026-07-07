@@ -202,6 +202,13 @@ function InvestigatePage() {
     (d) => d.status === "PRIME_SUSPECT",
   ).length;
 
+  const timelineEntries = useMemo(
+    () => TimelineEngine.derive({ case: data, discoveredIds: discoveredSet }),
+    [data, discoveredSet],
+  );
+  const timelineSummary = TimelineEngine.summary(timelineEntries);
+
+
   return (
     <div className="flex h-screen flex-col noir-grain">
       <TopBar

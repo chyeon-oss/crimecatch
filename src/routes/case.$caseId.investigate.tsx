@@ -281,6 +281,23 @@ function InvestigatePage() {
                   />
                 </InvestigationSection>
 
+                <InvestigationSection
+                  icon={Clock}
+                  title="Investigation Timeline"
+                  subtitle={`${timelineSummary.revealed} / ${timelineSummary.total} 시간대 확인${
+                    timelineSummary.hidden > 0
+                      ? ` · ${timelineSummary.hidden}개 미확인`
+                      : ""
+                  }`}
+                >
+                  <InvestigationTimeline
+                    entries={timelineEntries}
+                    onOpenEvidence={openEvidenceAndMarkRead}
+                  />
+                </InvestigationSection>
+
+
+
                 {data.crimeScene && (
                   <InvestigationSection
                     icon={Footprints}

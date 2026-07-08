@@ -374,6 +374,12 @@ function InvestigatePage() {
         }
       />
 
+      <SceneStageTimeline
+        stages={sceneStages}
+        currentSceneId={runtimeState.currentScene}
+        completedSceneIds={runtimeState.completedScenes}
+      />
+
       <InvestigationHUD
         case={data}
         storyState={storyState}

@@ -580,20 +580,18 @@ function InvestigatePage() {
                 )}
               </div>
             </div>
-          </div>
-        </ResizablePanel>
-
-        <ResizableHandle />
+        </main>
 
         {/* RIGHT: Detective Partner */}
-        <ResizablePanel defaultSize={24} minSize={18} maxSize={34}>
+        <aside className="w-full shrink-0 border-t border-border md:sticky md:top-0 md:max-h-screen md:w-[320px] md:min-w-[280px] md:overflow-y-auto md:border-l md:border-t-0">
           <PartnerPanel
             case={data}
             intelligenceState={intelligenceState}
             storyState={storyState}
           />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+        </aside>
+      </div>
+
 
       <EvidenceModal
         evidence={openEvidence}

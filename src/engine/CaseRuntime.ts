@@ -276,7 +276,7 @@ export function reduceRuntime(
             notebookQueue: pushNote(
               next.notebookQueue,
               "EVIDENCE_DISCOVERED",
-              ev ? `🔎 ${ev.title}` : `🔎 ${evId}`,
+              ev ? `🔎 ${ev.notebookEntry || ev.title}` : `🔎 ${evId}`,
             ),
           };
         }
@@ -294,7 +294,7 @@ export function reduceRuntime(
         notebookQueue: pushNote(
           state.notebookQueue,
           "EVIDENCE_DISCOVERED",
-          `🔎 ${ev.title}`,
+          `🔎 ${ev.notebookEntry || ev.title}`,
         ),
       };
       return applyDerived(def, next);

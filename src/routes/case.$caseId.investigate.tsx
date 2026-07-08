@@ -37,6 +37,7 @@ import { InvestigationTimeline } from "@/components/InvestigationTimeline";
 import { ObjectiveBanner } from "@/components/ObjectiveBanner";
 import { SceneStageTimeline, type SceneStage } from "@/components/SceneStageTimeline";
 import { SceneTransitionModal } from "@/components/SceneTransitionModal";
+import { RuntimeDebugPanel } from "@/components/RuntimeDebugPanel";
 
 import {
   CaseEngine,

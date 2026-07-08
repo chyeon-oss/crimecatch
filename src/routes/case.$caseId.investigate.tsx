@@ -40,6 +40,8 @@ import { SuspectDatabase } from "@/components/SuspectDatabase";
 import { SuspectProfileModal } from "@/components/SuspectProfileModal";
 import { InvestigationTimeline } from "@/components/InvestigationTimeline";
 import { ObjectiveBanner } from "@/components/ObjectiveBanner";
+import { SceneStageTimeline, type SceneStage } from "@/components/SceneStageTimeline";
+import { SceneTransitionModal } from "@/components/SceneTransitionModal";
 
 import {
   CaseEngine,

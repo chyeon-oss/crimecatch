@@ -64,7 +64,11 @@ export const victim = {
   ],
   // Engine-required field; kept from the existing case definition.
   causeOfDeath: "둔기에 의한 두부 손상 (좌측 측두부, 단일 타격 추정)",
-} satisfies Victim;
+};
+
+// Runtime type check: the engine expects `victim` to satisfy the Victim shape.
+const _runtimeVictimTypeCheck: Victim = victim;
+void _runtimeVictimTypeCheck;
 
 /** Non-spoiler contextual notes surfaced alongside the victim profile. */
 export const victimContext = {

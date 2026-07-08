@@ -376,14 +376,23 @@ export const CaseRuntime = {
     return ids
       .map((id) => def.hotspots.find((h) => h.id === id))
       .filter((h): h is RuntimeHotspot => !!h)
-      .map((h) => ({
-        ...h,
-        status: s.completedScenes.includes(h.id)
+      .map((h) => {
+        // A hotspot is COMPLETED once every piece of evidence it reveals has
+        // been discovered. This is derived (not stored) so we don't need to
+        // extend runtime state with a completedHotspots set. It intentionally
+        // does NOT key off completedScenes — scene completion and hotspot
+        // completion are independent concerns.
+        const revealed = h.revealsEvidenceIds;
+        const allRevealed =
+          revealed.length > 0 &&
+          revealed.every((id) => s.discoveredEvidence.includes(id));
+        const status: RuntimeHotspot["status"] = allRevealed
           ? "COMPLETED"
           : s.unlockedHotspots.includes(h.id)
             ? "AVAILABLE"
-            : "LOCKED",
-      }));
+            : "LOCKED";
+        return { ...h, status };
+      });
   },
   drainNotebook(s: CaseRuntimeState): [NotebookAutoEntry[], CaseRuntimeState] {
     return [s.notebookQueue, { ...s, notebookQueue: [] }];

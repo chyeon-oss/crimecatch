@@ -557,3 +557,45 @@ function SubmittedScreen({
     </div>
   );
 }
+
+function BoardConnectionsRecall({ case: c }: { case: Case }) {
+  const board = useMemo(() => readBoard(c.id), [c.id]);
+  if (board.connections.length === 0) return null;
+
+  const labelOf = (ep: BoardEndpoint): string => {
+    if (ep.kind === "evidence")
+      return c.evidence.find((e) => e.id === ep.id)?.title ?? "(증거)";
+    if (ep.kind === "suspect")
+      return c.suspects.find((s) => s.id === ep.id)?.name ?? "(용의자)";
+    return c.questions?.find((q) => q.id === ep.id)?.text ?? "(질문)";
+  };
+
+  return (
+    <div className="mb-4 rounded-xl border border-border/60 bg-surface-elevated/40 p-4">
+      <p className="text-[10px] uppercase tracking-[0.28em] text-primary/80">
+        추리 보드 · {board.connections.length}개 연결
+      </p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">
+        수사 중 직접 이어둔 관계입니다. 이 흐름을 근거로 삼아 서술해도 좋습니다.
+      </p>
+      <ul className="mt-3 space-y-1.5">
+        {board.connections.map((con) => (
+          <li
+            key={con.id}
+            className="rounded-md border border-border/50 bg-surface/50 px-2.5 py-1.5 text-[12px] text-foreground"
+          >
+            <span className="text-muted-foreground">{labelOf(con.from)}</span>
+            <span className="mx-1.5 text-primary/70">→</span>
+            <span className="text-muted-foreground">{labelOf(con.to)}</span>
+            {con.memo && (
+              <span className="mt-0.5 block text-[11px] italic text-muted-foreground/80">
+                “{con.memo}”
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+

@@ -357,7 +357,7 @@ function InvestigatePage() {
 
 
   return (
-    <div className="flex h-screen flex-col noir-grain">
+    <div className="flex min-h-screen flex-col noir-grain">
       <TopBar
         to="/case/$caseId"
         label="사건 정보로"

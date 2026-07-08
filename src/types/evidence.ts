@@ -39,4 +39,10 @@ export interface Evidence {
   relatedTimelineTimes?: string[];
   /** Free-form tags surfaced by the evidence locker for filtering. */
   tags?: string[];
+  /** Player-facing observation hint surfaced by the investigation UI. */
+  observation?: string;
+  /** Auto-generated notebook entry text when this evidence is discovered. */
+  notebookEntry?: string;
+  /** Question text that this evidence is designed to unlock. */
+  unlockedQuestion?: string;
 }

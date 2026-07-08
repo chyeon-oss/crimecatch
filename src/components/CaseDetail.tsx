@@ -51,7 +51,9 @@ function Meta({
       <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
-      <span className="text-sm font-medium text-foreground">{value}</span>
+      <span className="text-sm font-medium leading-relaxed text-foreground break-words">
+        {value}
+      </span>
     </div>
   );
 }

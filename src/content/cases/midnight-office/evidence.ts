@@ -21,13 +21,17 @@ export const evidence: Evidence[] = [
     id: "e2",
     title: "꺼진 CCTV 기록",
     category: "CCTV",
-    summary: "사건 직전 30분간 12층 전체 CCTV가 정전으로 꺼져 있었다.",
-    detail: "정전은 12층에만 국한되었고, 배전반에 수동 조작 흔적이 남아 있다.",
+    summary: "사건 시간대 일부가 비어 있는 CCTV 관리 기록.",
+    detail:
+      "기획전략실 복도 CCTV는 사건 전후 대부분 정상적으로 기록되어 있었지만, 특정 시간대에 영상 공백이 확인된다. 관리 콘솔에는 수동 삭제 흔적은 보이지 않는다. 다만 해당 공백이 시스템 오류인지, 설정된 자동 처리인지 추가 확인이 필요하다.",
     location: "관제실 서버",
     unlockOrder: 0,
     importance: "IMPORTANT",
+    observation: "영상이 사라진 것처럼 보이지만, 삭제라고 단정할 수는 없다.",
+    notebookEntry:
+      "CCTV 기록 확인. 특정 시간대 영상 공백이 있으나 수동 삭제 흔적은 보이지 않는다.",
+    unlockedQuestion: "CCTV 공백은 누가 만든 것일까, 아니면 원래 존재하던 구간일까?",
     relatedEvidenceIds: ["e6"],
-    relatedSuspectIds: ["s1"],
     relatedTimelineTimes: ["20:05", "20:30"],
   },
   {

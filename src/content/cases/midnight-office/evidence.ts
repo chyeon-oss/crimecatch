@@ -12,8 +12,7 @@ export const evidence: Evidence[] = [
     unlockOrder: 0,
     importance: "IMPORTANT",
     observation: "컵이 깨진 방식과 주변 흔적이 자연스럽지 않다.",
-    notebookEntry:
-      "깨진 머그컵 발견. 컵은 깨져 있지만 주변에 액체가 크게 흘러 있지 않다.",
+    notebookEntry: "깨진 머그컵 발견. 컵은 깨져 있지만 주변에 액체가 크게 흘러 있지 않다.",
     unlockedQuestion: "왜 컵은 깨졌는데 액체 흔적은 거의 없을까?",
     relatedEvidenceIds: ["e5"],
     relatedTimelineTimes: ["23:50"],
@@ -59,8 +58,7 @@ export const evidence: Evidence[] = [
     unlockOrder: 1,
     importance: "IMPORTANT",
     observation: "문은 잠겨 있었지만, 그것만으로 외부 침입이 없었다고 판단할 수는 없다.",
-    notebookEntry:
-      "출입문 확인. 강제 침입 흔적은 없으나 출입 기록 확인이 필요하다.",
+    notebookEntry: "출입문 확인. 강제 침입 흔적은 없으나 출입 기록 확인이 필요하다.",
     unlockedQuestion: "문은 정말 안에서 잠긴 것이 맞을까?",
     relatedSuspectIds: ["s1"],
   },
@@ -76,8 +74,7 @@ export const evidence: Evidence[] = [
     unlockCondition: { requiresEvidenceIds: ["e3"] },
     importance: "CRITICAL",
     observation: "현장에서 보이는 상황과 혈흔의 양이 직관적으로 맞지 않는다.",
-    notebookEntry:
-      "책상 아래 혈흔 확인. 혈흔은 존재하지만 양이 많지 않고, 주변 흔적도 제한적이다.",
+    notebookEntry: "책상 아래 혈흔 확인. 혈흔은 존재하지만 양이 많지 않고, 주변 흔적도 제한적이다.",
     unlockedQuestion: "피해자는 정말 이 자리에서 치명상을 입은 것일까?",
     relatedEvidenceIds: ["e1"],
     relatedSuspectIds: ["s1"],
@@ -87,8 +84,7 @@ export const evidence: Evidence[] = [
     title: "정전 기록",
     category: "DOCUMENT",
     summary: "12층 배전반에 수동 조작 흔적.",
-    detail:
-      "정전 시각 직전 배전반 앞에 접근한 인물은 박민수. 출입 카드 로그로 확인됨.",
+    detail: "정전 시각 직전 배전반 앞에 접근한 인물은 박민수. 출입 카드 로그로 확인됨.",
     location: "12층 배전반",
     unlockOrder: 2,
     unlockCondition: { requiresEvidenceIds: ["e2"] },

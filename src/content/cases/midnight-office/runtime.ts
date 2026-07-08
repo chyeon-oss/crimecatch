@@ -28,8 +28,7 @@ const evidence: RuntimeEvidence[] = [
     id: "e1",
     title: "깨진 머그컵",
     description: "피해자 책상 오른쪽 아래에서 발견된 깨진 머그컵.",
-    notebookEntry:
-      "깨진 머그컵 발견. 컵은 깨져 있지만 주변에 액체가 크게 흘러 있지 않다.",
+    notebookEntry: "깨진 머그컵 발견. 컵은 깨져 있지만 주변에 액체가 크게 흘러 있지 않다.",
     category: "OBJECT",
     importance: "IMPORTANT",
     location: "피해자 책상",
@@ -52,8 +51,7 @@ const evidence: RuntimeEvidence[] = [
     id: "e5",
     title: "책상 아래 혈흔",
     description: "회의실 바닥과 책상 아래쪽에서 확인된 작은 혈흔.",
-    notebookEntry:
-      "책상 아래 혈흔 확인. 혈흔은 존재하지만 양이 많지 않고, 주변 흔적도 제한적이다.",
+    notebookEntry: "책상 아래 혈흔 확인. 혈흔은 존재하지만 양이 많지 않고, 주변 흔적도 제한적이다.",
     category: "FORENSIC",
     importance: "CRITICAL",
     location: "회의실 바닥",
@@ -65,8 +63,7 @@ const evidence: RuntimeEvidence[] = [
     id: "e4",
     title: "잠긴 출입문",
     description: "사건 당시 닫혀 있던 기획전략실 출입문.",
-    notebookEntry:
-      "출입문 확인. 강제 침입 흔적은 없으나 출입 기록 확인이 필요하다.",
+    notebookEntry: "출입문 확인. 강제 침입 흔적은 없으나 출입 기록 확인이 필요하다.",
     category: "OBJECT",
     importance: "IMPORTANT",
     location: "출입문",
@@ -209,8 +206,7 @@ const scenes: Scene[] = [
   {
     id: "scene-01",
     title: "SCENE 01 — 사건 현장 도착",
-    description:
-      "심야의 12층 사무실. 첫 인상은 정돈되어 있으나, 자세히 보면 곳곳이 어긋나 있다.",
+    description: "심야의 12층 사무실. 첫 인상은 정돈되어 있으나, 자세히 보면 곳곳이 어긋나 있다.",
     objective: "사건 현장을 둘러보고 첫 번째 단서를 확보하세요.",
     status: "INVESTIGATION",
     availableHotspotIds: ["hs-victim-desk", "hs-meeting-floor", "hs-door"],
@@ -222,8 +218,7 @@ const scenes: Scene[] = [
   {
     id: "scene-02",
     title: "SCENE 02 — 이상한 시간대",
-    description:
-      "확보한 증거들이 하나의 시간대를 가리킨다. 정전, 꺼진 CCTV, 멈춘 시계 — 우연일까.",
+    description: "확보한 증거들이 하나의 시간대를 가리킨다. 정전, 꺼진 CCTV, 멈춘 시계 — 우연일까.",
     objective: "확보한 증거를 분석하고 사건의 이상한 시간대를 확인하세요.",
     status: "ANALYSIS",
     availableHotspotIds: ["hs-cctv", "hs-breaker", "hs-meeting-clock"],
@@ -236,8 +231,7 @@ const scenes: Scene[] = [
   {
     id: "scene-03",
     title: "SCENE 03 — 용의자 조사",
-    description:
-      "네 사람이 남았다. 진술을 확인하고, 어긋난 지점을 찾을 시간이다.",
+    description: "네 사람이 남았다. 진술을 확인하고, 어긋난 지점을 찾을 시간이다.",
     objective: "용의자들의 진술을 확인하고 모순되는 부분을 찾으세요.",
     status: "INTERROGATION",
     availableHotspotIds: [],

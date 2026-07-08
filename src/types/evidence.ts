@@ -1,16 +1,6 @@
-export type EvidenceCategory =
-  | "PHOTO"
-  | "DOCUMENT"
-  | "FORENSIC"
-  | "PHONE"
-  | "CCTV"
-  | "OBJECT";
+export type EvidenceCategory = "PHOTO" | "DOCUMENT" | "FORENSIC" | "PHONE" | "CCTV" | "OBJECT";
 
-export type EvidenceImportance =
-  | "COMMON"
-  | "UNCOMMON"
-  | "IMPORTANT"
-  | "CRITICAL";
+export type EvidenceImportance = "COMMON" | "UNCOMMON" | "IMPORTANT" | "CRITICAL";
 
 export type EvidenceState = "NEW" | "READ" | "CONNECTED";
 

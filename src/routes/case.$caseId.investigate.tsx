@@ -706,3 +706,6 @@ function InvestigatePage() {
           onContinue={() => setTransition(null)}
         />
       )}
+    </div>
+  );
+}

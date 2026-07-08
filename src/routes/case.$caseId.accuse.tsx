@@ -22,6 +22,19 @@ import {
 } from "@/data/deductionOptions";
 import type { Case, Evidence, Suspect } from "@/types";
 import { readBoard, type BoardEndpoint } from "@/lib/detectiveBoard";
+import { answerKey as midnightOfficeAnswerKey } from "@/content/cases/midnight-office/_spoilers";
+import {
+  scoreDeduction,
+  type DeductionScore,
+  type DeductionRank,
+} from "@/lib/deductionScoring";
+import type { CaseAnswerKey } from "@/content/cases/midnight-office/_spoilers";
+
+const CASE_ANSWER_KEYS: Record<string, CaseAnswerKey> = {
+  "midnight-office": midnightOfficeAnswerKey,
+};
+
+
 
 export const Route = createFileRoute("/case/$caseId/accuse")({
   head: () => ({
@@ -70,6 +83,7 @@ function AccusePage() {
   const [evidenceId, setEvidenceId] = useState<string | null>(null);
   const [reasoning, setReasoning] = useState("");
   const [submitted, setSubmitted] = useState<DeductionPayload | null>(null);
+  const [result, setResult] = useState<DeductionScore | null>(null);
 
   const canAdvance: Record<StepId, boolean> = {
     1: !!suspectId,
@@ -84,10 +98,25 @@ function AccusePage() {
   const goBack = () => setStep((s) => (s > 1 ? ((s - 1) as StepId) : s));
 
   const submit = (payload: DeductionPayload) => {
-    // Intentionally does NOT compute correctness — killer verification is
-    // wired up in a later pass. Store the payload locally so we can display
-    // a confirmation screen and log it for now.
     if (import.meta.env.DEV) console.log("[deduction] submit", payload);
+    const key = CASE_ANSWER_KEYS[data.id] ?? CASE_ANSWER_KEYS[data.slug];
+    if (key) {
+      const board = readBoard(data.id);
+      setResult(
+        scoreDeduction(
+          {
+            suspectId: payload.suspectId,
+            motiveId: payload.motiveId,
+            methodId: payload.methodId,
+            evidenceId: payload.evidenceId,
+            connections: board.connections,
+          },
+          key,
+        ),
+      );
+    } else {
+      setResult(null);
+    }
     setSubmitted(payload);
   };
 
@@ -101,6 +130,7 @@ function AccusePage() {
       reasoning: reasoning.trim(),
     });
   };
+
 
   const suspectById = (id: string | null) =>
     data.suspects.find((s) => s.id === id) ?? null;
@@ -118,7 +148,9 @@ function AccusePage() {
         motive={optionById(MOTIVE_OPTIONS, submitted.motiveId)}
         method={optionById(METHOD_OPTIONS, submitted.methodId)}
         evidence={evidenceByIdLocal(submitted.evidenceId)}
+        result={result}
       />
+
     );
   }
 
@@ -516,6 +548,7 @@ function SubmittedScreen({
   motive,
   method,
   evidence,
+  result,
 }: {
   case: Case;
   payload: DeductionPayload;
@@ -523,28 +556,33 @@ function SubmittedScreen({
   motive: DeductionOption | null;
   method: DeductionOption | null;
   evidence: Evidence | null;
+  result: DeductionScore | null;
 }) {
   return (
     <div className="min-h-screen noir-grain">
       <TopBar to="/case/$caseId/investigate" label="수사로 돌아가기" />
-      <main className="mx-auto max-w-2xl px-4 pb-24 pt-12 text-center">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-primary/40 bg-primary/10 text-primary">
-          <CheckCircle2 className="h-6 w-6" />
+      <main className="mx-auto max-w-2xl px-4 pb-24 pt-12">
+        <div className="text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-primary/40 bg-primary/10 text-primary">
+            <CheckCircle2 className="h-6 w-6" />
+          </div>
+          <p className="mt-6 text-[11px] uppercase tracking-[0.28em] text-primary/80">
+            Deduction Result
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-semibold text-foreground">
+            추리 결과
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground/80">{c.title}</p>
         </div>
-        <p className="mt-6 text-[11px] uppercase tracking-[0.28em] text-primary/80">
-          Deduction Submitted
-        </p>
-        <h1 className="mt-2 font-display text-3xl font-semibold text-foreground">
-          추리를 제출했습니다
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
-          결과 판정 로직은 다음 단계에서 연결됩니다. 지금은 제출한 내용만 기록됩니다.
-        </p>
+
+        {result && <ResultCard result={result} />}
 
         <div className="mt-8 text-left">
+          <p className="mb-2 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+            제출한 답안
+          </p>
           <SummaryList
             rows={[
-              { label: "사건", value: c.title },
               { label: "범인", value: suspect?.name ?? payload.suspectId, hint: suspect?.occupation },
               { label: "동기", value: motive?.label ?? payload.motiveId, hint: motive?.description },
               { label: "범행 방법", value: method?.label ?? payload.methodId, hint: method?.description },
@@ -553,10 +591,101 @@ function SubmittedScreen({
             ]}
           />
         </div>
+
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <button
+            type="button"
+            disabled
+            aria-disabled
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary/80 opacity-70"
+          >
+            <FileSearch className="h-4 w-4" />
+            사건 재구성 보기
+          </button>
+          <p className="text-[11px] text-muted-foreground/70">
+            전체 진실 재구성은 다음 챕터에서 공개됩니다.
+          </p>
+        </div>
       </main>
     </div>
   );
 }
+
+const RANK_TONE: Record<DeductionRank, string> = {
+  S: "border-amber-400/50 bg-amber-500/10 text-amber-200",
+  A: "border-emerald-400/50 bg-emerald-500/10 text-emerald-200",
+  B: "border-sky-400/50 bg-sky-500/10 text-sky-200",
+  C: "border-rose-400/50 bg-rose-500/10 text-rose-200",
+};
+
+function ResultCard({ result }: { result: DeductionScore }) {
+  const { score, rank, feedback, breakdown } = result;
+  const rows: { label: string; earned: number; max: number; extra?: string }[] = [
+    { label: "범인 지목", earned: breakdown.suspect.earned, max: breakdown.suspect.max },
+    { label: "동기", earned: breakdown.motive.earned, max: breakdown.motive.max },
+    { label: "범행 방법", earned: breakdown.method.earned, max: breakdown.method.max },
+    { label: "결정적 증거", earned: breakdown.evidence.earned, max: breakdown.evidence.max },
+    {
+      label: "추리 보드 연결",
+      earned: breakdown.connections.earned,
+      max: breakdown.connections.max,
+      extra: `${breakdown.connections.matched}/${breakdown.connections.required} 연결`,
+    },
+  ];
+  return (
+    <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-noir)]">
+      <div className="flex items-center gap-5">
+        <div
+          className={`grid h-20 w-20 shrink-0 place-items-center rounded-2xl border font-display text-4xl ${RANK_TONE[rank]}`}
+        >
+          {rank}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+            Final Score
+          </p>
+          <p className="mt-1 font-display text-4xl font-semibold text-foreground tabular-nums">
+            {score}
+            <span className="ml-1 text-sm text-muted-foreground">/ 100</span>
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-foreground/90">
+            {feedback}
+          </p>
+        </div>
+      </div>
+
+      <ul className="mt-5 space-y-1.5">
+        {rows.map((r) => {
+          const pct = r.max === 0 ? 0 : (r.earned / r.max) * 100;
+          return (
+            <li key={r.label} className="rounded-lg border border-border/60 bg-surface-elevated/40 p-3">
+              <div className="flex items-baseline justify-between gap-3 text-[12px]">
+                <span className="text-muted-foreground">{r.label}</span>
+                <span className="tabular-nums text-foreground">
+                  {r.earned}
+                  <span className="text-muted-foreground/70"> / {r.max}</span>
+                  {r.extra && (
+                    <span className="ml-2 text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                      {r.extra}
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-border/50">
+                <div
+                  className="h-full rounded-full bg-primary/70 transition-all"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+
 
 function BoardConnectionsRecall({ case: c }: { case: Case }) {
   const board = useMemo(() => readBoard(c.id), [c.id]);

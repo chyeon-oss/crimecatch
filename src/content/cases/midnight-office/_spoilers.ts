@@ -59,3 +59,30 @@ export const solution = {
     },
   ],
 };
+
+/**
+ * PRIVATE answer key for Final Deduction scoring.
+ * Consumed only by src/lib/deductionScoring.ts AFTER the player submits.
+ * MUST NEVER be rendered in the UI before submission.
+ */
+export interface CaseAnswerKey {
+  correctSuspectId: string;
+  correctMotiveId: string;
+  correctMethodId: string;
+  decisiveEvidenceIds: string[];
+  /** Endpoint pairs formatted as "kind:id" (evidence|question|suspect). Order-insensitive. */
+  requiredConnectionPairs: { a: string; b: string }[];
+}
+
+export const answerKey: CaseAnswerKey = {
+  correctSuspectId: "s1",
+  correctMotiveId: "motive-revenge",
+  correctMethodId: "method-blunt",
+  decisiveEvidenceIds: ["e2", "e5", "e6"],
+  requiredConnectionPairs: [
+    { a: "evidence:e6", b: "suspect:s1" },
+    { a: "evidence:e5", b: "suspect:s1" },
+    { a: "evidence:e2", b: "suspect:s1" },
+  ],
+};
+

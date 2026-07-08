@@ -1,27 +1,89 @@
 import type { Victim } from "@/types/case";
 
-export const victim: Victim = {
-  name: "김도현",
-  age: 42,
-  occupation: "개발본부 개발1팀장",
-  department: "노바코어 개발본부 개발1팀",
+/**
+ * Player-facing victim profile for CASE001: midnight-office.
+ *
+ * All fields below are visible to the player and contain no spoilers.
+ * The `causeOfDeath` field is preserved only because the engine type requires it.
+ */
+export const victim = {
+  name: "한도윤",
+  gender: "남성",
+  age: 38,
+  occupation: "기획전략실 팀장",
+  tenure: "8년 4개월",
+  employeeSince: "2018년",
+  profile:
+    "한도윤은 블루웨이브 솔루션즈 창립 초기부터 함께한 핵심 직원이다. 문제를 빠르게 파악하고 프로젝트를 정리하는 능력이 뛰어나 여러 대형 사업을 성공적으로 이끌었다. 반면 원칙을 지나치게 중시한다는 평가도 있었으며, 업무에서는 타협을 거의 하지 않는 것으로 알려져 있다.",
+  companyReputation: {
+    superior: "믿고 맡길 수 있는 사람.",
+    colleague: "능력은 인정하지만 같이 일하기는 쉽지 않다.",
+    junior: "무섭지만 많이 배우게 되는 사람.",
+  },
+  recentWork: [
+    "신규 사업 TF 총괄",
+    "연간 조직 개편 검토",
+    "프로젝트 예산 승인",
+    "인사평가 검토",
+  ],
+  recentTwoWeeks: [
+    "야근 증가",
+    "외부 미팅 다수",
+    "회의실 예약 빈도 증가",
+    "퇴근 시간 불규칙",
+  ],
+  clothingAtIncident: [
+    "흰 셔츠",
+    "네이비 슬랙스",
+    "검정 가죽 벨트",
+    "손목시계 착용",
+  ],
+  personalBelongings: [
+    "회사 출입카드",
+    "스마트폰",
+    "무선 이어폰",
+    "검정 볼펜",
+    "다이어리",
+  ],
+  deskItems: ["노트북", "머그컵", "서류철", "메모지", "명함 케이스"],
+  health: "특이 병력 없음. 복용 중인 약 없음.",
+  family: "배우자 1명. 자녀 없음.",
+  recentImpressions: [
+    "평소보다 말수가 적었다.",
+    "며칠 전부터 잠을 거의 못 잔 것 같았다.",
+    "무언가를 계속 고민하는 표정이었다.",
+  ],
+  lastOfficialSchedule: "21:00 프로젝트 검토 회의",
+  lastConfirmedLocation: "블루웨이브 솔루션즈 12층 기획전략실",
+  firstReportTime: "22:31",
+  firstReport: "회의실 근처에서 사람이 쓰러져 있습니다.",
+  initialPoliceNotes: [
+    "외부 침입 흔적은 아직 확인되지 않음.",
+    "현장은 보존 중.",
+    "사건 관계자들은 건물 내 대기 중.",
+  ],
+  // Engine-required field; kept from the existing case definition.
   causeOfDeath: "둔기에 의한 두부 손상 (좌측 측두부, 단일 타격 추정)",
-  biography:
-    "카이스트 전산학과 졸업 후 대기업 SI에서 8년을 근무하고 3년 전 노바코어 경력직으로 합류. 합류 1년 만에 팀장으로 승진했고, 회사의 주력 결제 플랫폼 리뉴얼 프로젝트를 총괄해 왔다. 사내에서는 실력은 인정받지만 회의 자리에서 팀원을 강하게 몰아붙이는 스타일로 알려져 있었다.",
-  portraitPrompt:
-    "40대 초반 한국 남성, 짧게 다듬은 머리와 무테 안경, 짙은 회색 셔츠 차림. 회의실 화이트보드를 배경으로 팔짱을 낀 자세, 형광등 아래에서 촬영된 사내 인물 사진 스타일, 자연광이 절제된 다큐멘터리톤 포토그래피.",
-  personalNotes:
-    "이혼 3년 차, 초등학생 딸의 양육권은 전 배우자에게 있음. 최근 6개월간 야근 빈도가 눈에 띄게 늘었고 주말에도 사무실에 자주 나왔다. 회사 앞 헬스장 월정액을 결제했으나 지난 두 달간 출입 기록은 없다.",
 };
+
+// Runtime type check: the engine expects `victim` to satisfy the Victim shape.
+const _runtimeVictimTypeCheck: Victim = victim;
+void _runtimeVictimTypeCheck;
 
 /** Non-spoiler contextual notes surfaced alongside the victim profile. */
 export const victimContext = {
-  companyReputation:
-    "실력은 확실하지만 회의에서 팀원을 강하게 몰아붙이는 스타일로 사내 평이 갈렸다.",
-  recentWork:
-    "결제 플랫폼 리뉴얼 프로젝트 총괄. 사건 전 2주간 스펙 변경 이슈로 여러 팀과 마찰이 있었다.",
-  personalBelongings:
-    "책상 위 무테 안경, 개인 노트북, 사내 출입증, 반쯤 마신 아메리카노 머그컵.",
-  initialPoliceNotes:
-    "외상은 좌측 측두부 단일 타격. 방어흔은 확인되지 않음. 사망 추정 시각은 20시 10분 ~ 20시 30분 구간.",
+  companyReputation: victim.companyReputation,
+  recentWork: victim.recentWork,
+  recentTwoWeeks: victim.recentTwoWeeks,
+  clothingAtIncident: victim.clothingAtIncident,
+  personalBelongings: victim.personalBelongings,
+  deskItems: victim.deskItems,
+  health: victim.health,
+  family: victim.family,
+  recentImpressions: victim.recentImpressions,
+  lastOfficialSchedule: victim.lastOfficialSchedule,
+  lastConfirmedLocation: victim.lastConfirmedLocation,
+  firstReportTime: victim.firstReportTime,
+  firstReport: victim.firstReport,
+  initialPoliceNotes: victim.initialPoliceNotes,
 };

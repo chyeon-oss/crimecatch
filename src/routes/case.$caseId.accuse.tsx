@@ -83,6 +83,7 @@ function AccusePage() {
   const [evidenceId, setEvidenceId] = useState<string | null>(null);
   const [reasoning, setReasoning] = useState("");
   const [submitted, setSubmitted] = useState<DeductionPayload | null>(null);
+  const [result, setResult] = useState<DeductionScore | null>(null);
 
   const canAdvance: Record<StepId, boolean> = {
     1: !!suspectId,
@@ -97,10 +98,25 @@ function AccusePage() {
   const goBack = () => setStep((s) => (s > 1 ? ((s - 1) as StepId) : s));
 
   const submit = (payload: DeductionPayload) => {
-    // Intentionally does NOT compute correctness — killer verification is
-    // wired up in a later pass. Store the payload locally so we can display
-    // a confirmation screen and log it for now.
     if (import.meta.env.DEV) console.log("[deduction] submit", payload);
+    const key = CASE_ANSWER_KEYS[data.id] ?? CASE_ANSWER_KEYS[data.slug];
+    if (key) {
+      const board = readBoard(data.id);
+      setResult(
+        scoreDeduction(
+          {
+            suspectId: payload.suspectId,
+            motiveId: payload.motiveId,
+            methodId: payload.methodId,
+            evidenceId: payload.evidenceId,
+            connections: board.connections,
+          },
+          key,
+        ),
+      );
+    } else {
+      setResult(null);
+    }
     setSubmitted(payload);
   };
 
@@ -114,6 +130,7 @@ function AccusePage() {
       reasoning: reasoning.trim(),
     });
   };
+
 
   const suspectById = (id: string | null) =>
     data.suspects.find((s) => s.id === id) ?? null;

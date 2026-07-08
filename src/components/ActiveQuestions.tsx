@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { HelpCircle, CheckCircle2 } from "lucide-react";
 import type { Case } from "@/types";
 import { IntelligenceEngine, type IntelligenceState } from "@/engine";
@@ -9,6 +10,29 @@ interface Props {
 
 export function ActiveQuestions({ case: c, state }: Props) {
   const items = IntelligenceEngine.visibleQuestions(c, state);
+  const prevIdsRef = useRef<Set<string> | null>(null);
+  const [newlyUnlocked, setNewlyUnlocked] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const currentActiveIds = new Set(
+      items.filter((i) => i.status === "active").map((i) => i.question.id),
+    );
+    const prev = prevIdsRef.current;
+    if (prev) {
+      const fresh = new Set<string>();
+      currentActiveIds.forEach((id) => {
+        if (!prev.has(id)) fresh.add(id);
+      });
+      if (fresh.size > 0) {
+        setNewlyUnlocked(fresh);
+        const t = setTimeout(() => setNewlyUnlocked(new Set()), 1400);
+        prevIdsRef.current = currentActiveIds;
+        return () => clearTimeout(t);
+      }
+    }
+    prevIdsRef.current = currentActiveIds;
+  }, [items]);
+
 
   if (items.length === 0) {
     return (

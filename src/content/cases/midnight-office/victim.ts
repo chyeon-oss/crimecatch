@@ -6,7 +6,7 @@ import type { Victim } from "@/types/case";
  * All fields below are visible to the player and contain no spoilers.
  * The `causeOfDeath` field is preserved only because the engine type requires it.
  */
-export const victim: Victim = {
+export const victim = {
   name: "한도윤",
   gender: "남성",
   age: 38,
@@ -64,7 +64,7 @@ export const victim: Victim = {
   ],
   // Engine-required field; kept from the existing case definition.
   causeOfDeath: "둔기에 의한 두부 손상 (좌측 측두부, 단일 타격 추정)",
-};
+} satisfies Victim;
 
 /** Non-spoiler contextual notes surfaced alongside the victim profile. */
 export const victimContext = {

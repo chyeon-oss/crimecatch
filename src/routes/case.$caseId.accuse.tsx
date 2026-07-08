@@ -22,11 +22,18 @@ import {
 } from "@/data/deductionOptions";
 import type { Case, Evidence, Suspect } from "@/types";
 import { readBoard, type BoardEndpoint } from "@/lib/detectiveBoard";
-import { answerKey } from "@/content/cases/midnight-office/_spoilers";
+import { answerKey as midnightOfficeAnswerKey } from "@/content/cases/midnight-office/_spoilers";
 import {
   scoreDeduction,
   type DeductionScore,
+  type DeductionRank,
 } from "@/lib/deductionScoring";
+import type { CaseAnswerKey } from "@/content/cases/midnight-office/_spoilers";
+
+const CASE_ANSWER_KEYS: Record<string, CaseAnswerKey> = {
+  "midnight-office": midnightOfficeAnswerKey,
+};
+
 
 
 export const Route = createFileRoute("/case/$caseId/accuse")({

@@ -40,6 +40,8 @@ import { SuspectDatabase } from "@/components/SuspectDatabase";
 import { SuspectProfileModal } from "@/components/SuspectProfileModal";
 import { InvestigationTimeline } from "@/components/InvestigationTimeline";
 import { ObjectiveBanner } from "@/components/ObjectiveBanner";
+import { SceneStageTimeline, type SceneStage } from "@/components/SceneStageTimeline";
+import { SceneTransitionModal } from "@/components/SceneTransitionModal";
 
 import {
   CaseEngine,
@@ -312,6 +314,53 @@ function InvestigatePage() {
 
   const canAccuse = currentScene?.status === "ACCUSATION";
 
+  const stageLabelFor = (status: string, fallback: string): string => {
+    switch (status) {
+      case "INVESTIGATION":
+        return "현장 도착";
+      case "ANALYSIS":
+        return "증거 분석";
+      case "INTERROGATION":
+        return "용의자 조사";
+      case "ACCUSATION":
+      case "RECONSTRUCTION":
+        return "최종 추리";
+      default:
+        return fallback;
+    }
+  };
+  const sceneStages: SceneStage[] = useMemo(
+    () =>
+      runtimeDef.scenes.map((s) => ({
+        id: s.id,
+        label: stageLabelFor(s.status, s.title.replace(/^SCENE\s*\d+\s*—\s*/i, "")),
+      })),
+    [runtimeDef.scenes],
+  );
+
+  // Detect automatic scene transitions to surface a "수사 단계 갱신" modal.
+  const prevSceneIdRef = useRef<string | null>(runtimeState.currentScene);
+  const [transition, setTransition] = useState<{
+    prevTitle: string | null;
+    newTitle: string | null;
+    newObjective: string | null;
+  } | null>(null);
+  useEffect(() => {
+    const prevId = prevSceneIdRef.current;
+    const curId = runtimeState.currentScene;
+    if (prevId && curId && prevId !== curId) {
+      const prev = runtimeDef.scenes.find((s) => s.id === prevId) ?? null;
+      const next = runtimeDef.scenes.find((s) => s.id === curId) ?? null;
+      setTransition({
+        prevTitle: prev?.title ?? null,
+        newTitle: next?.title ?? null,
+        newObjective: next?.objective ?? runtimeState.currentObjective ?? null,
+      });
+    }
+    prevSceneIdRef.current = curId;
+  }, [runtimeState.currentScene, runtimeState.currentObjective, runtimeDef.scenes]);
+
+
   return (
     <div className="flex h-screen flex-col noir-grain">
       <TopBar
@@ -323,6 +372,12 @@ function InvestigatePage() {
             수사 진행 중
           </span>
         }
+      />
+
+      <SceneStageTimeline
+        stages={sceneStages}
+        currentSceneId={runtimeState.currentScene}
+        completedSceneIds={runtimeState.completedScenes}
       />
 
       <InvestigationHUD
@@ -565,6 +620,14 @@ function InvestigatePage() {
       <SuspectProfileModal
         dossier={openSuspect}
         onClose={() => setOpenSuspect(null)}
+      />
+
+      <SceneTransitionModal
+        open={transition !== null}
+        previousSceneTitle={transition?.prevTitle ?? null}
+        newSceneTitle={transition?.newTitle ?? null}
+        newObjective={transition?.newObjective ?? null}
+        onContinue={() => setTransition(null)}
       />
     </div>
   );

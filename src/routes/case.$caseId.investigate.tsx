@@ -645,7 +645,27 @@ function InvestigatePage() {
                   title="Detective's Notebook"
                   subtitle="용의자·타임라인·증거·의문·가설을 자유롭게 기록하세요 (Markdown 지원)"
                 >
-                  <DetectiveNotebook caseId={data.id} />
+                  <DetectiveNotebook
+                    caseId={data.id}
+                    boardEvidence={discoveredEvidence.map((e) => ({
+                      id: e.id,
+                      label: e.title,
+                      sublabel: e.category,
+                    }))}
+                    boardQuestions={IntelligenceEngine.visibleQuestions(
+                      data,
+                      intelligenceState,
+                    ).map(({ question, status }) => ({
+                      id: question.id,
+                      label: question.text,
+                      sublabel: status === "solved" ? "해결됨" : "진행 중",
+                    }))}
+                    boardSuspects={suspectDossiers.map((d) => ({
+                      id: d.suspect.id,
+                      label: d.suspect.name,
+                      sublabel: d.suspect.occupation,
+                    }))}
+                  />
                 </InvestigationSection>
 
                 {canAccuse ? (

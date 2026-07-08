@@ -105,7 +105,10 @@ export const SuspectIntelEngine = {
 
     const personalityRevealed = readCount >= 1;
     const motiveHintRevealed = contradictionsFound >= 1;
-    const hiddenTruthRevealed = contradictionsFound >= 2;
+    // NOTE: hiddenTruth and isCulprit are spoiler fields — they must never be
+    // surfaced in the player UI. We keep the "숨겨진 진실" slot as a locked
+    // placeholder that only shows the number of contradictions gathered.
+    const hiddenTruthRevealed = false;
 
     const unknownFacts: SuspectFact[] = [
       {
@@ -118,19 +121,16 @@ export const SuspectIntelEngine = {
       {
         id: "motive",
         label: "잠재적 동기",
-        value:
-          s.isCulprit && motiveHintRevealed
-            ? c.solution.motive
-            : "재무·감정·이해관계 분석 필요. 추가 증거로 잠금 해제.",
+        value: motiveHintRevealed
+          ? c.solution.motive
+          : "재무·감정·이해관계 분석 필요. 추가 증거로 잠금 해제.",
         revealed: motiveHintRevealed,
         classified: !motiveHintRevealed,
       },
       {
         id: "hidden",
         label: "숨겨진 진실",
-        value: hiddenTruthRevealed
-          ? s.hiddenTruth
-          : "심층 취조 및 모순 증거 2건 이상 확보 시 해제됩니다.",
+        value: "심층 취조 및 모순 증거를 통해 최종 추리 단계에서 검증하세요.",
         revealed: hiddenTruthRevealed,
         classified: !hiddenTruthRevealed,
       },
@@ -138,7 +138,7 @@ export const SuspectIntelEngine = {
 
     const stress = Math.min(
       100,
-      contradictionsFound * 32 + readCount * 9 + (s.isCulprit ? 5 : 0),
+      contradictionsFound * 32 + readCount * 9,
     );
     const trust = Math.max(
       5,

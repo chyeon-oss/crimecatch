@@ -31,6 +31,8 @@ export type {
 export { TimelineEngine } from "./TimelineEngine";
 export type { TimelineEntry, TimelineInputs } from "./TimelineEngine";
 export { CaseRuntime, createRuntimeState, reduceRuntime } from "./CaseRuntime";
+export { validateCasePair } from "./CaseValidation";
+export type { CaseValidationResult } from "./CaseValidation";
 
 
 

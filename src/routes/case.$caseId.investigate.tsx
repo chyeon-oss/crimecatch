@@ -52,6 +52,7 @@ import {
 } from "@/engine";
 import { useCaseRuntime } from "@/hooks/useCaseRuntime";
 import { getRuntimeDefinition } from "@/data/runtime";
+import { validateCasePair } from "@/engine/CaseValidation";
 import type {
   Case,
   Evidence,
@@ -131,6 +132,19 @@ function InvestigatePage() {
     () => getRuntimeDefinition(data.id) ?? buildFallbackRuntime(data),
     [data],
   );
+
+  // Dev-only content/runtime drift check. Never blocks gameplay.
+  if (import.meta.env.DEV) {
+    const result = validateCasePair(data, runtimeDef);
+    if (!result.valid) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[CaseValidation] ${data.id} has ${result.errors.length} issue(s):`,
+        result.errors,
+      );
+    }
+  }
+
   const {
     state: runtimeState,
     currentScene,

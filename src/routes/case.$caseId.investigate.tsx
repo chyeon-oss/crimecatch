@@ -273,10 +273,38 @@ function InvestigatePage() {
     actions.interviewSuspect(d.suspect.id);
   };
 
-  const currentDiscovery = discoveryQueue[0]
-    ? (evidenceById.get(discoveryQueue[0]) ?? null)
+  const currentDiscovery = activeDiscoveryId
+    ? (evidenceById.get(activeDiscoveryId) ?? null)
     : null;
-  const continueDiscovery = () => setDiscoveryQueue((q) => q.slice(1));
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    };
+  }, []);
+  const dismissDiscovery = () => {
+    if (import.meta.env.DEV) {
+      console.log(
+        "[discovery] dismissed",
+        activeDiscoveryIdRef.current,
+        "· queue length",
+        discoveryQueue.length,
+      );
+    }
+    // Close immediately — do not wait on any animation or scene transition.
+    setActiveDiscoveryId(null);
+    // If more discoveries are pending, the promotion effect will fire on the
+    // next render. A tiny delay lets the modal fully unmount so the next
+    // one feels like a distinct event rather than a flicker.
+    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    if (discoveryQueue.length > 0) {
+      dismissTimerRef.current = setTimeout(() => {
+        // No-op: state change above already schedules the promotion effect.
+        // The timeout exists only to enforce a visible 150ms gap by
+        // deferring any follow-up focus work if needed.
+      }, 150);
+    }
+  };
 
   const totalHotspots = availableHotspots.length;
   const investigatedCount = availableHotspots.filter((h) =>

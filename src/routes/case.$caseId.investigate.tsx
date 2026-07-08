@@ -416,6 +416,12 @@ function InvestigatePage() {
                 />
               )}
 
+              <RuntimeDebugPanel
+                state={runtimeState}
+                availableHotspotIds={availableHotspots.map((h) => h.id)}
+              />
+
+
               <div className="grid gap-4">
                 <InvestigationSection
                   icon={ListChecks}

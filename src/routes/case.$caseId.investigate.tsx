@@ -621,6 +621,14 @@ function InvestigatePage() {
         dossier={openSuspect}
         onClose={() => setOpenSuspect(null)}
       />
+
+      <SceneTransitionModal
+        open={transition !== null}
+        previousSceneTitle={transition?.prevTitle ?? null}
+        newSceneTitle={transition?.newTitle ?? null}
+        newObjective={transition?.newObjective ?? null}
+        onContinue={() => setTransition(null)}
+      />
     </div>
   );
 }

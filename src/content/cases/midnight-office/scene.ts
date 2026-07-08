@@ -59,19 +59,23 @@ export const questions = [
   },
   {
     id: "q2",
-    text: "안쪽에서 잠긴 사무실에 어떻게 진입했는가?",
+    text: "문은 정말 안에서 잠긴 것이 맞을까?",
     generatedByEvidenceIds: ["e4"],
   },
   {
     id: "q3",
-    text: "책상 아래 남겨진 낯선 혈흔의 주인은 누구인가?",
+    text: "피해자는 정말 이 자리에서 치명상을 입은 것일까?",
     generatedByEvidenceIds: ["e5"],
-    solvedByEvidenceIds: ["e5"],
   },
   {
     id: "q4",
-    text: "피해자와 마지막으로 대화한 인물은 누구인가?",
+    text: "피해자는 사건 직전 누구와 무엇을 검토하고 있었을까?",
     generatedByEvidenceIds: ["e3"],
+  },
+  {
+    id: "q5",
+    text: "왜 컵은 깨졌는데 액체 흔적은 거의 없을까?",
+    generatedByEvidenceIds: ["e1"],
   },
 ];
 

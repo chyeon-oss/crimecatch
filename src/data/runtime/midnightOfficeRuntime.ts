@@ -7,13 +7,25 @@ import type {
 } from "@/types/runtime";
 
 /**
- * Runtime adapter for the "한밤의 사무실 살인사건" case.
+ * RUNTIME LAYER — progression state machine for "한밤의 사무실 살인사건".
  *
- * The runtime layer is intentionally independent from the presentational
- * `Case` data — it describes the case as a state machine (scenes, hotspots,
- * evidence rewards, questions, unlock/completion conditions) that the
- * generic Case Runtime Engine can drive.
+ * This file controls the *flow* of the case: scenes, objectives, hotspot
+ * unlocks, evidence rewards, question gating, scene completion, and the
+ * next-scene transitions the Case Runtime Engine walks through.
+ *
+ * The player-visible copy (suspect names, evidence descriptions, victim,
+ * briefing text) lives in the sibling content file:
+ * `src/data/cases/midnight-office.ts`.
+ *
+ * Contract with the content layer:
+ *   - Every evidence id here MUST exist in `case.evidence`.
+ *   - Every suspect id in `suspectIds` MUST exist in `case.suspects`.
+ *   - Hidden spoiler fields (`hiddenTruth`, `isCulprit`) live only on the
+ *     content layer and MUST NEVER be surfaced to the player.
+ *
+ * Validated at dev-time by `validateCasePair()` (src/engine/CaseValidation.ts).
  */
+
 
 const evidence: RuntimeEvidence[] = [
   {

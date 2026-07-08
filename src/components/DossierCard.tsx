@@ -22,21 +22,22 @@ function formatPlayers(n: number): string {
 
 const statusMeta: Record<DossierStatus, { label: string; className: string; Icon: typeof Lock }> = {
   LOCKED: {
-    label: "LOCKED",
+    label: "잠김",
     className: "border-muted-foreground/30 bg-background/60 text-muted-foreground",
     Icon: Lock,
   },
   AVAILABLE: {
-    label: "AVAILABLE",
+    label: "수사 가능",
     className: "border-primary/50 bg-primary/10 text-primary",
     Icon: Target,
   },
   COMPLETED: {
-    label: "COMPLETED",
+    label: "해결 완료",
     className: "border-emerald-500/50 bg-emerald-500/10 text-emerald-300",
     Icon: CheckCircle2,
   },
 };
+
 
 const difficultyMeta: Record<string, { dots: number; tone: string }> = {
   "쉬움": { dots: 1, tone: "text-emerald-300" },
@@ -72,12 +73,13 @@ export function DossierCard({ data, index }: { data: Case; index: number }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            CASE FILE
+            사건 파일
           </p>
           <p className="mt-0.5 font-mono text-lg font-semibold tracking-widest text-primary">
             № {caseNumber}
           </p>
         </div>
+
         <span
           className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-widest ${meta.className}`}
         >
@@ -101,7 +103,7 @@ export function DossierCard({ data, index }: { data: Case; index: number }) {
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
         <div>
           <dt className="flex items-center gap-1.5 font-mono uppercase tracking-widest text-muted-foreground/70">
-            <Gauge className="h-3 w-3" /> Difficulty
+            <Gauge className="h-3 w-3" /> 난이도
           </dt>
           <dd className={`mt-1 flex items-center gap-1 font-medium ${diff.tone}`}>
             {Array.from({ length: 3 }).map((_, i) => (
@@ -115,19 +117,19 @@ export function DossierCard({ data, index }: { data: Case; index: number }) {
         </div>
         <div>
           <dt className="flex items-center gap-1.5 font-mono uppercase tracking-widest text-muted-foreground/70">
-            <Clock className="h-3 w-3" /> Duration
+            <Clock className="h-3 w-3" /> 소요 시간
           </dt>
           <dd className="mt-1 font-medium text-foreground">{CaseEngine.formatPlayTime(data)}</dd>
         </div>
         <div>
           <dt className="flex items-center gap-1.5 font-mono uppercase tracking-widest text-muted-foreground/70">
-            <Users className="h-3 w-3" /> Detectives
+            <Users className="h-3 w-3" /> 참여 형사
           </dt>
           <dd className="mt-1 font-medium text-foreground">{formatPlayers(players)}</dd>
         </div>
         <div>
           <dt className="flex items-center gap-1.5 font-mono uppercase tracking-widest text-muted-foreground/70">
-            <Target className="h-3 w-3" /> Solved
+            <Target className="h-3 w-3" /> 해결률
           </dt>
           <dd className="mt-1 font-medium text-foreground">{completion}%</dd>
         </div>
@@ -136,7 +138,7 @@ export function DossierCard({ data, index }: { data: Case; index: number }) {
       {/* Footer CTA */}
       <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-4">
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          {locked ? "Clearance Required" : "Open Dossier"}
+          {locked ? "열람 권한 필요" : "사건 파일 열기"}
         </span>
         <span
           className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-300 ${
@@ -148,6 +150,7 @@ export function DossierCard({ data, index }: { data: Case; index: number }) {
           {locked ? <Lock className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
         </span>
       </div>
+
     </article>
   );
 

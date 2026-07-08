@@ -24,7 +24,8 @@ import { InvestigationSection } from "@/components/InvestigationSection";
 
 import { EvidenceModal } from "@/components/EvidenceModal";
 import { EvidenceLocker } from "@/components/EvidenceLocker";
-import { DetectiveNote } from "@/components/DetectiveNote";
+import { DetectiveNotebook } from "@/components/DetectiveNotebook";
+
 import { CrimeScene } from "@/components/CrimeScene";
 import { DiscoveryModal } from "@/components/DiscoveryModal";
 import { ActiveQuestions } from "@/components/ActiveQuestions";

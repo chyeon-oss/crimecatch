@@ -52,6 +52,7 @@ import {
 } from "@/engine";
 import { useCaseRuntime } from "@/hooks/useCaseRuntime";
 import { getRuntimeDefinition } from "@/data/runtime";
+import { validateCasePair } from "@/engine/CaseValidation";
 import type {
   Case,
   Evidence,

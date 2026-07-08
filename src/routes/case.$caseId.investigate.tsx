@@ -296,20 +296,15 @@ function InvestigatePage() {
         discoveryQueue.length,
       );
     }
-    // Close immediately — do not wait on any animation or scene transition.
+    // Close immediately — never wait for scene / investigation animation.
     setActiveDiscoveryId(null);
-    // If more discoveries are pending, the promotion effect will fire on the
-    // next render. A tiny delay lets the modal fully unmount so the next
-    // one feels like a distinct event rather than a flicker.
-    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
     if (discoveryQueue.length > 0) {
-      dismissTimerRef.current = setTimeout(() => {
-        // No-op: state change above already schedules the promotion effect.
-        // The timeout exists only to enforce a visible 150ms gap by
-        // deferring any follow-up focus work if needed.
-      }, 150);
+      setPromoteReady(false);
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+      dismissTimerRef.current = setTimeout(() => setPromoteReady(true), 150);
     }
   };
+
 
   const totalHotspots = availableHotspots.length;
   const investigatedCount = availableHotspots.filter((h) =>

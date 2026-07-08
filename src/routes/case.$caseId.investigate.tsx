@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -39,6 +39,7 @@ import { ObjectivesPanel } from "@/components/ObjectivesPanel";
 import { SuspectDatabase } from "@/components/SuspectDatabase";
 import { SuspectProfileModal } from "@/components/SuspectProfileModal";
 import { InvestigationTimeline } from "@/components/InvestigationTimeline";
+import { ObjectiveBanner } from "@/components/ObjectiveBanner";
 
 import {
   CaseEngine,
@@ -51,7 +52,15 @@ import {
   type EvidenceSortMode,
   type SuspectDossier,
 } from "@/engine";
-import type { Case, Evidence, CrimeSceneHotspot, BoardState } from "@/types";
+import { useCaseRuntime } from "@/hooks/useCaseRuntime";
+import { getRuntimeDefinition } from "@/data/runtime";
+import type {
+  Case,
+  Evidence,
+  CrimeScene as CrimeSceneData,
+  BoardState,
+} from "@/types";
+import type { CaseDefinition } from "@/types/runtime";
 
 export const Route = createFileRoute("/case/$caseId/investigate")({
   loader: ({ params }) => {
@@ -67,12 +76,73 @@ export const Route = createFileRoute("/case/$caseId/investigate")({
   component: InvestigatePage,
 });
 
+/**
+ * Fallback runtime definition for cases that haven't been ported to the
+ * runtime engine yet — one permissive scene that exposes every hotspot,
+ * suspect, and evidence at once so existing cases keep working unchanged.
+ */
+function buildFallbackRuntime(c: Case): CaseDefinition {
+  return {
+    id: c.id,
+    title: c.title,
+    scenes: [
+      {
+        id: "default",
+        title: c.title,
+        description: c.description,
+        objective: "현장을 조사하고 증거를 확보하세요.",
+        status: "INVESTIGATION",
+        availableHotspotIds: c.crimeScene?.hotspots.map((h) => h.id) ?? [],
+        availableSuspectIds: c.suspects.map((s) => s.id),
+        evidenceRewardIds: c.evidence.map((e) => e.id),
+        nextSceneId: null,
+      },
+    ],
+    evidence: c.evidence.map((e) => ({
+      id: e.id,
+      title: e.title,
+      description: e.summary,
+      category: e.category,
+      importance: e.importance ?? "COMMON",
+      location: e.location,
+      discovered: false,
+    })),
+    questions: (c.questions ?? []).map((q) => ({
+      id: q.id,
+      title: q.text,
+      description: "",
+      status: "LOCKED" as const,
+      unlockedByEvidenceIds: q.generatedByEvidenceIds,
+      solvedByEvidenceIds: q.solvedByEvidenceIds,
+    })),
+    hotspots: (c.crimeScene?.hotspots ?? []).map((h) => ({
+      id: h.id,
+      title: h.label,
+      status: "AVAILABLE" as const,
+      revealsEvidenceIds: h.revealsEvidenceIds,
+    })),
+    suspectIds: c.suspects.map((s) => s.id),
+    startSceneId: "default",
+  };
+}
+
 function InvestigatePage() {
   const { data } = Route.useLoaderData() as { data: Case };
+
+  const runtimeDef = useMemo<CaseDefinition>(
+    () => getRuntimeDefinition(data.id) ?? buildFallbackRuntime(data),
+    [data],
+  );
+  const {
+    state: runtimeState,
+    currentScene,
+    availableHotspots,
+    actions,
+  } = useCaseRuntime(runtimeDef);
+
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
   const [openSuspect, setOpenSuspect] = useState<SuspectDossier | null>(null);
 
-  const [discoveredIds, setDiscoveredIds] = useState<string[]>([]);
   const [discoveredAt, setDiscoveredAt] = useState<Map<string, number>>(
     () => new Map(),
   );
@@ -91,10 +161,34 @@ function InvestigatePage() {
     [data.evidence],
   );
 
+  const discoveredIds = runtimeState.discoveredEvidence;
   const discoveredSet = useMemo(
     () => new Set(discoveredIds),
     [discoveredIds],
   );
+
+  // Track newly-discovered evidence coming from runtime → discovery queue.
+  const seenRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const added: string[] = [];
+    for (const id of discoveredIds) {
+      if (!seenRef.current.has(id) && evidenceById.has(id)) {
+        seenRef.current.add(id);
+        added.push(id);
+      }
+    }
+    if (added.length) {
+      const now = Date.now();
+      setDiscoveredAt((prev) => {
+        const next = new Map(prev);
+        added.forEach((id, i) => {
+          if (!next.has(id)) next.set(id, now + i);
+        });
+        return next;
+      });
+      setDiscoveryQueue((q) => [...q, ...added]);
+    }
+  }, [discoveredIds, evidenceById]);
 
   const intelligenceState = useMemo(
     () => ({ discoveredIds: discoveredSet, readIds }),
@@ -108,35 +202,29 @@ function InvestigatePage() {
     return IntelligenceEngine.sortEvidence(list, discoveredIds, sortMode);
   }, [discoveredIds, evidenceById, sortMode]);
 
-  const handleInvestigate = (h: CrimeSceneHotspot) => {
+  // Scene-scoped crime scene fed into the existing CrimeScene component so
+  // only the current scene's hotspots are actionable — no whole-map dump.
+  const scopedScene: CrimeSceneData | null = useMemo(() => {
+    if (!currentScene || availableHotspots.length === 0) return null;
+    return {
+      imagePrompt: currentScene.description,
+      hotspots: availableHotspots.map((h) => ({
+        id: h.id,
+        label: h.title,
+        hint: "",
+        revealsEvidenceIds: h.revealsEvidenceIds,
+      })),
+    };
+  }, [currentScene, availableHotspots]);
+
+  const handleInvestigate = (h: { id: string }) => {
     setInvestigatedHotspotIds((prev) => {
+      if (prev.has(h.id)) return prev;
       const next = new Set(prev);
       next.add(h.id);
       return next;
     });
-    if (h.revealsEvidenceIds.length === 0) return;
-    const added: string[] = [];
-    setDiscoveredIds((prev) => {
-      const set = new Set(prev);
-      for (const id of h.revealsEvidenceIds) {
-        if (!set.has(id) && evidenceById.has(id)) {
-          set.add(id);
-          added.push(id);
-        }
-      }
-      return Array.from(set);
-    });
-    if (added.length) {
-      const now = Date.now();
-      setDiscoveredAt((prev) => {
-        const next = new Map(prev);
-        added.forEach((id, i) => {
-          if (!next.has(id)) next.set(id, now + i);
-        });
-        return next;
-      });
-      setDiscoveryQueue((q) => [...q, ...added]);
-    }
+    actions.investigateHotspot(h.id);
   };
 
   const openEvidenceAndMarkRead = (e: Evidence) => {
@@ -147,6 +235,14 @@ function InvestigatePage() {
       next.add(e.id);
       return next;
     });
+    actions.readEvidence(e.id);
+  };
+
+  const openSuspectAndInterview = (d: SuspectDossier) => {
+    setOpenSuspect(d);
+    // Interviewing happens the moment the detective opens the profile —
+    // for now that IS the interrogation surface.
+    actions.interviewSuspect(d.suspect.id);
   };
 
   const currentDiscovery = discoveryQueue[0]
@@ -154,13 +250,12 @@ function InvestigatePage() {
     : null;
   const continueDiscovery = () => setDiscoveryQueue((q) => q.slice(1));
 
-  const totalHotspots = data.crimeScene?.hotspots.length ?? 0;
-  const investigatedCount = investigatedHotspotIds.size;
+  const totalHotspots = availableHotspots.length;
+  const investigatedCount = availableHotspots.filter((h) =>
+    investigatedHotspotIds.has(h.id),
+  ).length;
 
-  const activeQuestionsCount = IntelligenceEngine.visibleQuestions(
-    data,
-    intelligenceState,
-  ).filter((q) => q.status === "active").length;
+  const activeQuestionsCount = runtimeState.activeQuestions.length;
 
   const storyState = useMemo(
     () =>
@@ -173,9 +268,6 @@ function InvestigatePage() {
       }),
     [data, discoveredSet, readIds, investigatedHotspotIds, boardState],
   );
-  const currentObjective =
-    StoryRuntime.defaultObjectives().find((o) => o.phase === storyState.phase)
-      ?.text ?? undefined;
 
   const objectives = useMemo(
     () =>
@@ -190,7 +282,7 @@ function InvestigatePage() {
   );
   const objectivesSummary = ObjectivesEngine.summary(objectives);
 
-  const suspectDossiers = useMemo(
+  const allSuspectDossiers = useMemo(
     () =>
       SuspectIntelEngine.all({
         case: data,
@@ -199,6 +291,15 @@ function InvestigatePage() {
       }),
     [data, discoveredSet, readIds],
   );
+  const sceneSuspectIds = new Set(currentScene?.availableSuspectIds ?? []);
+  const suspectDossiers = allSuspectDossiers.filter((d) =>
+    sceneSuspectIds.has(d.suspect.id),
+  );
+  const showSuspects =
+    (currentScene?.availableSuspectIds.length ?? 0) > 0 &&
+    (currentScene?.status === "INTERROGATION" ||
+      currentScene?.status === "ACCUSATION" ||
+      currentScene?.status === "RECONSTRUCTION");
   const primeSuspectCount = suspectDossiers.filter(
     (d) => d.status === "PRIME_SUSPECT",
   ).length;
@@ -209,6 +310,7 @@ function InvestigatePage() {
   );
   const timelineSummary = TimelineEngine.summary(timelineEntries);
 
+  const canAccuse = currentScene?.status === "ACCUSATION";
 
   return (
     <div className="flex h-screen flex-col noir-grain">
@@ -231,13 +333,12 @@ function InvestigatePage() {
       />
 
       <ResizablePanelGroup orientation="horizontal" className="flex-1">
-
         {/* LEFT: Case briefing */}
         <ResizablePanel defaultSize={22} minSize={16} maxSize={30}>
           <CaseSidebar
             case={data}
             storyState={storyState}
-            objectiveText={currentObjective}
+            objectiveText={runtimeState.currentObjective ?? undefined}
             discoveredCount={discoveredIds.length}
             totalEvidence={data.evidence.length}
           />
@@ -258,6 +359,15 @@ function InvestigatePage() {
                 </h1>
               </div>
 
+              {currentScene && (
+                <ObjectiveBanner
+                  sceneTitle={currentScene.title}
+                  objective={runtimeState.currentObjective ?? currentScene.objective}
+                  gameStatus={runtimeState.gameStatus}
+                  progress={runtimeState.investigationProgress}
+                />
+              )}
+
               <div className="grid gap-4">
                 <InvestigationSection
                   icon={ListChecks}
@@ -267,20 +377,37 @@ function InvestigatePage() {
                   <ObjectivesPanel objectives={objectives} />
                 </InvestigationSection>
 
-                <InvestigationSection
-                  icon={Users}
-                  title="Suspect Database"
-                  subtitle={
-                    primeSuspectCount > 0
-                      ? `${suspectDossiers.length}명 프로파일 · 유력 용의자 ${primeSuspectCount}명`
-                      : `${suspectDossiers.length}명 프로파일 등록`
-                  }
-                >
-                  <SuspectDatabase
-                    dossiers={suspectDossiers}
-                    onOpen={setOpenSuspect}
-                  />
-                </InvestigationSection>
+                {scopedScene && (
+                  <InvestigationSection
+                    icon={Footprints}
+                    title={currentScene?.title ?? "현재 씬"}
+                    subtitle={`${investigatedCount} / ${totalHotspots} 지점 조사 완료`}
+                  >
+                    <CrimeScene
+                      scene={scopedScene}
+                      evidenceById={evidenceById}
+                      investigatedIds={investigatedHotspotIds}
+                      onInvestigate={handleInvestigate}
+                    />
+                  </InvestigationSection>
+                )}
+
+                {showSuspects && (
+                  <InvestigationSection
+                    icon={Users}
+                    title="Suspect Database"
+                    subtitle={
+                      primeSuspectCount > 0
+                        ? `${suspectDossiers.length}명 프로파일 · 유력 용의자 ${primeSuspectCount}명`
+                        : `${suspectDossiers.length}명 프로파일 등록`
+                    }
+                  >
+                    <SuspectDatabase
+                      dossiers={suspectDossiers}
+                      onOpen={openSuspectAndInterview}
+                    />
+                  </InvestigationSection>
+                )}
 
                 <InvestigationSection
                   icon={Clock}
@@ -296,23 +423,6 @@ function InvestigatePage() {
                     onOpenEvidence={openEvidenceAndMarkRead}
                   />
                 </InvestigationSection>
-
-
-
-                {data.crimeScene && (
-                  <InvestigationSection
-                    icon={Footprints}
-                    title="범죄 현장"
-                    subtitle={`${investigatedCount} / ${totalHotspots} 지점 조사 완료`}
-                  >
-                    <CrimeScene
-                      scene={data.crimeScene}
-                      evidenceById={evidenceById}
-                      investigatedIds={investigatedHotspotIds}
-                      onInvestigate={handleInvestigate}
-                    />
-                  </InvestigationSection>
-                )}
 
                 <InvestigationSection
                   icon={Archive}
@@ -394,21 +504,33 @@ function InvestigatePage() {
                   <DetectiveNotebook caseId={data.id} />
                 </InvestigationSection>
 
-
-                <InvestigationSection
-                  icon={Gavel}
-                  title="최종 추리"
-                  subtitle="충분히 조사했다면 범인을 지목하세요"
-                >
-                  <Link
-                    to="/case/$caseId/accuse"
-                    params={{ caseId: data.slug }}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)] transition-transform hover:scale-[1.01]"
+                {canAccuse ? (
+                  <InvestigationSection
+                    icon={Gavel}
+                    title="최종 추리"
+                    subtitle="충분히 조사했다면 범인을 지목하세요"
                   >
-                    <Gavel className="h-4 w-4" />
-                    범인 지목하기
-                  </Link>
-                </InvestigationSection>
+                    <Link
+                      to="/case/$caseId/accuse"
+                      params={{ caseId: data.slug }}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)] transition-transform hover:scale-[1.01]"
+                    >
+                      <Gavel className="h-4 w-4" />
+                      범인 지목하기
+                    </Link>
+                  </InvestigationSection>
+                ) : (
+                  <InvestigationSection
+                    icon={Gavel}
+                    title="최종 추리"
+                    subtitle="아직 조사가 부족합니다. 다음 씬으로 진행하세요."
+                  >
+                    <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/60 bg-surface-elevated/50 p-3 text-xs text-muted-foreground">
+                      <Lock className="h-4 w-4" />
+                      SCENE 04에 도달하면 범인 지목이 가능해집니다.
+                    </div>
+                  </InvestigationSection>
+                )}
               </div>
             </div>
           </div>

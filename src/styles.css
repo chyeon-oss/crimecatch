@@ -274,7 +274,69 @@
   margin: 0.8em 0;
 }
 
+/* ============ Investigation Cinematic ============ */
+@keyframes cc-scene-zoom {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.03); }
+}
+@keyframes cc-hotspot-focus {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+  100% { transform: scale(1.04); box-shadow: 0 20px 60px -20px hsl(var(--primary) / 0.35), 0 0 0 1px hsl(var(--primary) / 0.5); }
+}
+@keyframes cc-scan-sweep {
+  0%   { transform: translateY(-120%); opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(120%); opacity: 0; }
+}
+@keyframes cc-reticle {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.08); }
+}
+@keyframes cc-area-glow {
+  0%   { opacity: 0; transform: scale(0.92); }
+  30%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 0.9; transform: scale(1); }
+}
+@keyframes cc-shimmer {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+@keyframes cc-discovery-flash {
+  0%   { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+  30%  { box-shadow: 0 0 0 2px hsl(var(--primary) / 0.55), 0 0 40px hsl(var(--primary) / 0.25); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+}
+@keyframes cc-question-unlock {
+  0%   { opacity: 0; transform: translateY(-4px) scale(0.98); box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+  40%  { opacity: 1; transform: translateY(0)     scale(1.01); box-shadow: 0 0 0 2px hsl(var(--primary) / 0.5); }
+  100% { opacity: 1; transform: translateY(0)     scale(1);    box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+}
 
-
-
+.cc-scene-zooming { animation: cc-scene-zoom 900ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+.cc-hotspot-focused { animation: cc-hotspot-focus 500ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards; z-index: 2; position: relative; }
+.cc-hotspot-dimmed { opacity: 0.28; filter: blur(0.6px) saturate(0.7); transition: opacity 300ms ease, filter 300ms ease; }
+.cc-scan-sweep {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent, hsl(var(--primary) / 0.18), transparent);
+  animation: cc-scan-sweep 900ms ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.cc-reticle { animation: cc-reticle 1200ms ease-in-out infinite; }
+.cc-area-glow { animation: cc-area-glow 600ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+.cc-shimmer-line {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.cc-shimmer-line::before {
+  content: "";
+  position: absolute; top: 0; bottom: 0; width: 40%;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.35), transparent);
+  animation: cc-shimmer 1100ms ease-in-out;
+}
+.cc-discovery-flash { animation: cc-discovery-flash 1600ms ease-out; }
+.cc-question-unlock { animation: cc-question-unlock 900ms cubic-bezier(0.22, 0.61, 0.36, 1); }
 

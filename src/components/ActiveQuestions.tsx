@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { HelpCircle, CheckCircle2 } from "lucide-react";
 import type { Case } from "@/types";
 import { IntelligenceEngine, type IntelligenceState } from "@/engine";
@@ -9,6 +10,29 @@ interface Props {
 
 export function ActiveQuestions({ case: c, state }: Props) {
   const items = IntelligenceEngine.visibleQuestions(c, state);
+  const prevIdsRef = useRef<Set<string> | null>(null);
+  const [newlyUnlocked, setNewlyUnlocked] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const currentActiveIds = new Set(
+      items.filter((i) => i.status === "active").map((i) => i.question.id),
+    );
+    const prev = prevIdsRef.current;
+    if (prev) {
+      const fresh = new Set<string>();
+      currentActiveIds.forEach((id) => {
+        if (!prev.has(id)) fresh.add(id);
+      });
+      if (fresh.size > 0) {
+        setNewlyUnlocked(fresh);
+        const t = setTimeout(() => setNewlyUnlocked(new Set()), 1400);
+        prevIdsRef.current = currentActiveIds;
+        return () => clearTimeout(t);
+      }
+    }
+    prevIdsRef.current = currentActiveIds;
+  }, [items]);
+
 
   if (items.length === 0) {
     return (
@@ -28,20 +52,27 @@ export function ActiveQuestions({ case: c, state }: Props) {
     <div className="space-y-3">
       {active.length > 0 && (
         <ul className="space-y-2">
-          {active.map(({ question }) => (
-            <li
-              key={question.id}
-              className="flex items-start gap-2.5 rounded-lg border border-primary/25 bg-primary/5 p-3"
-            >
-              <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] uppercase tracking-widest text-primary/80">
-                  Question
-                </p>
-                <p className="mt-0.5 text-sm text-foreground">{question.text}</p>
-              </div>
-            </li>
-          ))}
+          {active.map(({ question }) => {
+            const isNew = newlyUnlocked.has(question.id);
+            return (
+              <li
+                key={question.id}
+                className={
+                  "flex items-start gap-2.5 rounded-lg border border-primary/25 bg-primary/5 p-3 " +
+                  (isNew ? "cc-question-unlock" : "")
+                }
+              >
+                <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] uppercase tracking-widest text-primary/80">
+                    {isNew ? "New Question" : "Question"}
+                  </p>
+                  <p className="mt-0.5 text-sm text-foreground">{question.text}</p>
+                </div>
+              </li>
+            );
+          })}
+
         </ul>
       )}
 

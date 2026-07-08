@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Eye, PenLine, BookMarked } from "lucide-react";
@@ -16,6 +16,19 @@ export function DetectiveNotebook({ caseId }: Props) {
   const { notebook, update } = useNotebook(caseId);
   const [active, setActive] = useState<NotebookSectionId>("suspects");
   const [mode, setMode] = useState<"write" | "read">("write");
+  const [flash, setFlash] = useState(false);
+
+  useEffect(() => {
+    const handler = () => {
+      setFlash(false);
+      // Force reflow so the animation restarts if fired rapidly.
+      requestAnimationFrame(() => setFlash(true));
+      const t = setTimeout(() => setFlash(false), 1700);
+      return () => clearTimeout(t);
+    };
+    window.addEventListener("cc:evidence-discovered", handler);
+    return () => window.removeEventListener("cc:evidence-discovered", handler);
+  }, []);
 
   const section = useMemo(
     () => NOTEBOOK_SECTIONS.find((s) => s.id === active)!,
@@ -24,7 +37,13 @@ export function DetectiveNotebook({ caseId }: Props) {
   const value = notebook[active] ?? "";
 
   return (
-    <div className="notebook-shell overflow-hidden rounded-xl border border-amber-900/30">
+    <div
+      className={
+        "notebook-shell overflow-hidden rounded-xl border border-amber-900/30 " +
+        (flash ? "cc-discovery-flash" : "")
+      }
+    >
+
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-amber-900/30 bg-[#1a1410]/60 px-2 py-1.5">
         <BookMarked className="mx-1 h-3.5 w-3.5 text-amber-200/70" />

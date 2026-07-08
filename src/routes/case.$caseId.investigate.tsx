@@ -382,9 +382,9 @@ function InvestigatePage() {
         totalEvidence={data.evidence.length}
       />
 
-      <ResizablePanelGroup orientation="horizontal" className="flex-1">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col md:flex-row">
         {/* LEFT: Case briefing */}
-        <ResizablePanel defaultSize={22} minSize={16} maxSize={30}>
+        <aside className="w-full shrink-0 border-b border-border md:sticky md:top-0 md:max-h-screen md:w-[280px] md:min-w-[260px] md:overflow-y-auto md:border-b-0 md:border-r">
           <CaseSidebar
             case={data}
             storyState={storyState}
@@ -392,14 +392,11 @@ function InvestigatePage() {
             discoveredCount={discoveredIds.length}
             totalEvidence={data.evidence.length}
           />
-        </ResizablePanel>
-
-        <ResizableHandle />
+        </aside>
 
         {/* CENTER: Investigation scene */}
-        <ResizablePanel defaultSize={54} minSize={40}>
-          <div className="h-full overflow-y-auto">
-            <div className="mx-auto max-w-3xl px-6 pb-16 pt-6">
+        <main className="min-w-0 flex-1">
+          <div className="mx-auto max-w-3xl px-6 pb-16 pt-6">
               <div className="mb-5">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                   ACTIVE INVESTIGATION

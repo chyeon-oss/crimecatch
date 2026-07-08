@@ -30,6 +30,7 @@ export type {
 } from "./SuspectIntelEngine";
 export { TimelineEngine } from "./TimelineEngine";
 export type { TimelineEntry, TimelineInputs } from "./TimelineEngine";
+export { CaseRuntime, createRuntimeState, reduceRuntime } from "./CaseRuntime";
 
 
 

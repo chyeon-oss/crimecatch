@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, Lightbulb, Send, Sparkles, Brain } from "lucide-react";
+import { Bot, Lightbulb, Send, Sparkles, Brain, BookMarked } from "lucide-react";
 import { IntelligenceEngine, StoryRuntime, type IntelligenceState } from "@/engine";
 import type { Case, StoryRuntimeState } from "@/types";
+import { useNotebook, NOTEBOOK_SECTIONS, notebookSummary } from "@/lib/notebook";
+
 
 
 interface PartnerMessage {

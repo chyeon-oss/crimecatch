@@ -206,8 +206,12 @@ function InvestigatePage() {
     }
   }, [discoveredIds, evidenceById]);
 
-  // Promote the head of the queue into the active slot whenever one frees up.
+  // Cooldown between two modals so the first fully unmounts before the next
+  // appears (150ms, per spec). Set to false during dismiss and flipped back
+  // on via setTimeout; the promotion effect only runs when true.
+  const [promoteReady, setPromoteReady] = useState(true);
   useEffect(() => {
+    if (!promoteReady) return;
     if (activeDiscoveryId !== null) return;
     if (discoveryQueue.length === 0) return;
     const [head, ...rest] = discoveryQueue;
@@ -216,7 +220,8 @@ function InvestigatePage() {
     if (import.meta.env.DEV) {
       console.log("[discovery] shown", head, "· remaining", rest.length);
     }
-  }, [activeDiscoveryId, discoveryQueue]);
+  }, [promoteReady, activeDiscoveryId, discoveryQueue]);
+
 
   const intelligenceState = useMemo(
     () => ({ discoveredIds: discoveredSet, readIds }),

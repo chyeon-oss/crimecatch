@@ -165,6 +165,15 @@ function InvestigatePage() {
     [discoveredIds],
   );
 
+  // Active discovery id (the one whose modal is visible). Kept in a ref
+  // alongside state so the enqueue effect can dedupe against it without
+  // depending on render timing.
+  const [activeDiscoveryId, setActiveDiscoveryId] = useState<string | null>(null);
+  const activeDiscoveryIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    activeDiscoveryIdRef.current = activeDiscoveryId;
+  }, [activeDiscoveryId]);
+
   // Track newly-discovered evidence coming from runtime → discovery queue.
   const seenRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -184,9 +193,35 @@ function InvestigatePage() {
         });
         return next;
       });
-      setDiscoveryQueue((q) => [...q, ...added]);
+      setDiscoveryQueue((q) => {
+        const existing = new Set(q);
+        if (activeDiscoveryIdRef.current) existing.add(activeDiscoveryIdRef.current);
+        const fresh = added.filter((id) => !existing.has(id));
+        if (import.meta.env.DEV && fresh.length) {
+          for (const id of fresh) console.log("[discovery] queued", id);
+          console.log("[discovery] queue length", q.length + fresh.length);
+        }
+        return fresh.length ? [...q, ...fresh] : q;
+      });
     }
   }, [discoveredIds, evidenceById]);
+
+  // Cooldown between two modals so the first fully unmounts before the next
+  // appears (150ms, per spec). Set to false during dismiss and flipped back
+  // on via setTimeout; the promotion effect only runs when true.
+  const [promoteReady, setPromoteReady] = useState(true);
+  useEffect(() => {
+    if (!promoteReady) return;
+    if (activeDiscoveryId !== null) return;
+    if (discoveryQueue.length === 0) return;
+    const [head, ...rest] = discoveryQueue;
+    setDiscoveryQueue(rest);
+    setActiveDiscoveryId(head);
+    if (import.meta.env.DEV) {
+      console.log("[discovery] shown", head, "· remaining", rest.length);
+    }
+  }, [promoteReady, activeDiscoveryId, discoveryQueue]);
+
 
   const intelligenceState = useMemo(
     () => ({ discoveredIds: discoveredSet, readIds }),
@@ -243,10 +278,33 @@ function InvestigatePage() {
     actions.interviewSuspect(d.suspect.id);
   };
 
-  const currentDiscovery = discoveryQueue[0]
-    ? (evidenceById.get(discoveryQueue[0]) ?? null)
+  const currentDiscovery = activeDiscoveryId
+    ? (evidenceById.get(activeDiscoveryId) ?? null)
     : null;
-  const continueDiscovery = () => setDiscoveryQueue((q) => q.slice(1));
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    };
+  }, []);
+  const dismissDiscovery = () => {
+    if (import.meta.env.DEV) {
+      console.log(
+        "[discovery] dismissed",
+        activeDiscoveryIdRef.current,
+        "· queue length",
+        discoveryQueue.length,
+      );
+    }
+    // Close immediately — never wait for scene / investigation animation.
+    setActiveDiscoveryId(null);
+    if (discoveryQueue.length > 0) {
+      setPromoteReady(false);
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+      dismissTimerRef.current = setTimeout(() => setPromoteReady(true), 150);
+    }
+  };
+
 
   const totalHotspots = availableHotspots.length;
   const investigatedCount = availableHotspots.filter((h) =>
@@ -352,9 +410,27 @@ function InvestigatePage() {
         newTitle: next?.title ?? null,
         newObjective: next?.objective ?? runtimeState.currentObjective ?? null,
       });
+      if (import.meta.env.DEV) {
+        console.log("[scene] transition queued", prevId, "→", curId);
+      }
     }
     prevSceneIdRef.current = curId;
   }, [runtimeState.currentScene, runtimeState.currentObjective, runtimeDef.scenes]);
+
+  // Discovery modals always take priority over the scene-transition modal
+  // (spec: show all discoveries first, then transition, then objective).
+  const hasPendingDiscovery =
+    activeDiscoveryId !== null || discoveryQueue.length > 0;
+  const showTransition = transition !== null && !hasPendingDiscovery;
+  const shownTransitionRef = useRef(false);
+  useEffect(() => {
+    if (showTransition && !shownTransitionRef.current) {
+      shownTransitionRef.current = true;
+      if (import.meta.env.DEV) console.log("[scene] transition shown");
+    } else if (!showTransition) {
+      shownTransitionRef.current = false;
+    }
+  }, [showTransition]);
 
 
   return (
@@ -608,24 +684,28 @@ function InvestigatePage() {
         onOpenEvidence={openEvidenceAndMarkRead}
       />
 
-      <DiscoveryModal
-        evidence={currentDiscovery}
-        remaining={Math.max(0, discoveryQueue.length - 1)}
-        onContinue={continueDiscovery}
-      />
+      {currentDiscovery && (
+        <DiscoveryModal
+          evidence={currentDiscovery}
+          remaining={discoveryQueue.length}
+          onContinue={dismissDiscovery}
+        />
+      )}
 
       <SuspectProfileModal
         dossier={openSuspect}
         onClose={() => setOpenSuspect(null)}
       />
 
-      <SceneTransitionModal
-        open={transition !== null}
-        previousSceneTitle={transition?.prevTitle ?? null}
-        newSceneTitle={transition?.newTitle ?? null}
-        newObjective={transition?.newObjective ?? null}
-        onContinue={() => setTransition(null)}
-      />
+      {showTransition && (
+        <SceneTransitionModal
+          open
+          previousSceneTitle={transition?.prevTitle ?? null}
+          newSceneTitle={transition?.newTitle ?? null}
+          newObjective={transition?.newObjective ?? null}
+          onContinue={() => setTransition(null)}
+        />
+      )}
     </div>
   );
 }

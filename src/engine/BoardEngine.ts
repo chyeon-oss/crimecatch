@@ -1,5 +1,6 @@
 import type {
   BoardConnection,
+  BoardNote,
   BoardPin,
   BoardPinKind,
   BoardState,
@@ -9,7 +10,7 @@ import type {
 } from "@/types";
 
 export function createBoardState(): BoardState {
-  return { pins: [], connections: [], theories: [] };
+  return { pins: [], connections: [], theories: [], notes: [] };
 }
 
 const uid = (prefix: string) =>
@@ -18,17 +19,48 @@ const uid = (prefix: string) =>
 export interface BoardPinLabel {
   title: string;
   subtitle: string;
-  tone: "evidence" | "suspect" | "timeline";
+  tone: "evidence" | "suspect" | "timeline" | "location";
 }
 
+// Default drop zone (world space) used when no position is supplied.
+const DEFAULT_SPAWN = { x: 240, y: 200, spread: 320 };
+const spawnPos = (i: number) => ({
+  x: DEFAULT_SPAWN.x + ((i * 173) % DEFAULT_SPAWN.spread),
+  y: DEFAULT_SPAWN.y + ((i * 211) % DEFAULT_SPAWN.spread),
+});
+
 export const BoardEngine = {
-  addPin(state: BoardState, kind: BoardPinKind, refId: string): BoardState {
+  addPin(
+    state: BoardState,
+    kind: BoardPinKind,
+    refId: string,
+    pos?: { x: number; y: number },
+  ): BoardState {
     const exists = state.pins.some(
       (p) => p.kind === kind && p.refId === refId,
     );
     if (exists) return state;
-    const pin: BoardPin = { id: uid("pin"), kind, refId };
+    const fallback = pos ?? spawnPos(state.pins.length);
+    const pin: BoardPin = {
+      id: uid("pin"),
+      kind,
+      refId,
+      x: fallback.x,
+      y: fallback.y,
+    };
     return { ...state, pins: [...state.pins, pin] };
+  },
+
+  movePin(
+    state: BoardState,
+    pinId: string,
+    x: number,
+    y: number,
+  ): BoardState {
+    return {
+      ...state,
+      pins: state.pins.map((p) => (p.id === pinId ? { ...p, x, y } : p)),
+    };
   },
 
   removePin(state: BoardState, pinId: string): BoardState {
@@ -57,10 +89,64 @@ export const BoardEngine = {
     return { ...state, connections: [...state.connections, conn] };
   },
 
+  setConnectionLabel(
+    state: BoardState,
+    connectionId: string,
+    label: string,
+  ): BoardState {
+    return {
+      ...state,
+      connections: state.connections.map((c) =>
+        c.id === connectionId
+          ? { ...c, label: label.trim() ? label.trim() : undefined }
+          : c,
+      ),
+    };
+  },
+
   removeConnection(state: BoardState, connectionId: string): BoardState {
     return {
       ...state,
       connections: state.connections.filter((c) => c.id !== connectionId),
+    };
+  },
+
+  addNote(
+    state: BoardState,
+    input: { text?: string; x: number; y: number; tint?: number },
+  ): BoardState {
+    const note: BoardNote = {
+      id: uid("note"),
+      text: input.text ?? "",
+      x: input.x,
+      y: input.y,
+      tint: input.tint ?? Math.floor(Math.random() * 4),
+    };
+    return { ...state, notes: [...(state.notes ?? []), note] };
+  },
+
+  updateNote(state: BoardState, id: string, text: string): BoardState {
+    return {
+      ...state,
+      notes: (state.notes ?? []).map((n) =>
+        n.id === id ? { ...n, text } : n,
+      ),
+    };
+  },
+
+  moveNote(state: BoardState, id: string, x: number, y: number): BoardState {
+    return {
+      ...state,
+      notes: (state.notes ?? []).map((n) =>
+        n.id === id ? { ...n, x, y } : n,
+      ),
+    };
+  },
+
+  removeNote(state: BoardState, id: string): BoardState {
+    return {
+      ...state,
+      notes: (state.notes ?? []).filter((n) => n.id !== id),
     };
   },
 
@@ -92,6 +178,15 @@ export const BoardEngine = {
       const s = c.suspects.find((x) => x.id === pin.refId);
       if (!s) return null;
       return { title: s.name, subtitle: s.occupation, tone: "suspect" };
+    }
+    if (pin.kind === "location") {
+      const h = c.crimeScene?.hotspots.find((x) => x.id === pin.refId);
+      if (!h) return null;
+      return {
+        title: h.label,
+        subtitle: h.hint ?? "현장 위치",
+        tone: "location",
+      };
     }
     const t = c.timeline.find((x) => x.time === pin.refId);
     if (!t) return null;

@@ -53,7 +53,7 @@ export const crimeScene: CrimeScene = {
 export const questions = [
   {
     id: "q1",
-    text: "누가 사건 직전 12층의 전원을 내렸는가?",
+    text: "CCTV 공백은 누가 만든 것일까, 아니면 원래 존재하던 구간일까?",
     generatedByEvidenceIds: ["e2"],
     solvedByEvidenceIds: ["e6"],
   },
@@ -76,6 +76,18 @@ export const questions = [
     id: "q5",
     text: "왜 컵은 깨졌는데 액체 흔적은 거의 없을까?",
     generatedByEvidenceIds: ["e1"],
+  },
+  {
+    id: "q6",
+    text: "정전은 우연이었을까, 누군가 이용한 것일까?",
+    generatedByEvidenceIds: ["e6"],
+    solvedByEvidenceIds: ["e6"],
+  },
+  {
+    id: "q7",
+    text: "피해자는 정확히 언제 사망했을까?",
+    generatedByEvidenceIds: ["e2", "e7"],
+    solvedByEvidenceIds: ["e2", "e7"],
   },
 ];
 

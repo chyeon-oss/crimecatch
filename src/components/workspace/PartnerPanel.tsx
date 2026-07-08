@@ -330,3 +330,12 @@ function StoryRuntimePhaseLabel(state: StoryRuntimeState) {
   return StoryRuntime.phaseDef(state.phase).koreanTitle;
 }
 
+const SECTION_KEYWORDS: Record<(typeof NOTEBOOK_SECTIONS)[number]["id"], string> = {
+  suspects: "용의자",
+  timeline: "시간",
+  evidence: "증거",
+  questions: "의문",
+  theories: "가설",
+};
+
+

@@ -1,5 +1,25 @@
 import type { Case } from "@/types";
 
+/**
+ * CONTENT LAYER — presentational case data for "한밤의 사무실 살인사건".
+ *
+ * This file drives the *visible copy* shown to the player: suspect cards,
+ * evidence descriptions, timeline, victim, briefing. Progression, scene
+ * flow, hotspot unlocks and evidence gating live in the sibling runtime
+ * file: `src/data/runtime/midnightOfficeRuntime.ts`.
+ *
+ * Contract with the runtime layer:
+ *   - Evidence ids MUST match runtime evidence ids one-to-one.
+ *   - Suspect ids MUST match runtime `suspectIds`.
+ *   - `hiddenTruth` and `isCulprit` are SPOILER fields. They exist for
+ *     future scoring / final reconstruction only and MUST NEVER be
+ *     rendered in the player-facing UI (cards, modals, partner panel,
+ *     final deduction, notebook).
+ *
+ * Validated at dev-time by `validateCasePair()` (src/engine/CaseValidation.ts).
+ */
+
+
 export const midnightOffice: Case = {
   id: "midnight-office",
   slug: "midnight-office",

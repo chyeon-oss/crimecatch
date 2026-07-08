@@ -148,7 +148,9 @@ function AccusePage() {
         motive={optionById(MOTIVE_OPTIONS, submitted.motiveId)}
         method={optionById(METHOD_OPTIONS, submitted.methodId)}
         evidence={evidenceByIdLocal(submitted.evidenceId)}
+        result={result}
       />
+
     );
   }
 

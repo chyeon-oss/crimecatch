@@ -165,6 +165,15 @@ function InvestigatePage() {
     [discoveredIds],
   );
 
+  // Active discovery id (the one whose modal is visible). Kept in a ref
+  // alongside state so the enqueue effect can dedupe against it without
+  // depending on render timing.
+  const [activeDiscoveryId, setActiveDiscoveryId] = useState<string | null>(null);
+  const activeDiscoveryIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    activeDiscoveryIdRef.current = activeDiscoveryId;
+  }, [activeDiscoveryId]);
+
   // Track newly-discovered evidence coming from runtime → discovery queue.
   const seenRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -184,9 +193,30 @@ function InvestigatePage() {
         });
         return next;
       });
-      setDiscoveryQueue((q) => [...q, ...added]);
+      setDiscoveryQueue((q) => {
+        const existing = new Set(q);
+        if (activeDiscoveryIdRef.current) existing.add(activeDiscoveryIdRef.current);
+        const fresh = added.filter((id) => !existing.has(id));
+        if (import.meta.env.DEV && fresh.length) {
+          for (const id of fresh) console.log("[discovery] queued", id);
+          console.log("[discovery] queue length", q.length + fresh.length);
+        }
+        return fresh.length ? [...q, ...fresh] : q;
+      });
     }
   }, [discoveredIds, evidenceById]);
+
+  // Promote the head of the queue into the active slot whenever one frees up.
+  useEffect(() => {
+    if (activeDiscoveryId !== null) return;
+    if (discoveryQueue.length === 0) return;
+    const [head, ...rest] = discoveryQueue;
+    setDiscoveryQueue(rest);
+    setActiveDiscoveryId(head);
+    if (import.meta.env.DEV) {
+      console.log("[discovery] shown", head, "· remaining", rest.length);
+    }
+  }, [activeDiscoveryId, discoveryQueue]);
 
   const intelligenceState = useMemo(
     () => ({ discoveredIds: discoveredSet, readIds }),

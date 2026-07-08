@@ -22,6 +22,12 @@ import {
 } from "@/data/deductionOptions";
 import type { Case, Evidence, Suspect } from "@/types";
 import { readBoard, type BoardEndpoint } from "@/lib/detectiveBoard";
+import { answerKey } from "@/content/cases/midnight-office/_spoilers";
+import {
+  scoreDeduction,
+  type DeductionScore,
+} from "@/lib/deductionScoring";
+
 
 export const Route = createFileRoute("/case/$caseId/accuse")({
   head: () => ({

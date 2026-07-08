@@ -410,9 +410,27 @@ function InvestigatePage() {
         newTitle: next?.title ?? null,
         newObjective: next?.objective ?? runtimeState.currentObjective ?? null,
       });
+      if (import.meta.env.DEV) {
+        console.log("[scene] transition queued", prevId, "→", curId);
+      }
     }
     prevSceneIdRef.current = curId;
   }, [runtimeState.currentScene, runtimeState.currentObjective, runtimeDef.scenes]);
+
+  // Discovery modals always take priority over the scene-transition modal
+  // (spec: show all discoveries first, then transition, then objective).
+  const hasPendingDiscovery =
+    activeDiscoveryId !== null || discoveryQueue.length > 0;
+  const showTransition = transition !== null && !hasPendingDiscovery;
+  const shownTransitionRef = useRef(false);
+  useEffect(() => {
+    if (showTransition && !shownTransitionRef.current) {
+      shownTransitionRef.current = true;
+      if (import.meta.env.DEV) console.log("[scene] transition shown");
+    } else if (!showTransition) {
+      shownTransitionRef.current = false;
+    }
+  }, [showTransition]);
 
 
   return (

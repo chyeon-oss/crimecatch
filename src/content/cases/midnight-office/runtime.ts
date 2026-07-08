@@ -73,7 +73,9 @@ const evidence: RuntimeEvidence[] = [
   {
     id: "e2",
     title: "꺼진 CCTV 기록",
-    description: "사건 직전 30분간 12층 전체 CCTV가 정전으로 꺼져 있었다.",
+    description: "사건 시간대 일부가 비어 있는 CCTV 관리 기록.",
+    notebookEntry:
+      "CCTV 기록 확인. 특정 시간대 영상 공백이 있으나 수동 삭제 흔적은 보이지 않는다.",
     category: "CCTV",
     importance: "IMPORTANT",
     location: "관제실 서버",
@@ -83,9 +85,10 @@ const evidence: RuntimeEvidence[] = [
   {
     id: "e6",
     title: "정전 기록",
-    description: "12층 배전반에 수동 조작 흔적. 정전 직전 접근자 카드 로그가 남아 있다.",
+    description: "사건 시간대와 가까운 시각에 기록된 짧은 전원 이상 로그.",
+    notebookEntry: "정전 기록 확인. 12층 일부 구역에서 짧은 전원 이상이 있었다.",
     category: "DOCUMENT",
-    importance: "CRITICAL",
+    importance: "IMPORTANT",
     location: "12층 배전반",
     discovered: false,
     relatedEvidence: ["e2"],
@@ -94,9 +97,10 @@ const evidence: RuntimeEvidence[] = [
   {
     id: "e7",
     title: "멈춘 회의실 시계",
-    description: "회의실 벽시계가 20:18에 멈춰 있다. 사망 추정 시각을 좁힌다.",
+    description: "회의실 벽에 걸린 아날로그 시계가 특정 시각에서 멈춰 있다.",
+    notebookEntry: "회의실 시계 확인. 시계가 멈춰 있으며 배터리 덮개가 열려 있다.",
     category: "OBJECT",
-    importance: "IMPORTANT",
+    importance: "CRITICAL",
     location: "회의실",
     discovered: false,
     relatedQuestions: ["q-tod"],

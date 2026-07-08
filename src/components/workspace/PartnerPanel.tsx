@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, Lightbulb, Send, Sparkles, Brain } from "lucide-react";
+import { Bot, Lightbulb, Send, Sparkles, Brain, BookMarked } from "lucide-react";
 import { IntelligenceEngine, StoryRuntime, type IntelligenceState } from "@/engine";
 import type { Case, StoryRuntimeState } from "@/types";
+import { useNotebook, NOTEBOOK_SECTIONS, notebookSummary } from "@/lib/notebook";
+
 
 
 interface PartnerMessage {
@@ -43,12 +45,36 @@ export function PartnerPanel({ case: c, intelligenceState, storyState }: Props) 
   const solvedQuestions = questions.filter((q) => q.status === "solved");
   const readCount = intelligenceState.readIds.size;
 
+  const { notebook } = useNotebook(c.id);
+  const nbSummary = notebookSummary(notebook);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
       behavior: "smooth",
     });
   }, [history, tab]);
+
+  const referenceNotebook = (userText: string): string | null => {
+    const q = userText.toLowerCase();
+    // Match a section the detective mentions, or fall back to any filled section.
+    const matchedSection =
+      NOTEBOOK_SECTIONS.find(
+        (s) =>
+          q.includes(s.label.toLowerCase()) ||
+          q.includes(s.id) ||
+          q.includes(SECTION_KEYWORDS[s.id]),
+      ) ?? NOTEBOOK_SECTIONS.find((s) => notebook[s.id]?.trim().length);
+    if (!matchedSection) return null;
+    const raw = notebook[matchedSection.id]?.trim();
+    if (!raw) return null;
+    const snippet = raw
+      .replace(/[#>*_`\-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 140);
+    return `노트북의 "${matchedSection.label}" 항목을 참고했습니다 — "${snippet}${raw.length > 140 ? "…" : ""}". 이 기록과 지금까지의 증거를 비교해보시죠.`;
+  };
 
   const send = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,18 +87,23 @@ export function PartnerPanel({ case: c, intelligenceState, storyState }: Props) 
       text,
       kind: "chat",
     };
-    // Placeholder reasoning response — real AI wiring lands here later.
+    // Partner reasoning. Never surfaces suspect.hiddenTruth or Solution — those
+    // are gated by the accusation flow. Uses only player-authored notebook +
+    // discovered/read evidence state.
+    const notebookLine = referenceNotebook(text);
+    const baseReply =
+      activeQuestions.length > 0
+        ? `아직 확인이 필요한 의문이 ${activeQuestions.length}개 있습니다. 우선 "${activeQuestions[0].question.text}"부터 짚어보시죠.`
+        : "지금까지 수집한 단서들이 하나의 그림으로 모이고 있습니다. 가설을 정리해보시죠.";
     const reply: PartnerMessage = {
       id: `p_${Date.now() + 1}`,
       role: "partner",
-      text:
-        activeQuestions.length > 0
-          ? `아직 확인이 필요한 의문이 ${activeQuestions.length}개 있습니다. 우선 "${activeQuestions[0].question.text}"부터 짚어보시죠.`
-          : "지금까지 수집한 단서들이 하나의 그림으로 모이고 있습니다. 가설을 정리해보시죠.",
+      text: notebookLine ? `${notebookLine}\n\n${baseReply}` : baseReply,
       kind: "reasoning",
     };
     setHistory((h) => [...h, user, reply]);
   };
+
 
   return (
     <aside className="flex h-full flex-col border-l border-border/60 bg-card/40 backdrop-blur-sm">
@@ -175,6 +206,13 @@ export function PartnerPanel({ case: c, intelligenceState, storyState }: Props) 
             <ReasoningLine label="용의자">
               {c.suspects.map((s) => s.name).join(", ")}
             </ReasoningLine>
+            <ReasoningLine label="노트북">
+              <span className="inline-flex items-center gap-1">
+                <BookMarked className="h-3 w-3 text-amber-300" />
+                {nbSummary.filledCount}/{nbSummary.totalSections} 섹션 · {nbSummary.words} words
+              </span>
+            </ReasoningLine>
+
             <div className="rounded-lg border border-border/40 bg-surface-elevated/40 p-3">
               <p className="mb-1 text-[9px] uppercase tracking-widest text-muted-foreground">
                 파트너 메모
@@ -291,4 +329,13 @@ function ReasoningLine({
 function StoryRuntimePhaseLabel(state: StoryRuntimeState) {
   return StoryRuntime.phaseDef(state.phase).koreanTitle;
 }
+
+const SECTION_KEYWORDS: Record<(typeof NOTEBOOK_SECTIONS)[number]["id"], string> = {
+  suspects: "용의자",
+  timeline: "시간",
+  evidence: "증거",
+  questions: "의문",
+  theories: "가설",
+};
+
 

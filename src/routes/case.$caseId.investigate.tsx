@@ -24,7 +24,8 @@ import { InvestigationSection } from "@/components/InvestigationSection";
 
 import { EvidenceModal } from "@/components/EvidenceModal";
 import { EvidenceLocker } from "@/components/EvidenceLocker";
-import { DetectiveNote } from "@/components/DetectiveNote";
+import { DetectiveNotebook } from "@/components/DetectiveNotebook";
+
 import { CrimeScene } from "@/components/CrimeScene";
 import { DiscoveryModal } from "@/components/DiscoveryModal";
 import { ActiveQuestions } from "@/components/ActiveQuestions";
@@ -387,11 +388,12 @@ function InvestigatePage() {
 
                 <InvestigationSection
                   icon={NotebookPen}
-                  title="추리 노트"
-                  subtitle="당신의 가설을 기록하세요"
+                  title="Detective's Notebook"
+                  subtitle="용의자·타임라인·증거·의문·가설을 자유롭게 기록하세요 (Markdown 지원)"
                 >
-                  <DetectiveNote storageKey={`note-${data.id}`} />
+                  <DetectiveNotebook caseId={data.id} />
                 </InvestigationSection>
+
 
                 <InvestigationSection
                   icon={Gavel}

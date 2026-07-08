@@ -16,6 +16,11 @@ export interface Victim {
   occupation: string;
   causeOfDeath: string;
   profileImage?: string;
+  /** Optional extended profile fields (player-facing, non-spoiler). */
+  department?: string;
+  biography?: string;
+  portraitPrompt?: string;
+  personalNotes?: string;
 }
 
 export interface UnlockRules {

@@ -231,6 +231,7 @@ function AccusePage() {
               title="당신의 추리를 설명하세요."
               subtitle="선택한 증거가 어떻게 범인을 가리키는지 서술하세요."
             >
+              <BoardConnectionsRecall case={data} />
               <textarea
                 value={reasoning}
                 onChange={(e) => setReasoning(e.target.value)}

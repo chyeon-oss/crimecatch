@@ -6,7 +6,6 @@ import type { Solution } from "./solution";
 import type { CrimeScene } from "./hotspot";
 import type { InvestigationQuestion } from "./question";
 
-
 export type CaseDifficulty = "쉬움" | "보통" | "어려움";
 export type CaseStatus = "무료" | "신규" | "프리미엄";
 
@@ -17,10 +16,32 @@ export interface Victim {
   causeOfDeath: string;
   profileImage?: string;
   /** Optional extended profile fields (player-facing, non-spoiler). */
+  gender?: string;
   department?: string;
+  tenure?: string;
+  employeeSince?: string;
   biography?: string;
+  profile?: string;
   portraitPrompt?: string;
   personalNotes?: string;
+  companyReputation?: {
+    superior?: string;
+    colleague?: string;
+    junior?: string;
+  };
+  recentWork?: string[];
+  recentTwoWeeks?: string[];
+  clothingAtIncident?: string[];
+  personalBelongings?: string[];
+  deskItems?: string[];
+  health?: string;
+  family?: string;
+  recentImpressions?: string[];
+  lastOfficialSchedule?: string;
+  lastConfirmedLocation?: string;
+  firstReportTime?: string;
+  firstReport?: string;
+  initialPoliceNotes?: string[];
 }
 
 export interface UnlockRules {
@@ -67,4 +88,3 @@ export interface Case {
   /** Investigation intelligence: questions surfaced during the case. */
   questions?: InvestigationQuestion[];
 }
-

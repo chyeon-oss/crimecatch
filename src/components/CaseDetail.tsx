@@ -97,8 +97,8 @@ function NoteList({ items }: { items?: string[] }) {
 function SuspectCard({ suspect }: { suspect: Suspect }) {
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
           <h3 className="font-display text-base font-medium text-foreground">
             {suspect.name}
           </h3>
@@ -107,11 +107,12 @@ function SuspectCard({ suspect }: { suspect: Suspect }) {
           </p>
         </div>
         <span className="shrink-0 rounded-full border border-border/80 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-          {suspect.relationship}
+          {suspect.id}
         </span>
       </div>
 
       <div className="mt-3 border-t border-border/40 pt-3">
+        <Field label="관계" value={suspect.relationship} />
         <Field label="성격" value={suspect.personality} />
         <Field label="최초 진술" value={suspect.initialStatement} />
         <Field label="알리바이" value={suspect.alibi} />

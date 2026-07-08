@@ -206,6 +206,13 @@ export function PartnerPanel({ case: c, intelligenceState, storyState }: Props) 
             <ReasoningLine label="용의자">
               {c.suspects.map((s) => s.name).join(", ")}
             </ReasoningLine>
+            <ReasoningLine label="노트북">
+              <span className="inline-flex items-center gap-1">
+                <BookMarked className="h-3 w-3 text-amber-300" />
+                {nbSummary.filledCount}/{nbSummary.totalSections} 섹션 · {nbSummary.words} words
+              </span>
+            </ReasoningLine>
+
             <div className="rounded-lg border border-border/40 bg-surface-elevated/40 p-3">
               <p className="mb-1 text-[9px] uppercase tracking-widest text-muted-foreground">
                 파트너 메모

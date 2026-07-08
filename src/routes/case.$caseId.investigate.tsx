@@ -14,11 +14,6 @@ import {
 } from "lucide-react";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { TopBar } from "@/components/TopBar";
 import { InvestigationSection } from "@/components/InvestigationSection";
 
@@ -42,6 +37,7 @@ import { InvestigationTimeline } from "@/components/InvestigationTimeline";
 import { ObjectiveBanner } from "@/components/ObjectiveBanner";
 import { SceneStageTimeline, type SceneStage } from "@/components/SceneStageTimeline";
 import { SceneTransitionModal } from "@/components/SceneTransitionModal";
+import { RuntimeDebugPanel } from "@/components/RuntimeDebugPanel";
 
 import {
   CaseEngine,
@@ -362,7 +358,7 @@ function InvestigatePage() {
 
 
   return (
-    <div className="flex h-screen flex-col noir-grain">
+    <div className="flex min-h-screen flex-col noir-grain">
       <TopBar
         to="/case/$caseId"
         label="사건 정보로"
@@ -387,9 +383,9 @@ function InvestigatePage() {
         totalEvidence={data.evidence.length}
       />
 
-      <ResizablePanelGroup orientation="horizontal" className="flex-1">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col md:flex-row">
         {/* LEFT: Case briefing */}
-        <ResizablePanel defaultSize={22} minSize={16} maxSize={30}>
+        <aside className="w-full shrink-0 border-b border-border md:sticky md:top-0 md:max-h-screen md:w-[280px] md:min-w-[260px] md:overflow-y-auto md:border-b-0 md:border-r">
           <CaseSidebar
             case={data}
             storyState={storyState}
@@ -397,14 +393,11 @@ function InvestigatePage() {
             discoveredCount={discoveredIds.length}
             totalEvidence={data.evidence.length}
           />
-        </ResizablePanel>
-
-        <ResizableHandle />
+        </aside>
 
         {/* CENTER: Investigation scene */}
-        <ResizablePanel defaultSize={54} minSize={40}>
-          <div className="h-full overflow-y-auto">
-            <div className="mx-auto max-w-3xl px-6 pb-16 pt-6">
+        <main className="min-w-0 flex-1">
+          <div className="mx-auto max-w-3xl px-6 pb-16 pt-6">
               <div className="mb-5">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                   ACTIVE INVESTIGATION
@@ -422,6 +415,12 @@ function InvestigatePage() {
                   progress={runtimeState.investigationProgress}
                 />
               )}
+
+              <RuntimeDebugPanel
+                state={runtimeState}
+                availableHotspotIds={availableHotspots.map((h) => h.id)}
+              />
+
 
               <div className="grid gap-4">
                 <InvestigationSection
@@ -588,20 +587,18 @@ function InvestigatePage() {
                 )}
               </div>
             </div>
-          </div>
-        </ResizablePanel>
-
-        <ResizableHandle />
+        </main>
 
         {/* RIGHT: Detective Partner */}
-        <ResizablePanel defaultSize={24} minSize={18} maxSize={34}>
+        <aside className="w-full shrink-0 border-t border-border md:sticky md:top-0 md:max-h-screen md:w-[320px] md:min-w-[280px] md:overflow-y-auto md:border-l md:border-t-0">
           <PartnerPanel
             case={data}
             intelligenceState={intelligenceState}
             storyState={storyState}
           />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+        </aside>
+      </div>
+
 
       <EvidenceModal
         evidence={openEvidence}

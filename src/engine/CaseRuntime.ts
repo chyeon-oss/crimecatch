@@ -234,10 +234,15 @@ function applyDerived(
         currentObjective: nextScene.objective,
         gameStatus: statusForScene(nextScene, next.gameStatus),
       };
+      // Re-derive hotspots for the newly-active scene so its available
+      // hotspots enter `unlockedHotspots` immediately — otherwise the
+      // reducer rejects clicks on them and the case can never progress.
+      next = { ...next, unlockedHotspots: recomputeHotspots(def, nextScene, next) };
     } else if (!scene.nextSceneId) {
       next = { ...next, gameStatus: "ACCUSATION" };
     }
   }
+
 
   next = { ...next, investigationProgress: progressOf(def, next) };
   return next;

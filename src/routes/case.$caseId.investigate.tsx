@@ -684,24 +684,25 @@ function InvestigatePage() {
         onOpenEvidence={openEvidenceAndMarkRead}
       />
 
-      <DiscoveryModal
-        evidence={currentDiscovery}
-        remaining={Math.max(0, discoveryQueue.length - 1)}
-        onContinue={continueDiscovery}
-      />
+      {currentDiscovery && (
+        <DiscoveryModal
+          evidence={currentDiscovery}
+          remaining={discoveryQueue.length}
+          onContinue={dismissDiscovery}
+        />
+      )}
 
       <SuspectProfileModal
         dossier={openSuspect}
         onClose={() => setOpenSuspect(null)}
       />
 
-      <SceneTransitionModal
-        open={transition !== null}
-        previousSceneTitle={transition?.prevTitle ?? null}
-        newSceneTitle={transition?.newTitle ?? null}
-        newObjective={transition?.newObjective ?? null}
-        onContinue={() => setTransition(null)}
-      />
-    </div>
-  );
-}
+      {showTransition && (
+        <SceneTransitionModal
+          open
+          previousSceneTitle={transition?.prevTitle ?? null}
+          newSceneTitle={transition?.newTitle ?? null}
+          newObjective={transition?.newObjective ?? null}
+          onContinue={() => setTransition(null)}
+        />
+      )}

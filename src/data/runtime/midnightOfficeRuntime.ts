@@ -4,5 +4,6 @@
  */
 export {
   midnightOfficeRuntime,
-  runtime as midnightOfficeRuntime,
+  runtime,
 } from "@/content/cases/midnight-office/runtime";
+

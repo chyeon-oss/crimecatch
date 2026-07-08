@@ -23,10 +23,7 @@ import type {
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
-function conditionMet(
-  cond: RuntimeUnlockCondition | undefined,
-  s: CaseRuntimeState,
-): boolean {
+function conditionMet(cond: RuntimeUnlockCondition | undefined, s: CaseRuntimeState): boolean {
   if (!cond) return true;
   const has = (list: string[] | undefined, pool: string[]) =>
     !list?.length || list.every((id) => pool.includes(id));
@@ -38,23 +35,18 @@ function conditionMet(
   );
 }
 
-function completionMet(
-  scene: Scene,
-  s: CaseRuntimeState,
-): boolean {
+function completionMet(scene: Scene, s: CaseRuntimeState): boolean {
   const cond: RuntimeCompletionCondition | undefined = scene.completionCondition;
   if (!cond) {
     // Default: all reward evidence collected.
-    return scene.evidenceRewardIds.every((id) =>
-      s.discoveredEvidence.includes(id),
-    );
+    return scene.evidenceRewardIds.every((id) => s.discoveredEvidence.includes(id));
   }
   const has = (list: string[] | undefined, pool: string[]) =>
     !list?.length || list.every((id) => pool.includes(id));
   const minOk =
     cond.minEvidenceRewards == null ||
-    scene.evidenceRewardIds.filter((id) => s.discoveredEvidence.includes(id))
-      .length >= cond.minEvidenceRewards;
+    scene.evidenceRewardIds.filter((id) => s.discoveredEvidence.includes(id)).length >=
+      cond.minEvidenceRewards;
   return (
     minOk &&
     has(cond.requiresEvidenceIds, s.discoveredEvidence) &&
@@ -77,17 +69,13 @@ function recomputeQuestions(
     if (solved.has(q.id)) continue;
     const unlockList = q.unlockedByEvidenceIds ?? [];
     const shouldActivate =
-      unlockList.length === 0 ||
-      unlockList.some((id) => s.discoveredEvidence.includes(id));
+      unlockList.length === 0 || unlockList.some((id) => s.discoveredEvidence.includes(id));
     if (shouldActivate && !active.has(q.id)) {
       active.add(q.id);
       newlyActive.push(q.id);
     }
     const solveList = q.solvedByEvidenceIds ?? [];
-    if (
-      solveList.length > 0 &&
-      solveList.every((id) => s.discoveredEvidence.includes(id))
-    ) {
+    if (solveList.length > 0 && solveList.every((id) => s.discoveredEvidence.includes(id))) {
       active.delete(q.id);
       solved.add(q.id);
       newlySolved.push(q.id);
@@ -118,10 +106,7 @@ function recomputeHotspots(
 
 function progressOf(def: CaseDefinition, s: CaseRuntimeState): number {
   const totals =
-    def.evidence.length +
-    def.questions.length +
-    def.scenes.length +
-    def.suspectIds.length;
+    def.evidence.length + def.questions.length + def.scenes.length + def.suspectIds.length;
   if (totals === 0) return 0;
   const done =
     s.discoveredEvidence.length +
@@ -189,10 +174,7 @@ export function createRuntimeState(def: CaseDefinition): CaseRuntimeState {
   };
 }
 
-function applyDerived(
-  def: CaseDefinition,
-  s: CaseRuntimeState,
-): CaseRuntimeState {
+function applyDerived(def: CaseDefinition, s: CaseRuntimeState): CaseRuntimeState {
   const scene = def.scenes.find((x) => x.id === s.currentScene);
   const q = recomputeQuestions(def, s);
   let notebookQueue = s.notebookQueue;
@@ -243,7 +225,6 @@ function applyDerived(
     }
   }
 
-
   next = { ...next, investigationProgress: progressOf(def, next) };
   return next;
 }
@@ -276,7 +257,7 @@ export function reduceRuntime(
             notebookQueue: pushNote(
               next.notebookQueue,
               "EVIDENCE_DISCOVERED",
-              ev ? `🔎 ${ev.title}` : `🔎 ${evId}`,
+              ev ? `🔎 ${ev.notebookEntry || ev.title}` : `🔎 ${evId}`,
             ),
           };
         }
@@ -294,7 +275,7 @@ export function reduceRuntime(
         notebookQueue: pushNote(
           state.notebookQueue,
           "EVIDENCE_DISCOVERED",
-          `🔎 ${ev.title}`,
+          `🔎 ${ev.notebookEntry || ev.title}`,
         ),
       };
       return applyDerived(def, next);
@@ -312,27 +293,20 @@ export function reduceRuntime(
       const next: CaseRuntimeState = {
         ...state,
         interviewedSuspects: [...state.interviewedSuspects, action.suspectId],
-        gameStatus:
-          state.gameStatus === "INVESTIGATION" ? "INTERROGATION" : state.gameStatus,
+        gameStatus: state.gameStatus === "INVESTIGATION" ? "INTERROGATION" : state.gameStatus,
       };
       return applyDerived(def, next);
     }
 
     case "SOLVE_QUESTION": {
       if (state.solvedQuestions.includes(action.questionId)) return state;
-      const q: RuntimeQuestion | undefined = def.questions.find(
-        (x) => x.id === action.questionId,
-      );
+      const q: RuntimeQuestion | undefined = def.questions.find((x) => x.id === action.questionId);
       if (!q) return state;
       const next: CaseRuntimeState = {
         ...state,
         activeQuestions: state.activeQuestions.filter((id) => id !== q.id),
         solvedQuestions: [...state.solvedQuestions, q.id],
-        notebookQueue: pushNote(
-          state.notebookQueue,
-          "QUESTION_SOLVED",
-          `✓ ${q.title}`,
-        ),
+        notebookQueue: pushNote(state.notebookQueue, "QUESTION_SOLVED", `✓ ${q.title}`),
       };
       return applyDerived(def, next);
     }
@@ -384,8 +358,7 @@ export const CaseRuntime = {
         // completion are independent concerns.
         const revealed = h.revealsEvidenceIds;
         const allRevealed =
-          revealed.length > 0 &&
-          revealed.every((id) => s.discoveredEvidence.includes(id));
+          revealed.length > 0 && revealed.every((id) => s.discoveredEvidence.includes(id));
         const status: RuntimeHotspot["status"] = allRevealed
           ? "COMPLETED"
           : s.unlockedHotspots.includes(h.id)

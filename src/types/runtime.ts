@@ -44,6 +44,8 @@ export interface RuntimeEvidence {
   discovered: boolean;
   relatedEvidence?: string[];
   relatedQuestions?: string[];
+  /** Auto-generated notebook entry text when this evidence is discovered. */
+  notebookEntry?: string;
 }
 
 export interface RuntimeQuestion {

@@ -28,8 +28,7 @@ export const evidence: Evidence[] = [
     unlockOrder: 0,
     importance: "IMPORTANT",
     observation: "영상이 사라진 것처럼 보이지만, 삭제라고 단정할 수는 없다.",
-    notebookEntry:
-      "CCTV 기록 확인. 특정 시간대 영상 공백이 있으나 수동 삭제 흔적은 보이지 않는다.",
+    notebookEntry: "CCTV 기록 확인. 특정 시간대 영상 공백이 있으나 수동 삭제 흔적은 보이지 않는다.",
     unlockedQuestion: "CCTV 공백은 누가 만든 것일까, 아니면 원래 존재하던 구간일까?",
     relatedEvidenceIds: ["e6"],
     relatedTimelineTimes: ["20:05", "20:30"],

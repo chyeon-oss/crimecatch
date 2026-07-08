@@ -74,8 +74,7 @@ const evidence: RuntimeEvidence[] = [
     id: "e2",
     title: "꺼진 CCTV 기록",
     description: "사건 시간대 일부가 비어 있는 CCTV 관리 기록.",
-    notebookEntry:
-      "CCTV 기록 확인. 특정 시간대 영상 공백이 있으나 수동 삭제 흔적은 보이지 않는다.",
+    notebookEntry: "CCTV 기록 확인. 특정 시간대 영상 공백이 있으나 수동 삭제 흔적은 보이지 않는다.",
     category: "CCTV",
     importance: "IMPORTANT",
     location: "관제실 서버",

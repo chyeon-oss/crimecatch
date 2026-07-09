@@ -211,6 +211,54 @@ export function SuspectProfileModal({ dossier, onClose }: Props) {
           </section>
 
           <section>
+            <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-primary/70">
+              First-Round Interview
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {s.firstImpression && (
+                <div className="rounded-md border border-border/60 bg-surface-elevated/60 p-3">
+                  <p className="text-[10px] uppercase tracking-widest text-primary/70">
+                    첫인상
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">
+                    {s.firstImpression}
+                  </p>
+                </div>
+              )}
+              {s.interviewNotes && (
+                <div className="rounded-md border border-border/60 bg-surface-elevated/60 p-3">
+                  <p className="text-[10px] uppercase tracking-widest text-primary/70">
+                    심문 메모
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">
+                    {s.interviewNotes}
+                  </p>
+                </div>
+              )}
+              {s.pressurePoint && (
+                <div className="rounded-md border border-border/60 bg-surface-elevated/60 p-3">
+                  <p className="text-[10px] uppercase tracking-widest text-primary/70">
+                    압박 포인트
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">
+                    {s.pressurePoint}
+                  </p>
+                </div>
+              )}
+              {s.visibleContradictionHint && (
+                <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
+                  <p className="text-[10px] uppercase tracking-widest text-primary/70">
+                    모순 힌트
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">
+                    {s.visibleContradictionHint}
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section>
             <p className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-primary/70">
               <AlertTriangle className="h-3 w-3 text-rose-300" />
               Contradictions

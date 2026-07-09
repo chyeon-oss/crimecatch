@@ -13,9 +13,14 @@ export type PublicSuspect = {
   initialStatement: string;
   alibi: string;
   firstImpression: string;
+  /** Notes from the first-round police interview (player-facing). */
+  interviewNotes: string;
+  /** Sensitive topic to press during interrogation (player-facing). */
+  pressurePoint: string;
+  /** Subtle hint toward useful evidence — never reveals the answer. */
+  visibleContradictionHint: string;
+  /** Kept for compatibility with legacy surfaces that read policeNotes. */
   policeNotes: string;
-  interviewPrompt: string;
-  contradictionHint: string;
 };
 
 export const suspects: PublicSuspect[] = [
@@ -29,17 +34,19 @@ export const suspects: PublicSuspect[] = [
     personality:
       "말투는 차분하고 논리적이다. 답변이 지나치게 정리되어 있어, 상황을 미리 정돈해둔 듯한 인상을 준다.",
     initialStatement:
-      "팀장님은 평소처럼 야근 중이셨습니다. 저도 제 자리에서 업무를 보고 있었고요. 회의실 쪽에는 오래 머물지 않았습니다.",
+      "그 시간엔 제 자리에서 자료를 정리하고 있었습니다. 팀장님과 따로 이야기한 건 없습니다.",
     alibi:
-      "본인 좌석과 소회의실을 오가며 신규 사업 TF 자료를 정리하고 있었다고 진술. 늦은 시간까지 사무실에 남아 있었던 것은 확인된다.",
+      "본인 자리에서 야근 중이었다고 주장.",
     firstImpression:
-      "말투는 차분하지만, 답변이 지나치게 정리되어 있다. 미리 준비한 듯한 인상을 준다.",
+      "말투는 차분하지만 답변이 지나치게 정리되어 있다.",
+    interviewNotes:
+      "피해자와 업무상 가장 자주 부딪히던 인물. 질문을 받을 때 감정 표현은 적지만, 특정 시간대에 대한 답변이 모호하다.",
+    pressurePoint:
+      "피해자와의 마지막 대화.",
+    visibleContradictionHint:
+      "그의 진술은 출입문과 시간 관련 증거와 함께 다시 확인할 필요가 있다.",
     policeNotes:
-      "피해자와 업무적으로 가장 가까운 위치에 있었으며, 사건 당일 늦은 시간까지 사무실에 남아 있었다.",
-    interviewPrompt:
-      "피해자와 마지막으로 대화한 시점, 야근 중 동선, 신규 사업 TF 관련 업무를 확인하세요.",
-    contradictionHint:
-      "진술이 지나치게 매끄럽습니다. 시간대별 동선을 다른 증거와 비교해보세요.",
+      "피해자와 업무상 가장 자주 부딪히던 인물. 질문을 받을 때 감정 표현은 적지만, 특정 시간대에 대한 답변이 모호하다.",
   },
   {
     id: "s2",
@@ -51,17 +58,19 @@ export const suspects: PublicSuspect[] = [
     personality:
       "침착하지만 방어적이다. 프로젝트 이야기로 화제가 넘어가면 목소리가 미묘하게 날카로워진다.",
     initialStatement:
-      "회의가 끝난 뒤 바로 정리하고 나왔습니다. 한 팀장님과 의견 차이는 있었지만, 그건 업무적인 문제였습니다.",
+      "회의가 끝난 뒤 바로 나갔습니다. 더 남아 있을 이유가 없었어요.",
     alibi:
-      "회의 종료 후 자기 자리로 돌아가 업무를 마무리하고 퇴근했다고 진술. 회의실을 나선 정확한 시점은 본인도 명확히 기억하지 못한다.",
+      "회의 종료 후 귀가했다고 주장.",
     firstImpression:
-      "침착하지만 방어적이다. 질문이 프로젝트 이야기로 넘어가면 목소리가 약간 날카로워진다.",
+      "침착하지만 질문이 깊어질수록 방어적으로 변한다.",
+    interviewNotes:
+      "피해자와 프로젝트 일정 문제로 충돌한 기록이 있다. 감정적 동기는 있어 보이지만, 사건 현장에 남아 있었다는 직접 증거는 아직 없다.",
+    pressurePoint:
+      "회의 종료 후 실제 동선.",
+    visibleContradictionHint:
+      "그녀의 진술은 CCTV 공백과 퇴근 동선을 함께 검토해야 한다.",
     policeNotes:
-      "사건 당일 피해자와 공개적인 언쟁이 있었다는 직원 진술이 있다.",
-    interviewPrompt:
-      "회의 종료 후 동선, 피해자와의 언쟁, 프로젝트 일정 갈등을 확인하세요.",
-    contradictionHint:
-      "업무 갈등을 축소하려는 태도가 보입니다. 회의 이후 실제 동선을 확인해야 합니다.",
+      "피해자와 프로젝트 일정 문제로 충돌한 기록이 있다. 감정적 동기는 있어 보이지만, 사건 현장에 남아 있었다는 직접 증거는 아직 없다.",
   },
   {
     id: "s3",
@@ -73,17 +82,19 @@ export const suspects: PublicSuspect[] = [
     personality:
       "대답이 빠르지만 눈을 자주 피한다. 질문이 길어질수록 손을 마주 잡거나 자세를 자주 바꾼다.",
     initialStatement:
-      "그 시간엔 잠깐 자리를 비웠습니다. 커피를 마시러 갔던 것 같고… 정확한 시간은 잘 기억나지 않습니다.",
+      "잠깐 커피를 마시러 나갔다 온 것뿐입니다. 정확한 시간은 기억이 잘 안 납니다.",
     alibi:
-      "잠깐 자리에서 벗어나 있었다고만 진술. 이동 경로와 시각을 명확히 특정하지 못한다.",
+      "커피를 마시러 자리를 비웠다고 주장.",
     firstImpression:
-      "대답이 빠르지만 눈을 자주 피한다. 질문을 오래 이어가면 불안한 기색이 드러난다.",
+      "빠르게 답하지만 눈을 잘 마주치지 않는다.",
+    interviewNotes:
+      "사건 시간 전후의 동선이 가장 흐릿하다. 단순히 긴장한 것인지, 숨기는 것이 있는지는 아직 알 수 없다.",
+    pressurePoint:
+      "자리를 비운 정확한 시간.",
+    visibleContradictionHint:
+      "그의 진술은 CCTV 기록과 회의실 시계의 시간 차이를 함께 확인해야 한다.",
     policeNotes:
-      "사건 전후 동선이 가장 불명확하다. 본인은 단순한 휴식이었다고 주장한다.",
-    interviewPrompt:
-      "커피를 마시러 간 시간, 복도 이동, 피해자와의 마지막 접촉 여부를 확인하세요.",
-    contradictionHint:
-      "기억이 흐릿하다는 말이 반복됩니다. CCTV와 출입 기록이 확보되면 비교가 필요합니다.",
+      "사건 시간 전후의 동선이 가장 흐릿하다. 단순히 긴장한 것인지, 숨기는 것이 있는지는 아직 알 수 없다.",
   },
   {
     id: "s4",
@@ -95,16 +106,18 @@ export const suspects: PublicSuspect[] = [
     personality:
       "조사에 협조적이지만 긴장한 기색을 감추지 못한다. 질문을 받을 때 손을 자주 만진다.",
     initialStatement:
-      "저는 인사 관련 자료 때문에 잠깐 이야기를 나눴을 뿐입니다. 사건과 관련될 만한 내용은 아니었습니다.",
+      "인사평가 관련해서 한 팀장님과 이야기를 나눈 건 맞습니다. 하지만 사건과는 상관없습니다.",
     alibi:
-      "인사팀 사무실에서 관련 서류를 정리하고 있었다고 진술. 피해자와의 비공개 면담 시각은 기록으로 일부 확인된다.",
+      "인사팀 자료를 정리한 뒤 사무실을 떠났다고 주장.",
     firstImpression:
-      "조사에 협조적이지만 긴장한 기색을 감추지 못한다. 질문을 받을 때 손을 자주 만진다.",
+      "협조적이지만 지나치게 조심스럽다.",
+    interviewNotes:
+      "피해자의 최근 업무와 밀접하게 연결되어 있다. 직접적인 적대감은 보이지 않지만, 민감한 내부 자료를 알고 있었을 가능성이 있다.",
+    pressurePoint:
+      "피해자가 검토하던 인사평가 자료.",
+    visibleContradictionHint:
+      "그녀의 진술은 피해자의 노트북 기록과 함께 다시 볼 필요가 있다.",
     policeNotes:
-      "피해자의 최근 업무 중 인사평가 검토가 포함되어 있었고, 한유리는 해당 자료 접근 권한을 가진 직원이다.",
-    interviewPrompt:
-      "인사평가 자료, 비공개 면담 내용, 사건 당일 피해자와의 대화 여부를 확인하세요.",
-    contradictionHint:
-      "'관련될 만한 내용은 아니다'라는 표현이 애매합니다. 무엇을 관련 없다고 판단했는지 확인해야 합니다.",
+      "피해자의 최근 업무와 밀접하게 연결되어 있다. 직접적인 적대감은 보이지 않지만, 민감한 내부 자료를 알고 있었을 가능성이 있다.",
   },
 ];

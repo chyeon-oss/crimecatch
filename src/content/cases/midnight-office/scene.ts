@@ -89,6 +89,21 @@ export const questions = [
     generatedByEvidenceIds: ["e2", "e7"],
     solvedByEvidenceIds: ["e2", "e7"],
   },
+  {
+    id: "q8",
+    text: "누가 피해자와 마지막으로 대화했을까?",
+    generatedByEvidenceIds: ["e2"],
+  },
+  {
+    id: "q9",
+    text: "각 용의자의 알리바이는 증거와 일치할까?",
+    generatedByEvidenceIds: ["e6"],
+  },
+  {
+    id: "q10",
+    text: "피해자가 사건 직전 검토하던 자료는 누구와 관련되어 있을까?",
+    generatedByEvidenceIds: ["e3"],
+  },
 ];
 
 export const achievements = [

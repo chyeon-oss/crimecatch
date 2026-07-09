@@ -616,9 +616,8 @@ function SubmittedScreen({
         <div className="mt-8 flex flex-col items-center gap-2">
           <button
             type="button"
-            disabled
-            aria-disabled
-            className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary/80 opacity-70"
+            onClick={onOpenReconstruction}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)] transition-transform hover:scale-[1.01]"
           >
             <FileSearch className="h-4 w-4" />
             사건 재구성 보기

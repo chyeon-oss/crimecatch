@@ -149,16 +149,27 @@ function AccusePage() {
 
   if (submitted) {
     return (
-      <SubmittedScreen
-        case={data}
-        payload={submitted}
-        suspect={suspectById(submitted.suspectId)}
-        motive={optionById(MOTIVE_OPTIONS, submitted.motiveId)}
-        method={optionById(METHOD_OPTIONS, submitted.methodId)}
-        evidence={evidenceByIdLocal(submitted.evidenceId)}
-        result={result}
-      />
-
+      <>
+        <SubmittedScreen
+          case={data}
+          payload={submitted}
+          suspect={suspectById(submitted.suspectId)}
+          motive={optionById(MOTIVE_OPTIONS, submitted.motiveId)}
+          method={optionById(METHOD_OPTIONS, submitted.methodId)}
+          evidence={evidenceByIdLocal(submitted.evidenceId)}
+          result={result}
+          onOpenReconstruction={() => setShowReconstruction(true)}
+        />
+        {showReconstruction && (
+          <ReconstructionModal
+            case={data}
+            payload={submitted}
+            result={result}
+            discoveredEvidence={discoveredEvidence}
+            onClose={() => setShowReconstruction(false)}
+          />
+        )}
+      </>
     );
   }
 

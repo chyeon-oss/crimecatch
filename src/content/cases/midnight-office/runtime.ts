@@ -235,7 +235,7 @@ const scenes: Scene[] = [
     id: "scene-03",
     title: "SCENE 03 — 용의자 조사",
     description: "네 사람이 남았다. 진술을 확인하고, 어긋난 지점을 찾을 시간이다.",
-    objective: "용의자들의 진술을 확인하고 모순되는 부분을 찾으세요.",
+    objective: "용의자들의 진술을 확인하고, 확보한 증거와 맞지 않는 부분을 찾아보세요.",
     status: "INTERROGATION",
     availableHotspotIds: [],
     availableSuspectIds: ["s1", "s2", "s3", "s4"],

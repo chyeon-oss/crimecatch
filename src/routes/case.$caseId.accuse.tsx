@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   Gavel,
@@ -11,6 +11,13 @@ import {
   ArrowRight,
   ArrowLeft,
   Lock,
+  X,
+  Clock,
+  Search,
+  FileText,
+  AlertTriangle,
+  ChevronRight,
+  FolderOpen,
 } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { Route as CaseRoute } from "./case.$caseId";

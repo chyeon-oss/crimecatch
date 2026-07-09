@@ -91,6 +91,7 @@ function AccusePage() {
   const [reasoning, setReasoning] = useState("");
   const [submitted, setSubmitted] = useState<DeductionPayload | null>(null);
   const [result, setResult] = useState<DeductionScore | null>(null);
+  const [showReconstruction, setShowReconstruction] = useState(false);
 
   const canAdvance: Record<StepId, boolean> = {
     1: !!suspectId,

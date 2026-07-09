@@ -568,6 +568,7 @@ function SubmittedScreen({
   method,
   evidence,
   result,
+  onOpenReconstruction,
 }: {
   case: Case;
   payload: DeductionPayload;
@@ -576,6 +577,7 @@ function SubmittedScreen({
   method: DeductionOption | null;
   evidence: Evidence | null;
   result: DeductionScore | null;
+  onOpenReconstruction: () => void;
 }) {
   return (
     <div className="min-h-screen noir-grain">

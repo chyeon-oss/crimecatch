@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   Gavel,
@@ -11,6 +11,13 @@ import {
   ArrowRight,
   ArrowLeft,
   Lock,
+  X,
+  Clock,
+  Search,
+  FileText,
+  AlertTriangle,
+  ChevronRight,
+  FolderOpen,
 } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { Route as CaseRoute } from "./case.$caseId";
@@ -84,6 +91,7 @@ function AccusePage() {
   const [reasoning, setReasoning] = useState("");
   const [submitted, setSubmitted] = useState<DeductionPayload | null>(null);
   const [result, setResult] = useState<DeductionScore | null>(null);
+  const [showReconstruction, setShowReconstruction] = useState(false);
 
   const canAdvance: Record<StepId, boolean> = {
     1: !!suspectId,
@@ -141,16 +149,27 @@ function AccusePage() {
 
   if (submitted) {
     return (
-      <SubmittedScreen
-        case={data}
-        payload={submitted}
-        suspect={suspectById(submitted.suspectId)}
-        motive={optionById(MOTIVE_OPTIONS, submitted.motiveId)}
-        method={optionById(METHOD_OPTIONS, submitted.methodId)}
-        evidence={evidenceByIdLocal(submitted.evidenceId)}
-        result={result}
-      />
-
+      <>
+        <SubmittedScreen
+          case={data}
+          payload={submitted}
+          suspect={suspectById(submitted.suspectId)}
+          motive={optionById(MOTIVE_OPTIONS, submitted.motiveId)}
+          method={optionById(METHOD_OPTIONS, submitted.methodId)}
+          evidence={evidenceByIdLocal(submitted.evidenceId)}
+          result={result}
+          onOpenReconstruction={() => setShowReconstruction(true)}
+        />
+        {showReconstruction && (
+          <ReconstructionModal
+            case={data}
+            payload={submitted}
+            result={result}
+            discoveredEvidence={discoveredEvidence}
+            onClose={() => setShowReconstruction(false)}
+          />
+        )}
+      </>
     );
   }
 
@@ -549,6 +568,7 @@ function SubmittedScreen({
   method,
   evidence,
   result,
+  onOpenReconstruction,
 }: {
   case: Case;
   payload: DeductionPayload;
@@ -557,6 +577,7 @@ function SubmittedScreen({
   method: DeductionOption | null;
   evidence: Evidence | null;
   result: DeductionScore | null;
+  onOpenReconstruction: () => void;
 }) {
   return (
     <div className="min-h-screen noir-grain">
@@ -595,9 +616,8 @@ function SubmittedScreen({
         <div className="mt-8 flex flex-col items-center gap-2">
           <button
             type="button"
-            disabled
-            aria-disabled
-            className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary/80 opacity-70"
+            onClick={onOpenReconstruction}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)] transition-transform hover:scale-[1.01]"
           >
             <FileSearch className="h-4 w-4" />
             사건 재구성 보기
@@ -682,6 +702,181 @@ function ResultCard({ result }: { result: DeductionScore }) {
         })}
       </ul>
     </section>
+  );
+}
+
+const RECONSTRUCTION_BEATS: {
+  id: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+  { id: "pre", title: "1. 사건 전", icon: Clock },
+  { id: "meeting", title: "2. 마지막 회의", icon: Users },
+  { id: "gap", title: "3. 이상한 공백", icon: FileSearch },
+  { id: "scene", title: "4. 현장 발견", icon: Search },
+  { id: "final", title: "5. 최종 판단", icon: CheckCircle2 },
+];
+
+function ReconstructionModal({
+  case: c,
+  payload,
+  result,
+  discoveredEvidence,
+  onClose,
+}: {
+  case: Case;
+  payload: DeductionPayload | null;
+  result: DeductionScore | null;
+  discoveredEvidence: Evidence[];
+  onClose: () => void;
+}) {
+  const safePayload = payload ?? {
+    suspectId: "",
+    motiveId: "",
+    methodId: "",
+    evidenceId: "",
+    reasoning: "",
+  };
+
+  const suspect = c.suspects.find((s) => s.id === safePayload.suspectId) ?? null;
+  const motive = MOTIVE_OPTIONS.find((o) => o.id === safePayload.motiveId) ?? null;
+  const method = METHOD_OPTIONS.find((o) => o.id === safePayload.methodId) ?? null;
+  const evidence = c.evidence.find((e) => e.id === safePayload.evidenceId) ?? null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-noir)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative border-b border-border/60 bg-gradient-to-br from-surface-elevated to-black/50 p-6">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-primary/80">
+                CASE RECONSTRUCTION
+              </p>
+              <h2 className="mt-1 font-display text-2xl text-foreground">사건 재구성</h2>
+              <p className="mt-1 max-w-lg text-sm text-muted-foreground">
+                당신이 확보한 증거를 바탕으로 사건의 흐름을 다시 정리합니다.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+              aria-label="닫기"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-8 overflow-y-auto p-6">
+          <section>
+            <div className="relative">
+              <div className="absolute left-[19px] top-0 bottom-0 w-px bg-border/60" />
+              <ul className="space-y-6">
+                {RECONSTRUCTION_BEATS.map((beat, idx) => (
+                  <li key={beat.id} className="relative flex gap-5">
+                    <div className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/40 bg-primary/10 text-primary">
+                      <beat.icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1 rounded-xl border border-border/60 bg-surface-elevated/40 p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          BEAT {String(idx + 1).padStart(2, "0")}
+                        </span>
+                      </div>
+                      <h3 className="mt-1 font-display text-lg text-foreground">
+                        {beat.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                        이 장면은 최종 사건 데이터가 연결되면 공개됩니다.
+                      </p>
+                      {discoveredEvidence.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {discoveredEvidence.map((e) => (
+                            <span
+                              key={e.id}
+                              className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-surface px-2 py-1 text-[11px] text-muted-foreground"
+                            >
+                              <FileText className="h-3 w-3" />
+                              {e.title}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-border/60 bg-surface-elevated/40 p-5">
+            <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-primary/80">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              당신의 추리 결과
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-md border border-border/60 bg-surface/60 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">지목한 용의자</p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  {suspect?.name ?? "미지정"}
+                </p>
+              </div>
+              <div className="rounded-md border border-border/60 bg-surface/60 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">선택한 동기</p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  {motive?.label ?? "미지정"}
+                </p>
+              </div>
+              <div className="rounded-md border border-border/60 bg-surface/60 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">선택한 방법</p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  {method?.label ?? "미지정"}
+                </p>
+              </div>
+              <div className="rounded-md border border-border/60 bg-surface/60 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">결정적 증거</p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  {evidence?.title ?? "미지정"}
+                </p>
+              </div>
+            </div>
+            {result && (
+              <div className="mt-4 flex items-center gap-4 rounded-md border border-primary/30 bg-primary/5 p-3">
+                <div className="grid h-12 w-12 place-items-center rounded-xl border border-primary/40 font-display text-xl text-primary">
+                  {result.rank}
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">최종 점수</p>
+                  <p className="font-display text-lg text-foreground tabular-nums">
+                    {result.score}<span className="text-sm text-muted-foreground">/100</span>
+                  </p>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+
+        <div className="border-t border-border/60 p-5">
+          <Link
+            to="/case/$caseId"
+            params={{ caseId: c.slug }}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)] transition-transform hover:scale-[1.01]"
+          >
+            <FolderOpen className="h-4 w-4" />
+            사건 파일로 돌아가기
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
 

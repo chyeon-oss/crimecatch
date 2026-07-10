@@ -38,6 +38,7 @@ import { ObjectiveBanner } from "@/components/ObjectiveBanner";
 import { SceneStageTimeline, type SceneStage } from "@/components/SceneStageTimeline";
 import { SceneTransitionModal } from "@/components/SceneTransitionModal";
 import { RuntimeDebugPanel } from "@/components/RuntimeDebugPanel";
+import { CaseIntro, shouldShowIntro } from "@/components/CaseIntro";
 
 import {
   CaseEngine,
@@ -127,6 +128,12 @@ function buildFallbackRuntime(c: Case): CaseDefinition {
 
 function InvestigatePage() {
   const { data } = Route.useLoaderData() as { data: Case };
+
+  const [showIntro, setShowIntro] = useState(false);
+  useEffect(() => {
+    if (shouldShowIntro(data.id)) setShowIntro(true);
+  }, [data.id]);
+
 
   const runtimeDef = useMemo<CaseDefinition>(
     () => getRuntimeDefinition(data.id) ?? buildFallbackRuntime(data),
@@ -449,6 +456,14 @@ function InvestigatePage() {
 
   return (
     <div className="flex min-h-screen flex-col noir-grain">
+      {showIntro && (
+        <CaseIntro
+          caseId={data.id}
+          caseTitle={(data.title ?? "").toUpperCase()}
+          onDone={() => setShowIntro(false)}
+        />
+      )}
+
       <TopBar
         to="/case/$caseId"
         label="사건 정보로"

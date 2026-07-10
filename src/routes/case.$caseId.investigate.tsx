@@ -456,6 +456,14 @@ function InvestigatePage() {
 
   return (
     <div className="flex min-h-screen flex-col noir-grain">
+      {showIntro && (
+        <CaseIntro
+          caseId={data.id}
+          caseTitle={(data.title ?? "").toUpperCase()}
+          onDone={() => setShowIntro(false)}
+        />
+      )}
+
       <TopBar
         to="/case/$caseId"
         label="사건 정보로"

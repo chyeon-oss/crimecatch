@@ -38,6 +38,7 @@ import { ObjectiveBanner } from "@/components/ObjectiveBanner";
 import { SceneStageTimeline, type SceneStage } from "@/components/SceneStageTimeline";
 import { SceneTransitionModal } from "@/components/SceneTransitionModal";
 import { RuntimeDebugPanel } from "@/components/RuntimeDebugPanel";
+import { CaseIntro, shouldShowIntro } from "@/components/CaseIntro";
 
 import {
   CaseEngine,

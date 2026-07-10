@@ -129,6 +129,12 @@ function buildFallbackRuntime(c: Case): CaseDefinition {
 function InvestigatePage() {
   const { data } = Route.useLoaderData() as { data: Case };
 
+  const [showIntro, setShowIntro] = useState(false);
+  useEffect(() => {
+    if (shouldShowIntro(data.id)) setShowIntro(true);
+  }, [data.id]);
+
+
   const runtimeDef = useMemo<CaseDefinition>(
     () => getRuntimeDefinition(data.id) ?? buildFallbackRuntime(data),
     [data],

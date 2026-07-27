@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import exteriorImg from "@/assets/intro/scene-exterior.jpg";
+import hallwayImg from "@/assets/intro/scene-hallway.jpg";
+import doorImg from "@/assets/intro/scene-door.jpg";
 
 type Props = {
   caseId: string;
@@ -21,8 +24,11 @@ export function shouldShowIntro(caseId: string): boolean {
 }
 
 /**
- * 5–7s cinematic intro: logo → CASE title → timeline beats → fade out.
- * Fade-only transitions. Click or ESC skips. Persists a per-case seen flag.
+ * Opening cinematic sequence (~10s):
+ *   0 Logo → 1 Case title → 2 Emergency call → 3 Detective arrived
+ *   → 4 Building exterior → 5 Hallway → 6 Taped door
+ *   → 7 Final "Click to Enter Crime Scene" (waits for user)
+ * ESC or click during timeline skips entirely. Persists a per-case seen flag.
  */
 export function CaseIntro({
   caseId,
@@ -32,7 +38,6 @@ export function CaseIntro({
   arrivalTime = "22:57",
   onDone,
 }: Props) {
-  // 0: logo, 1: black, 2: case title, 3: emergency beat, 4: arrival beat, 5: fade-out
   const [step, setStep] = useState(0);
   const [closing, setClosing] = useState(false);
 
@@ -44,19 +49,24 @@ export function CaseIntro({
     } catch {
       /* ignore */
     }
-    window.setTimeout(onDone, 500);
+    window.setTimeout(onDone, 600);
   };
 
   useEffect(() => {
-    // Timings (ms cumulative from mount): total ~6.2s
-    const timers: number[] = [];
-    timers.push(window.setTimeout(() => setStep(1), 1200)); // fade to black
-    timers.push(window.setTimeout(() => setStep(2), 1700)); // case title
-    timers.push(window.setTimeout(() => setStep(3), 3200)); // emergency
-    timers.push(window.setTimeout(() => setStep(4), 4500)); // arrival
-    timers.push(window.setTimeout(() => finish(), 6200)); // fade out
+    // Cumulative timings (ms). Total ~10s; step 7 waits for click.
+    const schedule: Array<[number, number]> = [
+      [1, 1400], // → case title
+      [2, 3000], // → emergency call
+      [3, 4400], // → detective arrived
+      [4, 5800], // → building exterior
+      [5, 7200], // → hallway
+      [6, 8600], // → taped door
+      [7, 10000], // → final CTA (hold)
+    ];
+    const timers = schedule.map(([s, t]) =>
+      window.setTimeout(() => setStep(s), t),
+    );
     return () => timers.forEach((t) => window.clearTimeout(t));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -68,21 +78,61 @@ export function CaseIntro({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleClick = () => {
+    // On the final beat click = enter; before that, click skips the intro.
+    finish();
+  };
+
+  const Scene = ({
+    visible,
+    image,
+    dim = 0.55,
+    children,
+  }: {
+    visible: boolean;
+    image?: string;
+    dim?: number;
+    children?: React.ReactNode;
+  }) => (
+    <div
+      className={`absolute inset-0 transition-opacity duration-[1100ms] ease-in-out ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      {image && (
+        <>
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${image})`,
+              transform: visible ? "scale(1.06)" : "scale(1)",
+              transition: "transform 6s ease-out",
+            }}
+          />
+          <div
+            className="absolute inset-0 bg-black"
+            style={{ opacity: dim }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/80" />
+        </>
+      )}
+      <div className="relative flex h-full w-full items-center justify-center">
+        {children}
+      </div>
+    </div>
+  );
+
   return (
     <div
       role="dialog"
       aria-label="Case intro"
-      onClick={finish}
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-black cursor-pointer select-none transition-opacity duration-500 ${
+      onClick={handleClick}
+      className={`fixed inset-0 z-[100] overflow-hidden bg-black cursor-pointer select-none transition-opacity duration-500 ${
         closing ? "opacity-0" : "opacity-100"
       }`}
     >
-      {/* Step 0: Logo */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${
-          step === 0 ? "opacity-100" : "opacity-0"
-        }`}
-      >
+      {/* 0 · Logo */}
+      <Scene visible={step === 0}>
         <div className="text-center">
           <div className="text-3xl md:text-5xl font-semibold tracking-[0.35em] text-white/90">
             CRIME<span className="text-primary">CATCH</span>
@@ -91,14 +141,10 @@ export function CaseIntro({
             INVESTIGATION SYSTEM
           </div>
         </div>
-      </div>
+      </Scene>
 
-      {/* Step 2: Case title */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${
-          step === 2 ? "opacity-100" : "opacity-0"
-        }`}
-      >
+      {/* 1 · Case title */}
+      <Scene visible={step === 1}>
         <div className="text-center">
           <div className="text-xs md:text-sm tracking-[0.6em] text-primary/80">
             {caseCode}
@@ -108,44 +154,94 @@ export function CaseIntro({
           </div>
           <div className="mx-auto mt-6 h-px w-24 bg-white/30" />
         </div>
-      </div>
+      </Scene>
 
-      {/* Step 3: Emergency call */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${
-          step === 3 ? "opacity-100" : "opacity-0"
-        }`}
-      >
+      {/* 2 · Emergency call */}
+      <Scene visible={step === 2}>
         <div className="text-center">
           <div className="font-mono text-4xl md:text-6xl text-white/95 tabular-nums">
             {emergencyTime}
           </div>
           <div className="mt-4 text-xs md:text-sm tracking-[0.4em] uppercase text-white/60">
-            Emergency Call Received
+            신고 접수 · Emergency Call Received
           </div>
         </div>
-      </div>
+      </Scene>
 
-      {/* Step 4: Detective arrived */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${
-          step === 4 ? "opacity-100" : "opacity-0"
-        }`}
-      >
+      {/* 3 · Detective arrived */}
+      <Scene visible={step === 3}>
         <div className="text-center">
           <div className="font-mono text-4xl md:text-6xl text-white/95 tabular-nums">
             {arrivalTime}
           </div>
           <div className="mt-4 text-xs md:text-sm tracking-[0.4em] uppercase text-white/60">
-            Detective Arrived
+            탐정 도착 · Detective Arrived
           </div>
         </div>
-      </div>
+      </Scene>
+
+      {/* 4 · Building exterior */}
+      <Scene visible={step === 4} image={exteriorImg} dim={0.45}>
+        <div className="absolute bottom-16 left-0 right-0 text-center">
+          <div className="text-[10px] md:text-xs tracking-[0.5em] uppercase text-white/50">
+            SEOUL · GANGNAM DISTRICT
+          </div>
+          <div className="mt-2 text-xl md:text-3xl font-light tracking-[0.2em] text-white/90">
+            한 층에만 불이 켜져 있다.
+          </div>
+        </div>
+      </Scene>
+
+      {/* 5 · Hallway */}
+      <Scene visible={step === 5} image={hallwayImg} dim={0.5}>
+        <div className="absolute bottom-16 left-0 right-0 text-center">
+          <div className="text-[10px] md:text-xs tracking-[0.5em] uppercase text-white/50">
+            14F · CORRIDOR
+          </div>
+          <div className="mt-2 text-xl md:text-3xl font-light tracking-[0.2em] text-white/90">
+            복도 끝, 조용한 발소리.
+          </div>
+        </div>
+      </Scene>
+
+      {/* 6 · Taped door */}
+      <Scene visible={step === 6} image={doorImg} dim={0.35}>
+        <div className="absolute bottom-16 left-0 right-0 text-center">
+          <div className="text-[10px] md:text-xs tracking-[0.5em] uppercase text-primary/80">
+            SCENE SECURED
+          </div>
+          <div className="mt-2 text-xl md:text-3xl font-light tracking-[0.2em] text-white/95">
+            출입 통제선 너머, 사건이 기다린다.
+          </div>
+        </div>
+      </Scene>
+
+      {/* 7 · Final CTA */}
+      <Scene visible={step === 7} image={doorImg} dim={0.55}>
+        <div className="text-center">
+          <div className="text-[10px] md:text-xs tracking-[0.6em] uppercase text-primary/80">
+            {caseCode}
+          </div>
+          <div className="mt-3 text-2xl md:text-5xl font-light tracking-[0.25em] text-white">
+            {caseTitle}
+          </div>
+          <div className="mx-auto mt-8 h-px w-24 bg-primary/50" />
+          <div
+            className="mt-8 inline-flex items-center gap-3 text-sm md:text-base tracking-[0.4em] uppercase text-white/90"
+            style={{ animation: "cc-pulse-dot 2.2s ease-in-out infinite" }}
+          >
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+            Click to Enter Crime Scene
+          </div>
+        </div>
+      </Scene>
 
       {/* Skip hint */}
-      <div className="absolute bottom-6 left-0 right-0 text-center text-[10px] tracking-[0.4em] uppercase text-white/30">
-        Click or press ESC to skip
-      </div>
+      {step < 7 && (
+        <div className="pointer-events-none absolute bottom-6 left-0 right-0 text-center text-[10px] tracking-[0.4em] uppercase text-white/30">
+          Click or press ESC to skip
+        </div>
+      )}
     </div>
   );
 }

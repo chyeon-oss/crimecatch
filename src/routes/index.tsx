@@ -1,21 +1,19 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Shield, Fingerprint, ArrowRight, FileSearch } from "lucide-react";
-import { DossierCard } from "@/components/DossierCard";
-import { CinematicBackdrop } from "@/components/CinematicBackdrop";
+import { createFileRoute } from "@tanstack/react-router";
+import { Shield } from "lucide-react";
+import { CaseSelectionCard, type CaseRosterItem } from "@/components/CaseSelectionCard";
 import { CaseEngine } from "@/engine";
-import heroDetective from "@/assets/hero-detective.jpg";
-import detectiveBadge from "@/assets/detective-badge.png";
+import { useProgress } from "@/state/progressStore";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "크라임캐치 — AI 탐정 수사 플랫폼" },
+      { title: "크라임캐치 — 사건 파일" },
       {
         name: "description",
         content:
           "기밀 사건 파일을 열고, 증거를 분석하고, 용의자를 심문하여 진실을 밝혀내세요. AI 기반의 프리미엄 탐정 수사 게임.",
       },
-      { property: "og:title", content: "크라임캐치 — AI 탐정 수사 플랫폼" },
+      { property: "og:title", content: "크라임캐치 — 사건 파일" },
       {
         property: "og:description",
         content:
@@ -25,178 +23,161 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: HomePage,
+  component: CaseSelectionPage,
 });
 
-function HomePage() {
+const TOTAL_CASES = 12;
+
+const LOCKED_ROSTER: Omit<CaseRosterItem & { locked: true }, "locked">[] = [
+  {
+    caseNumber: "CASE 002",
+    title: "유산 상속 파티 살인사건",
+    subtitle: "화려한 별장에서 열린 상속 파티. 유언장이 공개되는 순간, 주인공이 무너졌다.",
+    difficulty: "보통",
+    estimatedMinutes: 40,
+  },
+  {
+    caseNumber: "CASE 003",
+    title: "실종된 연습생",
+    subtitle: "데뷔를 앞둔 아이돌 연습생이 연습실에서 사라졌다. 남은 것은 어긋난 춤 동작뿐.",
+    difficulty: "어려움",
+    estimatedMinutes: 50,
+  },
+  {
+    caseNumber: "CASE 004",
+    title: "붉은 도서관의 밀실",
+    subtitle: "대학 도서관 밀실에서 발견된 고고학 교수. 책장 사이에 숨겨진 진실을 밝혀라.",
+    difficulty: "어려움",
+    estimatedMinutes: 55,
+  },
+];
+
+function buildRoster(): CaseRosterItem[] {
   const cases = CaseEngine.list();
-  const firstAvailable = cases.find((c) => c.status !== "프리미엄") ?? cases[0];
+  const firstCase = cases[0];
+
+  const roster: CaseRosterItem[] = [];
+
+  if (firstCase) {
+    roster.push({
+      caseNumber: "CASE 001",
+      locked: false,
+      data: firstCase,
+      completed: false,
+    });
+  }
+
+  roster.push(...LOCKED_ROSTER.map((item) => ({ ...item, locked: true as const })));
+
+  return roster;
+}
+
+function CaseSelectionPage() {
+  const progress = useProgress();
+  const baseRoster = buildRoster();
+
+  const roster = baseRoster.map((item) => {
+    if (item.locked) return item;
+    const completed = progress.profile.solvedCaseIds.includes(item.data.id);
+    return {
+      ...item,
+      completed,
+      rank: completed ? progress.profile.rank : undefined,
+    };
+  });
+
+  const availableCount = roster.filter((item) => !item.locked).length;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* ─────────────── HERO ─────────────── */}
-      <section className="relative isolate overflow-hidden border-b border-border/40">
-        {/* Cinematic detective backdrop image */}
-        <div className="pointer-events-none absolute inset-0">
-          <img
-            src={heroDetective}
-            alt="수사관의 책상 위에 놓인 사건 파일과 돋보기, 지문 증거"
-            width={1920}
-            height={1280}
-            className="h-full w-full object-cover opacity-40"
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to right, var(--background) 0%, color-mix(in oklab, var(--background) 85%, transparent) 45%, color-mix(in oklab, var(--background) 40%, transparent) 100%)",
-            }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to bottom, transparent 40%, var(--background) 100%)",
-            }}
-          />
-        </div>
-        <CinematicBackdrop />
+    <div className="relative flex min-h-screen flex-col bg-background text-foreground">
+      {/* Subtle top glow */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-primary/5 to-transparent" />
 
-        {/* Top status bar */}
-        <div className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 pt-6 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground sm:px-8">
-          <div className="flex items-center gap-2">
-            <span
-              className="inline-block h-1.5 w-1.5 rounded-full bg-primary"
-              style={{ animation: "cc-pulse-dot 2.4s ease-in-out infinite" }}
-            />
-            <span className="text-primary/90">기밀문서</span>
-            <span className="hidden text-muted-foreground/60 sm:inline">// 1급 열람 권한</span>
-          </div>
-          <div className="hidden items-center gap-6 sm:flex">
-            <span>시스템 · 보안</span>
-            <span>케이스노트 / v3.14</span>
-          </div>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-primary transition-colors hover:bg-primary/15"
-          >
-            <Shield className="h-3 w-3" />
-            <span className="tracking-widest">본부</span>
-          </Link>
-        </div>
-
-        {/* Hero content */}
-        <div className="relative z-10 mx-auto max-w-6xl px-6 pb-24 pt-20 sm:px-8 sm:pt-28 lg:pt-36">
-          <div className="max-w-3xl">
-            <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/5 px-4 py-1.5 backdrop-blur-md">
-              <Fingerprint className="h-3.5 w-3.5 text-primary" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/90">
-                수사 본부 · 2026 설립
-              </span>
+      {/* Header */}
+      <header className="relative z-10 mx-auto w-full max-w-6xl px-6 pt-8 sm:px-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-lg border border-primary/40 bg-primary/10 text-primary">
+              <Shield className="h-4.5 w-4.5" />
             </div>
-
-            <h1 className="font-display text-6xl font-semibold leading-[0.95] tracking-tight text-foreground sm:text-7xl lg:text-8xl">
-              크라임
-              <br />
-              <span className="text-primary" style={{ textShadow: "0 0 40px color-mix(in oklab, var(--gold) 45%, transparent)" }}>
-                캐치
-              </span>
-            </h1>
-
-            <div className="mt-8 flex items-center gap-4">
-              <span className="h-px w-12 bg-primary/60" />
-              <p className="font-mono text-xs uppercase tracking-[0.35em] text-muted-foreground sm:text-sm">
-                AI 탐정 수사 플랫폼
+            <div>
+              <h1 className="font-display text-lg font-semibold tracking-wide text-foreground sm:text-xl">
+                CRIMECATCH
+              </h1>
+              <p className="hidden font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground sm:block">
+                Confidential Investigation Bureau
               </p>
             </div>
-
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              기밀 사건 파일을 열어보세요. 흩어진 증거의 조각을 조사하고, 용의자들을 교차 심문하여
-              진실이 묻힌 그 순간을 재구성하십시오.
-            </p>
-
-            <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Link
-                to="/case/$caseId/investigate"
-                params={{ caseId: firstAvailable.slug }}
-                className="group inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold tracking-wide text-primary-foreground shadow-[var(--shadow-gold)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-10px_color-mix(in_oklab,var(--gold)_60%,transparent)]"
-              >
-                <span>수사 시작하기</span>
-                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
-              <a
-                href="#case-files"
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card/40 px-6 py-3.5 text-sm font-semibold tracking-wide text-foreground backdrop-blur-md transition-all duration-300 hover:border-primary/40 hover:bg-card/70"
-              >
-                <FileSearch className="h-4 w-4 text-primary" />
-                <span>사건 목록 보기</span>
-              </a>
-            </div>
-
-            {/* Ambient stats row */}
-            <div className="mt-16 grid max-w-lg grid-cols-3 gap-6 border-t border-border/50 pt-6 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-              <div>
-                <p className="text-2xl font-semibold tracking-tight text-foreground">{cases.length.toString().padStart(2, "0")}</p>
-                <p className="mt-1">진행 중 사건</p>
-              </div>
-              <div>
-                <p className="text-2xl font-semibold tracking-tight text-foreground">24시간</p>
-                <p className="mt-1">현장 대응</p>
-              </div>
-              <div>
-                <p className="text-2xl font-semibold tracking-tight text-primary">AI</p>
-                <p className="mt-1">수사 지원</p>
-              </div>
-            </div>
           </div>
 
-          {/* Detective badge — floating emblem */}
-          <img
-            src={detectiveBadge}
-            alt="탐정 배지"
-            width={1024}
-            height={1024}
-            loading="lazy"
-            className="pointer-events-none absolute right-6 top-24 hidden h-64 w-64 opacity-70 drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)] lg:block xl:h-80 xl:w-80"
-            style={{ animation: "cc-float 12s ease-in-out infinite" }}
-          />
-        </div>
-
-        {/* Bottom hairline */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-      </section>
-
-      {/* ─────────────── CASE FILES ─────────────── */}
-      <main id="case-files" className="relative mx-auto max-w-6xl px-6 py-20 sm:px-8 sm:py-28">
-        <div className="mb-12 flex items-end justify-between gap-6">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-primary/80">
-              // 사건 기록보관소
-            </p>
-            <h2 className="mt-3 font-display text-3xl font-semibold text-foreground sm:text-4xl">
-              사건 파일
-            </h2>
-            <p className="mt-2 max-w-md text-sm text-muted-foreground">
-              모든 사건 파일은 하나의 독립된 수사입니다. 형사님, 사건을 선택하세요.
-            </p>
-          </div>
-          <div className="hidden shrink-0 items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground sm:flex">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-            {cases.length}건 열람 가능
+          <div className="flex items-center gap-3 rounded-full border border-border/60 bg-surface-elevated/60 px-4 py-2 backdrop-blur-md">
+            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+              Cases
+            </span>
+            <span className="font-mono text-sm font-semibold tabular-nums text-primary">
+              {availableCount.toString().padStart(2, "0")}
+            </span>
+            <span className="font-mono text-xs text-muted-foreground/60">/</span>
+            <span className="font-mono text-sm font-semibold tabular-nums text-muted-foreground">
+              {TOTAL_CASES.toString().padStart(2, "0")}
+            </span>
           </div>
         </div>
+      </header>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {cases.map((c, i) => (
-            <DossierCard key={c.id} data={c} index={i} />
+      {/* Main content */}
+      <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-6 py-16 sm:px-8 sm:py-20">
+        <div className="mb-12 text-center sm:mb-16">
+          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-primary/80">
+            // Case Files
+          </p>
+          <h2 className="mt-3 font-display text-3xl font-semibold text-foreground sm:text-4xl lg:text-5xl">
+            수사 대기 중인 사건
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground">
+            형사님에게 배정된 사건 파일입니다. 하나의 사건을 완료해야 다음 기밀 파일이 열립니다.
+          </p>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {roster.map((item) => (
+            <CaseSelectionCard key={item.caseNumber} item={item} />
           ))}
         </div>
 
-        <footer className="mt-24 flex flex-col items-center gap-2 border-t border-border/50 pt-8 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          <span>크라임캐치 · 수사 픽션 전담 본부</span>
-          <span className="text-muted-foreground/50">등장하는 모든 사건은 허구입니다.</span>
-        </footer>
+        {/* Progress summary */}
+        <div className="mx-auto mt-16 max-w-xl rounded-2xl border border-border/50 bg-surface-elevated/40 p-6 text-center backdrop-blur-md">
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+            Overall Progress
+          </p>
+          <div className="mt-4 flex items-center gap-4">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-border/50">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-500"
+                style={{ width: `${(availableCount / TOTAL_CASES) * 100}%` }}
+              />
+            </div>
+            <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
+              {Math.round((availableCount / TOTAL_CASES) * 100)}%
+            </span>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground/70">
+            {TOTAL_CASES - availableCount}건의 사건이 곧 추가됩니다.
+          </p>
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-8 pt-4 sm:px-8">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-border/40 pt-6 sm:flex-row">
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground/60">
+            v0.1 Alpha
+          </p>
+          <p className="text-center text-xs text-muted-foreground/70 sm:text-right">
+            새로운 사건은 지속적으로 추가됩니다.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

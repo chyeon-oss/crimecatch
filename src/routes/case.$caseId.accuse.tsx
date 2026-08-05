@@ -36,6 +36,8 @@ import {
   type DeductionRank,
 } from "@/lib/deductionScoring";
 import type { CaseAnswerKey } from "@/content/cases/midnight-office/_spoilers";
+import type { TruthPack } from "@/types/truth";
+import { midnightOfficeTruth } from "@/content/cases/midnight-office/_truth";
 
 const CASE_ANSWER_KEYS: Record<string, CaseAnswerKey> = {
   "midnight-office": midnightOfficeAnswerKey,

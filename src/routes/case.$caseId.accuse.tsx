@@ -705,17 +705,18 @@ function ResultCard({ result }: { result: DeductionScore }) {
   );
 }
 
-const RECONSTRUCTION_BEATS: {
-  id: string;
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-}[] = [
-  { id: "pre", title: "1. 사건 전", icon: Clock },
-  { id: "meeting", title: "2. 마지막 회의", icon: Users },
-  { id: "gap", title: "3. 이상한 공백", icon: FileSearch },
-  { id: "scene", title: "4. 현장 발견", icon: Search },
-  { id: "final", title: "5. 최종 판단", icon: CheckCircle2 },
-];
+const BEAT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  pre: Clock,
+  meeting: Users,
+  gap: FileSearch,
+  scene: Search,
+  final: CheckCircle2,
+};
+
+/** Truth Packs are spoiler content — keyed here, used only after submission. */
+const CASE_TRUTH_PACKS: Record<string, TruthPack> = {
+  "midnight-office": midnightOfficeTruth,
+};
 
 function ReconstructionModal({
   case: c,
@@ -743,6 +744,18 @@ function ReconstructionModal({
   const method = METHOD_OPTIONS.find((o) => o.id === safePayload.methodId) ?? null;
   const evidence = c.evidence.find((e) => e.id === safePayload.evidenceId) ?? null;
 
+  const truth = CASE_TRUTH_PACKS[c.id] ?? CASE_TRUTH_PACKS[c.slug] ?? null;
+  const discoveredIds = useMemo(
+    () => new Set(discoveredEvidence.map((e) => e.id)),
+    [discoveredEvidence],
+  );
+  const titleOf = (id: string) =>
+    c.evidence.find((e) => e.id === id)?.title ?? id;
+
+  const correct = truth
+    ? safePayload.suspectId === truth.summary.culpritId
+    : null;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
@@ -761,9 +774,19 @@ function ReconstructionModal({
               <p className="text-[11px] uppercase tracking-[0.28em] text-primary/80">
                 CASE RECONSTRUCTION
               </p>
-              <h2 className="mt-1 font-display text-2xl text-foreground">사건 재구성</h2>
+              <h2 className="mt-1 font-display text-2xl text-foreground">
+                {correct === null
+                  ? "사건 재구성"
+                  : correct
+                    ? "진실 규명"
+                    : "사건 재검토 필요"}
+              </h2>
               <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-                당신이 확보한 증거를 바탕으로 사건의 흐름을 다시 정리합니다.
+                {correct === null
+                  ? "사건의 흐름을 다시 정리합니다."
+                  : correct
+                    ? "당신의 지목은 사실과 일치했습니다. 사건의 실제 순서를 확인하십시오."
+                    : "지목한 인물은 범인이 아니었습니다. 아래는 사건의 실제 순서입니다."}
               </p>
             </div>
             <button
@@ -777,46 +800,120 @@ function ReconstructionModal({
         </div>
 
         <div className="flex-1 space-y-8 overflow-y-auto p-6">
-          <section>
-            <div className="relative">
-              <div className="absolute left-[19px] top-0 bottom-0 w-px bg-border/60" />
-              <ul className="space-y-6">
-                {RECONSTRUCTION_BEATS.map((beat, idx) => (
-                  <li key={beat.id} className="relative flex gap-5">
-                    <div className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/40 bg-primary/10 text-primary">
-                      <beat.icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1 rounded-xl border border-border/60 bg-surface-elevated/40 p-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                          BEAT {String(idx + 1).padStart(2, "0")}
-                        </span>
-                      </div>
-                      <h3 className="mt-1 font-display text-lg text-foreground">
-                        {beat.title}
-                      </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                        이 장면은 최종 사건 데이터가 연결되면 공개됩니다.
-                      </p>
-                      {discoveredEvidence.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {discoveredEvidence.map((e) => (
-                            <span
-                              key={e.id}
-                              className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-surface px-2 py-1 text-[11px] text-muted-foreground"
-                            >
-                              <FileText className="h-3 w-3" />
-                              {e.title}
-                            </span>
-                          ))}
+          {truth && (
+            <section>
+              <div className="relative">
+                <div className="absolute left-[19px] top-0 bottom-0 w-px bg-border/60" />
+                <ul className="space-y-6">
+                  {truth.beats.map((beat) => {
+                    const Icon = BEAT_ICONS[beat.id] ?? Clock;
+                    const chips = beat.evidenceIds.filter((id) =>
+                      discoveredIds.has(id),
+                    );
+                    return (
+                      <li key={beat.id} className="relative flex gap-5">
+                        <div className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-primary/40 bg-primary/10 text-primary">
+                          <Icon className="h-4 w-4" />
                         </div>
-                      )}
+                        <div className="min-w-0 flex-1 rounded-xl border border-border/60 bg-surface-elevated/40 p-4">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                              BEAT {String(beat.order).padStart(2, "0")}
+                            </span>
+                            <span className="text-[11px] tabular-nums text-primary/80">
+                              {beat.time}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground/80">
+                              {beat.location}
+                            </span>
+                          </div>
+                          <h3 className="mt-1 font-display text-lg text-foreground">
+                            {beat.order}. {beat.title}
+                          </h3>
+                          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                            {beat.body}
+                          </p>
+                          {chips.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                              {chips.map((id) => (
+                                <span
+                                  key={id}
+                                  className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-surface px-2 py-1 text-[11px] text-muted-foreground"
+                                >
+                                  <FileText className="h-3 w-3" />
+                                  {titleOf(id)}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </section>
+          )}
+
+          {truth && (
+            <section className="rounded-xl border border-primary/30 bg-primary/[0.04] p-5">
+              <p className="text-[11px] uppercase tracking-[0.28em] text-primary/80">
+                FINAL TRUTH
+              </p>
+              <h3 className="mt-1 font-display text-xl text-foreground">
+                사건의 진실
+              </h3>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <TruthRow label="범인" value={truth.summary.culpritName} />
+                <TruthRow label="범행 시각" value={truth.summary.murderWindow} />
+                <TruthRow label="동기" value={truth.summary.motive} />
+                <TruthRow label="범행 방법" value={truth.summary.method} />
+              </div>
+              <div className="mt-3 rounded-md border border-border/60 bg-surface/60 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  밀실이 만들어진 방법
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-foreground/90">
+                  {truth.summary.lockedRoomTrick}
+                </p>
+              </div>
+
+              <p className="mt-5 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+                모순의 연쇄
+              </p>
+              <ol className="mt-2 space-y-2">
+                {truth.summary.contradictionChain.map((ch, i) => (
+                  <li
+                    key={i}
+                    className="rounded-md border border-border/60 bg-surface/50 p-3"
+                  >
+                    <p className="text-[12px] text-muted-foreground line-through decoration-muted-foreground/50">
+                      {ch.claim}
+                    </p>
+                    <p className="mt-1 flex items-start gap-1.5 text-[13px] leading-relaxed text-foreground">
+                      <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70" />
+                      {ch.contradiction}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {ch.evidenceIds.map((id) => (
+                        <span
+                          key={id}
+                          className="rounded border border-border/60 bg-surface px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                        >
+                          {titleOf(id)}
+                        </span>
+                      ))}
                     </div>
                   </li>
                 ))}
-              </ul>
-            </div>
-          </section>
+              </ol>
+
+              <p className="mt-5 border-l-2 border-primary/50 pl-3 text-sm italic leading-relaxed text-foreground/90">
+                {truth.summary.closing}
+              </p>
+            </section>
+          )}
+
 
           <section className="rounded-xl border border-border/60 bg-surface-elevated/40 p-5">
             <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-primary/80">

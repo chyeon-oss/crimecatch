@@ -1022,3 +1022,14 @@ function BoardConnectionsRecall({ case: c }: { case: Case }) {
   );
 }
 
+
+function TruthRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-border/60 bg-surface/60 p-3">
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 text-sm leading-relaxed text-foreground">{value}</p>
+    </div>
+  );
+}

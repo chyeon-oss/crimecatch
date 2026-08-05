@@ -593,7 +593,11 @@ function SubmittedScreen({
             Deduction Result
           </p>
           <h1 className="mt-2 font-display text-3xl font-semibold text-foreground">
-            추리 결과
+            {result === null
+              ? "추리 결과"
+              : result.breakdown.suspect.hit
+                ? "진실 규명"
+                : "사건 재검토 필요"}
           </h1>
           <p className="mt-1 text-xs text-muted-foreground/80">{c.title}</p>
         </div>
@@ -615,6 +619,8 @@ function SubmittedScreen({
           />
         </div>
 
+        <BoardConnectionsRecall case={c} />
+
         <div className="mt-8 flex flex-col items-center gap-2">
           <button
             type="button"
@@ -625,9 +631,10 @@ function SubmittedScreen({
             사건 재구성 보기
           </button>
           <p className="text-[11px] text-muted-foreground/70">
-            전체 진실 재구성은 다음 챕터에서 공개됩니다.
+            사건의 실제 순서와 최종 진실을 확인할 수 있습니다.
           </p>
         </div>
+
       </main>
     </div>
   );

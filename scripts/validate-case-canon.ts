@@ -36,11 +36,14 @@ for (const e of result.errors) console.log("  ERROR:", e);
 
 // ---- Spoiler isolation audit -------------------------------------------------
 const PRIVATE_FILES = ["_spoilers", "_truth", "AUTHOR_BIBLE"];
-const FORBIDDEN_PUBLIC_TOKENS = [
-  "isCulprit",
-  "hiddenTruth",
-  "윤미란", // canonical culprit name must not appear in public content modules
-];
+/** Field assignments that would leak the spoiler layer into public modules. */
+const FORBIDDEN_PUBLIC_TOKENS = ["isCulprit:", "hiddenTruth:"];
+/**
+ * Culprit identity must not be *labelled* in public modules. The suspect name
+ * itself is player-facing by design (it is one of four names on the board), so
+ * we forbid the phrases that would mark it as the answer.
+ */
+const FORBIDDEN_CULPRIT_MARKERS = ["진범", "범인은", "culprit"];
 const PUBLIC_CONTENT_FILES = [
   "briefing.ts",
   "victim.ts",
@@ -58,6 +61,11 @@ for (const file of PUBLIC_CONTENT_FILES) {
   for (const token of FORBIDDEN_PUBLIC_TOKENS) {
     if (src.includes(token)) {
       isolationErrors.push(`${file} contains forbidden token "${token}"`);
+    }
+  }
+  for (const marker of FORBIDDEN_CULPRIT_MARKERS) {
+    if (src.toLowerCase().includes(marker.toLowerCase())) {
+      isolationErrors.push(`${file} contains culprit marker "${marker}"`);
     }
   }
 }

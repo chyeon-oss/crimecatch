@@ -11,7 +11,10 @@ export interface LockedCaseRosterItem {
   subtitle: string;
   difficulty: CaseDifficulty;
   estimatedMinutes: number;
+  /** Korean, spoiler-free prerequisite copy. */
+  lockReason?: string;
 }
+
 
 export interface PlayableCaseRosterItem {
   caseNumber: string;

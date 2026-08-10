@@ -68,12 +68,12 @@ export function SceneSurface({
   const [beatIndex, setBeatIndex] = useState(0);
   const [beats, setBeats] = useState<Beat[]>([]);
   const aliveRef = useRef(true);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
       aliveRef.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
 
   const backdrop = BACKDROPS[sceneIndex % BACKDROPS.length];
 

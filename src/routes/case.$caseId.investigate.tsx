@@ -39,6 +39,10 @@ import { SceneStageTimeline, type SceneStage } from "@/components/SceneStageTime
 import { SceneTransitionModal } from "@/components/SceneTransitionModal";
 import { RuntimeDebugPanel } from "@/components/RuntimeDebugPanel";
 import { CaseIntro, shouldShowIntro } from "@/components/CaseIntro";
+import { CaseLockedGuard } from "@/components/CaseLockedGuard";
+import { caseAccess } from "@/lib/caseAccess";
+import { useProgress } from "@/state/progressStore";
+
 
 import {
   CaseEngine,

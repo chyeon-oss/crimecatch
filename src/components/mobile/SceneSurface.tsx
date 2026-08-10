@@ -115,11 +115,8 @@ export function SceneSurface({
     : null;
 
   return (
-    <section className="px-4 pt-4">
-      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{sceneTitle}</p>
-      <p className="mt-1 text-[13px] leading-relaxed text-foreground/80">{objective}</p>
-
-      <div className="relative mt-3 aspect-[3/4] w-full overflow-hidden rounded-xl border border-border/70 bg-surface-elevated">
+    <section className="px-4">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-border/70 bg-surface-elevated">
         {/* Backdrop */}
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out"

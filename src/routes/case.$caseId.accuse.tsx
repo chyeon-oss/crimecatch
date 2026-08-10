@@ -192,7 +192,12 @@ function AccusePage() {
   const evidenceByIdLocal = (id: string | null) =>
     data.evidence.find((e) => e.id === id) ?? null;
 
+  if (!access.unlocked) {
+    return <CaseLockedGuard title={data.title} reason={access.reason ?? ""} />;
+  }
+
   if (submitted) {
+
     return (
       <>
         <SubmittedScreen

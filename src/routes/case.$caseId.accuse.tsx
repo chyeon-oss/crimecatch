@@ -701,6 +701,8 @@ function SubmittedScreen({
 }
 
 function CareerRecordCard({ career }: { career: DeductionCommitOutcome }) {
+  // First submission has no previous record to beat, so don't call it a new best.
+  const showNewBest = career.newBest && career.attempts > 1;
   const rows: { label: string; value: string; tone?: "primary" | "muted" }[] = [
     {
       label: "이번 제출",
@@ -709,7 +711,7 @@ function CareerRecordCard({ career }: { career: DeductionCommitOutcome }) {
     {
       label: "개인 최고",
       value: `${career.bestScore} / 100${career.bestRank ? ` · ${career.bestRank} 등급` : ""}`,
-      tone: career.newBest ? "primary" : "muted",
+      tone: showNewBest ? "primary" : "muted",
     },
     { label: "제출 횟수", value: `${career.attempts}회` },
   ];
@@ -745,7 +747,7 @@ function CareerRecordCard({ career }: { career: DeductionCommitOutcome }) {
       </dl>
 
       <ul className="mt-4 space-y-1.5 text-xs leading-relaxed">
-        {career.newBest && (
+        {showNewBest && (
           <li className="text-primary">개인 최고 기록을 경신했습니다.</li>
         )}
         {career.firstSolve && (

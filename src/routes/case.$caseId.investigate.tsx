@@ -71,6 +71,7 @@ import { MobileDeduction } from "@/components/mobile/MobileDeduction";
 import { useInterviewRuntime } from "@/hooks/useInterviewRuntime";
 import { getCaseInterviews } from "@/data/interviews";
 import { meetsRequirement } from "@/lib/dialogueRuntime";
+import { isPresentable } from "@/lib/evidenceGating";
 import { validateCasePair } from "@/engine/CaseValidation";
 import type { Case, Evidence, CrimeScene as CrimeSceneData, BoardState } from "@/types";
 import type { DialogueEffect } from "@/types/dialogue";
@@ -662,20 +663,20 @@ function InvestigateWorkspace() {
     if (!activeInterview) return [];
     const presented = new Set(activeInterview.state.presentedEvidenceIds);
     return discoveredEvidence
-      .filter((e) => readIds.has(e.id))
+      .filter((e) => isPresentable(e.id, discoveredSet, readIds))
       .map((e) => ({
         id: e.id,
         title: e.title,
         category: e.category,
         presented: presented.has(e.id),
       }));
-  }, [activeInterview, discoveredEvidence, readIds]);
+  }, [activeInterview, discoveredEvidence, discoveredSet, readIds]);
 
 
   /** Discovered AND read evidence — decisive-evidence candidates. */
   const readEvidence = useMemo(
-    () => discoveredEvidence.filter((e) => readIds.has(e.id)),
-    [discoveredEvidence, readIds],
+    () => discoveredEvidence.filter((e) => isPresentable(e.id, discoveredSet, readIds)),
+    [discoveredEvidence, discoveredSet, readIds],
   );
 
   const sceneIndex = Math.max(

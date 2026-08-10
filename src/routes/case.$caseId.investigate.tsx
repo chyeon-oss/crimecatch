@@ -128,6 +128,17 @@ function buildFallbackRuntime(c: Case): CaseDefinition {
 
 function InvestigatePage() {
   const { data } = Route.useLoaderData() as { data: Case };
+  const progress = useProgress();
+  const access = caseAccess(progress, data.id);
+  if (!access.unlocked) {
+    return <CaseLockedGuard title={data.title} reason={access.reason ?? ""} />;
+  }
+  return <InvestigateWorkspace />;
+}
+
+function InvestigateWorkspace() {
+
+  const { data } = Route.useLoaderData() as { data: Case };
 
   const [showIntro, setShowIntro] = useState(false);
   useEffect(() => {

@@ -17,6 +17,8 @@ export interface HubRoom {
 interface Props {
   rooms: HubRoom[];
   onOpen: (suspectId: string) => void;
+  /** Suspects the runtime still needs before the case can advance. */
+  remainingRequiredNames?: string[];
 }
 
 const MOOD_TONE: Record<SuspectMood, string> = {
@@ -28,9 +30,11 @@ const MOOD_TONE: Record<SuspectMood, string> = {
 /**
  * Scene 03 interview hub — a messenger-style room list. Each suspect is a
  * chat room with progress, current mood, and captured contradictions.
+ * Mood is a reaction reading only; it never implies guilt.
  */
-export function InterviewHub({ rooms, onOpen }: Props) {
+export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [] }: Props) {
   const remaining = rooms.filter((r) => !r.complete).length;
+  const required = remainingRequiredNames.length;
 
   return (
     <section className="space-y-3 px-4 py-4">
@@ -38,9 +42,14 @@ export function InterviewHub({ rooms, onOpen }: Props) {
         <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">진술 조사</p>
         <h2 className="text-[15px] font-semibold text-foreground">용의자 인터뷰</h2>
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-          {remaining > 0
-            ? `${remaining}명의 진술을 아직 다 듣지 않았습니다. 네 명 모두 들어야 진술을 비교할 수 있습니다.`
-            : "네 명의 진술을 모두 확보했습니다. 모순을 다시 확인해 보세요."}
+          {required > 0
+            ? `다음 단계로 넘어가려면 ${remainingRequiredNames.join(", ")}의 기본 질문을 모두 마쳐야 합니다. 채팅방을 열어 질문 목록의 항목을 차례로 물어보세요.`
+            : remaining > 0
+              ? `필수 진술은 확보했습니다. 남은 ${remaining}명의 진술도 들어보면 모순을 더 찾을 수 있습니다.`
+              : "네 명의 진술을 모두 확보했습니다. 모순을 다시 확인해 보세요."}
+        </p>
+        <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground/70">
+          표시되는 감정 상태는 반응 기록일 뿐, 유죄 여부와는 무관합니다.
         </p>
       </header>
 

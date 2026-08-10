@@ -109,7 +109,14 @@ function LockedCard({ item }: { item: LockedCaseRosterItem }) {
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground/70">
           {item.subtitle}
         </p>
+        {item.lockReason && (
+          <p className="mt-3 inline-flex items-start gap-1.5 rounded-md border border-border/50 bg-muted/40 px-2.5 py-1.5 text-[11px] leading-snug text-muted-foreground">
+            <Lock className="mt-px h-3 w-3 shrink-0" />
+            {item.lockReason}
+          </p>
+        )}
       </div>
+
 
       <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
         <DifficultyDots difficulty={item.difficulty} />

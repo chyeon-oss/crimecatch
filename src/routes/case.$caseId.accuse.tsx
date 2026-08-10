@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Gavel,
   Users,
@@ -18,16 +18,20 @@ import {
   AlertTriangle,
   ChevronRight,
   FolderOpen,
+  Briefcase,
+  Award,
+  Save,
 } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { Route as CaseRoute } from "./case.$caseId";
-import { useProgress } from "@/state/progressStore";
+import { progressStore, useProgress } from "@/state/progressStore";
 import {
   MOTIVE_OPTIONS,
   METHOD_OPTIONS,
   type DeductionOption,
 } from "@/data/deductionOptions";
 import type { Case, Evidence, Suspect } from "@/types";
+import type { DeductionCommitOutcome } from "@/types/progress";
 import { readBoard, type BoardEndpoint } from "@/lib/detectiveBoard";
 import { answerKey as midnightOfficeAnswerKey } from "@/content/cases/midnight-office/_spoilers";
 import {
@@ -36,8 +40,13 @@ import {
   type DeductionRank,
 } from "@/lib/deductionScoring";
 import type { CaseAnswerKey } from "@/content/cases/midnight-office/_spoilers";
+import { META_ACHIEVEMENTS } from "@/data/achievements";
 import type { TruthPack } from "@/types/truth";
 import { midnightOfficeTruth } from "@/content/cases/midnight-office/_truth";
+
+const ACHIEVEMENT_TITLES: Record<string, string> = Object.fromEntries(
+  META_ACHIEVEMENTS.map((a) => [a.id, a.title]),
+);
 
 const CASE_ANSWER_KEYS: Record<string, CaseAnswerKey> = {
   "midnight-office": midnightOfficeAnswerKey,
@@ -93,7 +102,10 @@ function AccusePage() {
   const [reasoning, setReasoning] = useState("");
   const [submitted, setSubmitted] = useState<DeductionPayload | null>(null);
   const [result, setResult] = useState<DeductionScore | null>(null);
+  const [career, setCareer] = useState<DeductionCommitOutcome | null>(null);
   const [showReconstruction, setShowReconstruction] = useState(false);
+  /** Guards against double-commit from React re-renders / double clicks. */
+  const committedRef = useRef(false);
 
   const canAdvance: Record<StepId, boolean> = {
     1: !!suspectId,
@@ -108,26 +120,51 @@ function AccusePage() {
   const goBack = () => setStep((s) => (s > 1 ? ((s - 1) as StepId) : s));
 
   const submit = (payload: DeductionPayload) => {
+    if (committedRef.current) return;
+    committedRef.current = true;
+
     if (import.meta.env.DEV) console.log("[deduction] submit", payload);
     const key = CASE_ANSWER_KEYS[data.id] ?? CASE_ANSWER_KEYS[data.slug];
+    let score: DeductionScore | null = null;
     if (key) {
       const board = readBoard(data.id);
-      setResult(
-        scoreDeduction(
-          {
-            suspectId: payload.suspectId,
-            motiveId: payload.motiveId,
-            methodId: payload.methodId,
-            evidenceId: payload.evidenceId,
-            connections: board.connections,
-          },
-          key,
-        ),
+      score = scoreDeduction(
+        {
+          suspectId: payload.suspectId,
+          motiveId: payload.motiveId,
+          methodId: payload.methodId,
+          evidenceId: payload.evidenceId,
+          connections: board.connections,
+        },
+        key,
       );
-    } else {
-      setResult(null);
     }
+    setResult(score);
     setSubmitted(payload);
+
+    // Persist the completion event exactly once per physical submission.
+    const correct = score
+      ? score.breakdown.suspect.hit
+      : payload.suspectId === data.solution.culpritId;
+    const b = score?.breakdown;
+    const perfect =
+      !!score &&
+      score.rank === "S" &&
+      !!b &&
+      b.suspect.hit &&
+      b.motive.hit &&
+      b.method.hit &&
+      b.evidence.hit &&
+      b.connections.matched >= b.connections.required;
+
+    setCareer(
+      progressStore.recordDeduction(data, {
+        score: score?.score ?? 0,
+        rank: score?.rank ?? null,
+        correct,
+        perfect,
+      }),
+    );
   };
 
   const handleSubmit = () => {
@@ -160,6 +197,7 @@ function AccusePage() {
           method={optionById(METHOD_OPTIONS, submitted.methodId)}
           evidence={evidenceByIdLocal(submitted.evidenceId)}
           result={result}
+          career={career}
           onOpenReconstruction={() => setShowReconstruction(true)}
         />
         {showReconstruction && (
@@ -174,6 +212,7 @@ function AccusePage() {
       </>
     );
   }
+
 
   return (
     <div className="min-h-screen noir-grain">
@@ -570,6 +609,7 @@ function SubmittedScreen({
   method,
   evidence,
   result,
+  career,
   onOpenReconstruction,
 }: {
   case: Case;
@@ -579,6 +619,7 @@ function SubmittedScreen({
   method: DeductionOption | null;
   evidence: Evidence | null;
   result: DeductionScore | null;
+  career: DeductionCommitOutcome | null;
   onOpenReconstruction: () => void;
 }) {
   return (
@@ -603,6 +644,8 @@ function SubmittedScreen({
         </div>
 
         {result && <ResultCard result={result} />}
+
+        {career && <CareerRecordCard career={career} />}
 
         <div className="mt-8 text-left">
           <p className="mb-2 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
@@ -633,10 +676,112 @@ function SubmittedScreen({
           <p className="text-[11px] text-muted-foreground/70">
             사건의 실제 순서와 최종 진실을 확인할 수 있습니다.
           </p>
+
+          <div className="mt-4 flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface-elevated/60 px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <FolderOpen className="h-4 w-4" />
+              사건 목록으로
+            </Link>
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface-elevated/60 px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <Briefcase className="h-4 w-4" />
+              탐정 사무실
+            </Link>
+          </div>
         </div>
 
       </main>
     </div>
+  );
+}
+
+function CareerRecordCard({ career }: { career: DeductionCommitOutcome }) {
+  // First submission has no previous record to beat, so don't call it a new best.
+  const showNewBest = career.newBest && career.attempts > 1;
+  const rows: { label: string; value: string; tone?: "primary" | "muted" }[] = [
+    {
+      label: "이번 제출",
+      value: `${career.score} / 100${career.rank ? ` · ${career.rank} 등급` : ""}`,
+    },
+    {
+      label: "개인 최고",
+      value: `${career.bestScore} / 100${career.bestRank ? ` · ${career.bestRank} 등급` : ""}`,
+      tone: showNewBest ? "primary" : "muted",
+    },
+    { label: "제출 횟수", value: `${career.attempts}회` },
+  ];
+
+  return (
+    <section className="mt-6 rounded-2xl border border-border bg-surface-elevated/40 p-5">
+      <div className="flex items-center gap-2">
+        <Save className="h-3.5 w-3.5 text-primary" />
+        <p className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
+          경력 기록
+        </p>
+        <span className="ml-auto rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-200">
+          SAVED
+        </span>
+      </div>
+
+      <dl className="mt-4 grid gap-2 sm:grid-cols-3">
+        {rows.map((r) => (
+          <div key={r.label} className="rounded-xl border border-border/60 bg-card/50 p-3">
+            <dt className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              {r.label}
+            </dt>
+            <dd
+              className={[
+                "mt-1 font-display text-base tabular-nums",
+                r.tone === "primary" ? "text-primary" : "text-foreground",
+              ].join(" ")}
+            >
+              {r.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <ul className="mt-4 space-y-1.5 text-xs leading-relaxed">
+        {showNewBest && (
+          <li className="text-primary">개인 최고 기록을 경신했습니다.</li>
+        )}
+        {career.firstSolve && (
+          <li className="text-emerald-200">
+            첫 해결 보상이 지급되었습니다{career.perfect ? " (완벽 해결 보너스 포함)" : ""}. 사건이
+            종결 처리되었습니다.
+          </li>
+        )}
+        {!career.firstSolve && career.correct && (
+          <li className="text-muted-foreground">
+            이미 종결된 사건입니다. 기록은 갱신되지만 보상은 다시 지급되지 않습니다.
+          </li>
+        )}
+        {!career.correct && (
+          <li className="text-rose-200/90">
+            이번 판단은 시도로만 기록되었습니다. 사건은 아직 종결되지 않았습니다.
+          </li>
+        )}
+        {career.newAchievements.length > 0 && (
+          <li className="flex flex-wrap items-center gap-1.5 pt-1">
+            <Award className="h-3.5 w-3.5 text-primary" />
+            <span className="text-muted-foreground">새 업적</span>
+            {career.newAchievements.map((id) => (
+              <span
+                key={id}
+                className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] text-primary"
+              >
+                {ACHIEVEMENT_TITLES[id] ?? id}
+              </span>
+            ))}
+          </li>
+        )}
+      </ul>
+    </section>
   );
 }
 

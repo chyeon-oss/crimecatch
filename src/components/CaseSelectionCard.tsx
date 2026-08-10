@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Lock, Clock, CheckCircle2, Sparkles } from "lucide-react";
 import type { Case, CaseDifficulty } from "@/types";
-import type { DetectiveRank } from "@/types/progress";
+import type { CaseResultRank } from "@/types/progress";
 import { CaseEngine } from "@/engine";
 
 export interface LockedCaseRosterItem {
@@ -18,7 +18,8 @@ export interface PlayableCaseRosterItem {
   locked: false;
   data: Case;
   completed: boolean;
-  rank?: DetectiveRank;
+  /** Best deduction rank achieved for this case (S/A/B/C). */
+  bestRank?: CaseResultRank | null;
 }
 
 export type CaseRosterItem = LockedCaseRosterItem | PlayableCaseRosterItem;
@@ -123,7 +124,7 @@ function PlayableCard({
 }: {
   item: PlayableCaseRosterItem;
 }) {
-  const { data, completed, rank, caseNumber } = item;
+  const { data, completed, bestRank, caseNumber } = item;
   const href = `/case/${data.slug}`;
 
   return (
@@ -157,13 +158,13 @@ function PlayableCard({
           {data.subtitle}
         </p>
 
-        {completed && rank && (
+        {completed && bestRank && (
           <div className="mt-4 inline-flex w-fit items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5">
             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               최고 등급
             </span>
             <span className="font-mono text-xs font-semibold text-primary">
-              {rank}
+              {bestRank}
             </span>
           </div>
         )}

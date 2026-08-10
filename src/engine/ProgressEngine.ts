@@ -1,10 +1,20 @@
 import type { Case } from "@/types";
 import type {
+  CaseHistoryEntry,
+  CaseResultRank,
+  CaseResultRecord,
+  DeductionCommitOutcome,
   DetectiveProfile,
   DetectiveRank,
   ProgressState,
 } from "@/types/progress";
 import { RANKS } from "@/data/ranks";
+
+/** Current persisted progress schema version. */
+export const PROGRESS_VERSION = 2;
+
+const RANK_ORDER: Record<CaseResultRank, number> = { C: 0, B: 1, A: 2, S: 3 };
+
 
 export const XP_REWARDS = {
   EVIDENCE_READ: 5,
@@ -120,6 +130,35 @@ function applyReputation(state: ProgressState, delta: number): ProgressState {
   return { ...state, profile: { ...state.profile, reputation } };
 }
 
+/* ------------------------- migration helpers ------------------------- */
+
+function num(v: unknown, fallback: number): number {
+  return typeof v === "number" && Number.isFinite(v) ? v : fallback;
+}
+
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
+}
+
+function strArray(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+}
+
+function isRank(v: unknown): v is CaseResultRank {
+  return v === "S" || v === "A" || v === "B" || v === "C";
+}
+
+function betterRank(
+  a: CaseResultRank | null,
+  b: CaseResultRank | null,
+): CaseResultRank | null {
+  if (!a) return b;
+  if (!b) return a;
+  return RANK_ORDER[a] >= RANK_ORDER[b] ? a : b;
+}
+
+
+
 export const ProgressEngine = {
   createInitial(name = "익명 탐정"): ProgressState {
     const level = 1;
@@ -139,9 +178,107 @@ export const ProgressEngine = {
       history: [],
       perCaseEvidenceRead: {},
       contradictionCount: 0,
-      version: 1,
+      caseResults: {},
+      version: PROGRESS_VERSION,
     };
   },
+
+  /**
+   * Migrate any previously persisted shape (v1 localStorage payloads
+   * included) to the current schema. Unknown/malformed fields default
+   * safely; every known field is preserved as-is.
+   */
+  migrate(raw: unknown): ProgressState {
+    const base = ProgressEngine.createInitial();
+    if (!raw || typeof raw !== "object") return base;
+    const r = raw as Partial<ProgressState> & Record<string, unknown>;
+    const rp = (r.profile ?? {}) as Partial<DetectiveProfile>;
+
+    const xp = num(rp.xp, base.profile.xp);
+    const level = typeof rp.level === "number" && rp.level > 0 ? rp.level : levelForXp(xp);
+
+    const profile: DetectiveProfile = {
+      name: typeof rp.name === "string" && rp.name ? rp.name : base.profile.name,
+      xp,
+      level,
+      rank: rankForLevel(level),
+      title: titleForLevel(level),
+      reputation: clamp(num(rp.reputation, REPUTATION.START), REPUTATION.MIN, REPUTATION.MAX),
+      solvedCaseIds: strArray(rp.solvedCaseIds),
+      wrongAccusations: Math.max(0, num(rp.wrongAccusations, 0)),
+      achievementsUnlocked: strArray(rp.achievementsUnlocked),
+    };
+
+    const perCaseEvidenceRead: Record<string, string[]> = {};
+    const rawRead = (r.perCaseEvidenceRead ?? {}) as Record<string, unknown>;
+    for (const [k, v] of Object.entries(rawRead)) perCaseEvidenceRead[k] = strArray(v);
+
+    const history: CaseHistoryEntry[] = (
+      Array.isArray(r.history) ? (r.history as unknown[]) : []
+    )
+      .filter((h): h is Record<string, unknown> => !!h && typeof h === "object")
+      .map((h) => ({
+        caseId: String(h.caseId ?? ""),
+        solved: !!h.solved,
+        perfect: !!h.perfect,
+        at: num(h.at, 0),
+        ...(typeof h.score === "number" ? { score: h.score } : {}),
+        ...(isRank(h.rank) ? { rank: h.rank } : {}),
+      }))
+      .filter((h) => h.caseId);
+
+
+    const caseResults: Record<string, CaseResultRecord> = {};
+    const rawResults = (r.caseResults ?? {}) as Record<string, unknown>;
+    for (const [k, v] of Object.entries(rawResults)) {
+      if (!v || typeof v !== "object") continue;
+      const c = v as Record<string, unknown>;
+      caseResults[k] = {
+        caseId: typeof c.caseId === "string" && c.caseId ? c.caseId : k,
+        attempts: Math.max(0, num(c.attempts, 0)),
+        bestScore: clamp(num(c.bestScore, 0), 0, 100),
+        bestRank: isRank(c.bestRank) ? c.bestRank : null,
+        lastScore: clamp(num(c.lastScore, 0), 0, 100),
+        lastRank: isRank(c.lastRank) ? c.lastRank : null,
+        solved: !!c.solved,
+        perfect: !!c.perfect,
+        lastSubmittedAt: num(c.lastSubmittedAt, 0),
+        ...(typeof c.solvedAt === "number" ? { solvedAt: c.solvedAt } : {}),
+      };
+    }
+
+    // Back-fill records for cases solved before per-case results existed.
+    for (const id of profile.solvedCaseIds) {
+      if (caseResults[id]) {
+        caseResults[id] = { ...caseResults[id], solved: true };
+        continue;
+      }
+      const h = history.find((e) => e.caseId === id && e.solved);
+      caseResults[id] = {
+        caseId: id,
+        attempts: 1,
+        bestScore: num(h?.score, 0),
+        bestRank: isRank(h?.rank) ? h.rank : null,
+        lastScore: num(h?.score, 0),
+        lastRank: isRank(h?.rank) ? h.rank : null,
+        solved: true,
+        perfect: !!h?.perfect,
+        lastSubmittedAt: num(h?.at, 0),
+        ...(h?.at ? { solvedAt: h.at } : {}),
+      };
+    }
+
+    return {
+      profile,
+      activeCaseId: typeof r.activeCaseId === "string" ? r.activeCaseId : null,
+      history: history.slice(0, 50),
+      perCaseEvidenceRead,
+      contradictionCount: Math.max(0, num(r.contradictionCount, 0)),
+      caseResults,
+      version: PROGRESS_VERSION,
+    };
+  },
+
 
   setActiveCase(state: ProgressState, caseId: string | null): ProgressState {
     return { ...state, activeCaseId: caseId };
@@ -169,13 +306,22 @@ export const ProgressEngine = {
     return { ...s, contradictionCount: s.contradictionCount + 1 };
   },
 
+  /**
+   * Records one final accusation. Idempotent for already-solved cases:
+   * a repeat correct accusation grants no XP/reputation, does not duplicate
+   * solvedCaseIds, and adds no new history entry.
+   */
   recordAccusation(
     state: ProgressState,
     caseId: string,
     correct: boolean,
     perfect = false,
+    scoreMeta?: { score?: number; rank?: CaseResultRank | null },
   ): ProgressState {
     let s = state;
+    const alreadySolved = s.profile.solvedCaseIds.includes(caseId);
+    if (correct && alreadySolved) return s;
+
     if (correct) {
       s = applyXp(s, XP_REWARDS.CORRECT_ACCUSATION + (perfect ? XP_REWARDS.PERFECT_BONUS : 0));
       s = applyReputation(
@@ -200,11 +346,94 @@ export const ProgressEngine = {
     return {
       ...s,
       history: [
-        { caseId, solved: correct, perfect: correct && perfect, at: Date.now() },
+        {
+          caseId,
+          solved: correct,
+          perfect: correct && perfect,
+          at: Date.now(),
+          ...(typeof scoreMeta?.score === "number" ? { score: scoreMeta.score } : {}),
+          ...(isRank(scoreMeta?.rank) ? { rank: scoreMeta.rank } : {}),
+        },
         ...s.history,
       ].slice(0, 50),
     };
   },
+
+  /**
+   * Commits one final deduction submission: updates the durable per-case
+   * result record and, on a first correct solve only, applies accusation
+   * rewards. Returns the next state plus a UI-facing outcome delta.
+   */
+  recordDeduction(
+    state: ProgressState,
+    input: {
+      caseId: string;
+      score: number;
+      rank: CaseResultRank | null;
+      correct: boolean;
+      perfect: boolean;
+    },
+  ): { state: ProgressState; outcome: DeductionCommitOutcome } {
+    const { caseId, correct } = input;
+    const score = clamp(Math.round(num(input.score, 0)), 0, 100);
+    const rank = isRank(input.rank) ? input.rank : null;
+    const now = Date.now();
+
+    const prev = state.caseResults[caseId];
+    const alreadySolved = !!prev?.solved || state.profile.solvedCaseIds.includes(caseId);
+    const firstSolve = correct && !alreadySolved;
+    const perfect = input.perfect && correct;
+
+    let next = state;
+    if (firstSolve || !correct) {
+      next = ProgressEngine.recordAccusation(next, caseId, correct, perfect, {
+        score,
+        rank,
+      });
+    }
+
+    const bestScore = Math.max(prev?.bestScore ?? 0, score);
+    const bestRank = betterRank(prev?.bestRank ?? null, rank);
+    const newBest = score > (prev?.bestScore ?? -1);
+
+    const record: CaseResultRecord = {
+      caseId,
+      attempts: (prev?.attempts ?? 0) + 1,
+      bestScore,
+      bestRank,
+      lastScore: score,
+      lastRank: rank,
+      solved: alreadySolved || correct,
+      perfect: (prev?.perfect ?? false) || perfect,
+      lastSubmittedAt: now,
+      ...(prev?.solvedAt
+        ? { solvedAt: prev.solvedAt }
+        : firstSolve
+          ? { solvedAt: now }
+          : {}),
+    };
+
+    next = { ...next, caseResults: { ...next.caseResults, [caseId]: record } };
+
+    return {
+      state: next,
+      outcome: {
+        caseId,
+        score,
+        rank,
+        attempts: record.attempts,
+        bestScore: record.bestScore,
+        bestRank: record.bestRank,
+        newBest,
+        correct,
+        perfect,
+        firstSolve,
+        rewarded: firstSolve,
+        newAchievements: [],
+      },
+    };
+  },
+
 
   unlockAchievement(state: ProgressState, id: string): ProgressState {
     if (state.profile.achievementsUnlocked.includes(id)) return state;

@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from "react";
 import type { Case } from "@/types";
-import type { ProgressState } from "@/types/progress";
+import type {
+  CaseResultRank,
+  DeductionCommitOutcome,
+  ProgressState,
+} from "@/types/progress";
 import { ProgressEngine } from "@/engine/ProgressEngine";
 import { AchievementEngine } from "@/engine/AchievementEngine";
 import {
@@ -80,10 +84,44 @@ class ProgressStore {
     this.commit(next);
   }
 
+  /**
+   * Commits one final deduction submission and returns the resulting delta
+   * so the result screen can show what was saved. Idempotent for rewards:
+   * only the first correct solve grants XP/reputation/achievements.
+   */
+  recordDeduction(
+    c: Case,
+    input: { score: number; rank: CaseResultRank | null; correct: boolean; perfect: boolean },
+  ): DeductionCommitOutcome {
+    const before = new Set(this.state.profile.achievementsUnlocked);
+    const { state: committed, outcome } = ProgressEngine.recordDeduction(this.state, {
+      caseId: c.id,
+      score: input.score,
+      rank: input.rank,
+      correct: input.correct,
+      perfect: input.perfect,
+    });
+
+    let next = committed;
+    if (outcome.firstSolve) {
+      const read = next.perCaseEvidenceRead[c.id] ?? [];
+      next = AchievementEngine.evaluate(next, {
+        lastCase: c,
+        lastAccusationCorrect: true,
+        readAllEvidenceInLastCase: read.length >= c.evidence.length,
+      });
+    }
+
+    const newAchievements = next.profile.achievementsUnlocked.filter((id) => !before.has(id));
+    this.commit(next);
+    return { ...outcome, newAchievements };
+  }
+
   reset(): void {
     this.commit(ProgressEngine.createInitial(this.state.profile.name));
   }
 }
+
 
 export const progressStore = new ProgressStore(new LocalStorageAdapter());
 

@@ -64,7 +64,11 @@ function DashboardPage() {
           </InvestigationSection>
 
           <InvestigationSection icon={History} title="최근 해결 사건">
-            <RecentSolvedList history={state.history} resolve={(id) => CaseEngine.get(id)} />
+            <RecentSolvedList
+              history={state.history}
+              resolve={(id) => CaseEngine.get(id)}
+              caseResults={state.caseResults}
+            />
           </InvestigationSection>
 
           <InvestigationSection icon={LockIcon} title="잠긴 사건 파일" subtitle="접근 권한 부족">

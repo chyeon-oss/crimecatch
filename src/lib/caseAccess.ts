@@ -41,3 +41,13 @@ export function caseAccess(progress: ProgressState, caseId: string): CaseAccess 
     reason: `${title} 사건을 해결한 뒤 열람할 수 있습니다.`,
   };
 }
+
+/** Display file codes used by the intro cinematic and case chrome. */
+const CASE_CODES: Record<string, string> = {
+  "midnight-office": "CASE001",
+  "inheritance-party": "CASE002",
+};
+
+export function caseCode(caseId: string): string {
+  return CASE_CODES[caseId] ?? "CASE";
+}

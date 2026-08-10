@@ -33,6 +33,29 @@ export interface CaseHistoryEntry {
   solved: boolean;
   perfect: boolean;
   at: number;
+  /** Deduction score for this submission, when available. */
+  score?: number;
+  /** Deduction rank for this submission, when available. */
+  rank?: CaseResultRank;
+}
+
+export type CaseResultRank = "S" | "A" | "B" | "C";
+
+/**
+ * Durable per-case result record. Player-facing metrics only —
+ * never store answer keys, truth content, or free-text reasoning here.
+ */
+export interface CaseResultRecord {
+  caseId: string;
+  attempts: number;
+  bestScore: number;
+  bestRank: CaseResultRank | null;
+  lastScore: number;
+  lastRank: CaseResultRank | null;
+  solved: boolean;
+  perfect: boolean;
+  lastSubmittedAt: number;
+  solvedAt?: number;
 }
 
 export interface DetectiveProfile {
@@ -54,5 +77,24 @@ export interface ProgressState {
   /** Per-case counters used by achievement rules. */
   perCaseEvidenceRead: Record<string, string[]>;
   contradictionCount: number;
+  /** Durable per-case deduction results, keyed by case id. */
+  caseResults: Record<string, CaseResultRecord>;
   version: number;
 }
+
+/** Result of committing one final deduction submission. */
+export interface DeductionCommitOutcome {
+  caseId: string;
+  score: number;
+  rank: CaseResultRank | null;
+  attempts: number;
+  bestScore: number;
+  bestRank: CaseResultRank | null;
+  newBest: boolean;
+  correct: boolean;
+  perfect: boolean;
+  firstSolve: boolean;
+  rewarded: boolean;
+  newAchievements: string[];
+}
+

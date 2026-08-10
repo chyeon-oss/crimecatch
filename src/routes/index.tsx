@@ -76,17 +76,25 @@ function CaseSelectionPage() {
   const progress = useProgress();
   const baseRoster = buildRoster();
 
-  const roster = baseRoster.map((item) => {
+  const roster: CaseRosterItem[] = baseRoster.map((item) => {
     if (item.locked) return item;
-    const completed = progress.profile.solvedCaseIds.includes(item.data.id);
+    const record = progress.caseResults[item.data.id];
+    const completed =
+      !!record?.solved || progress.profile.solvedCaseIds.includes(item.data.id);
     return {
       ...item,
       completed,
-      rank: completed ? progress.profile.rank : undefined,
+      bestRank: record?.bestRank ?? null,
     };
   });
 
-  const availableCount = roster.filter((item) => !item.locked).length;
+  const playable = roster.filter(
+    (item): item is Extract<CaseRosterItem, { locked: false }> => !item.locked,
+  );
+  const availableCount = playable.length;
+  const solvedCount = playable.filter((item) => item.completed).length;
+  const solvedPercent =
+    availableCount === 0 ? 0 : Math.round((solvedCount / availableCount) * 100);
 
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground">
@@ -154,14 +162,15 @@ function CaseSelectionPage() {
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-border/50">
               <div
                 className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: `${(availableCount / TOTAL_CASES) * 100}%` }}
+                style={{ width: `${solvedPercent}%` }}
               />
             </div>
             <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
-              {Math.round((availableCount / TOTAL_CASES) * 100)}%
+              {solvedPercent}%
             </span>
           </div>
           <p className="mt-3 text-xs text-muted-foreground/70">
+            공개된 사건 {solvedCount} / {availableCount}건 해결 ·{" "}
             {TOTAL_CASES - availableCount}건의 사건이 곧 추가됩니다.
           </p>
         </div>

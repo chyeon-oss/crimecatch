@@ -1,4 +1,5 @@
 import type { ProgressState } from "@/types/progress";
+import { ProgressEngine } from "@/engine/ProgressEngine";
 
 /**
  * SyncAdapter — abstract persistence. LocalStorageAdapter today,
@@ -16,7 +17,9 @@ export class LocalStorageAdapter implements ProgressSyncAdapter {
     if (typeof window === "undefined") return null;
     try {
       const raw = window.localStorage.getItem(KEY);
-      return raw ? (JSON.parse(raw) as ProgressState) : null;
+      if (!raw) return null;
+      // Any older schema (v1) is migrated forward; malformed data defaults safely.
+      return ProgressEngine.migrate(JSON.parse(raw));
     } catch {
       return null;
     }
@@ -31,3 +34,4 @@ export class LocalStorageAdapter implements ProgressSyncAdapter {
     }
   }
 }
+

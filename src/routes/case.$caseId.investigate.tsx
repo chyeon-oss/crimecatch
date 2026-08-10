@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import {
   Archive,
   NotebookPen,
@@ -67,9 +67,11 @@ import { ConversationSurface } from "@/components/mobile/ConversationSurface";
 import { InterviewHub } from "@/components/mobile/InterviewHub";
 import { InterviewRoom } from "@/components/mobile/InterviewRoom";
 import { EvidenceSheet } from "@/components/mobile/EvidenceSheet";
+import { MobileDeduction } from "@/components/mobile/MobileDeduction";
 import { useInterviewRuntime } from "@/hooks/useInterviewRuntime";
 import { getCaseInterviews } from "@/data/interviews";
 import { meetsRequirement } from "@/lib/dialogueRuntime";
+import { isPresentable } from "@/lib/evidenceGating";
 import { validateCasePair } from "@/engine/CaseValidation";
 import type { Case, Evidence, CrimeScene as CrimeSceneData, BoardState } from "@/types";
 import type { DialogueEffect } from "@/types/dialogue";
@@ -178,6 +180,7 @@ function InvestigateWorkspace() {
     currentScene,
     availableHotspots,
     actions,
+    hydrated: runtimeHydrated,
   } = useCaseRuntime(runtimeDef);
 
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
@@ -207,9 +210,40 @@ function InvestigateWorkspace() {
     activeDiscoveryIdRef.current = activeDiscoveryId;
   }, [activeDiscoveryId]);
 
+  // A restored session must not replay its discovery modals. This effect is
+  // declared before the enqueue effect so the same commit sees primed ids.
+  const primedRef = useRef(false);
+  useEffect(() => {
+    if (!runtimeHydrated || primedRef.current) return;
+    primedRef.current = true;
+    for (const id of discoveredIds) seenRef.current.add(id);
+    setDiscoveredAt((prev) => {
+      if (discoveredIds.length === 0) return prev;
+      const next = new Map(prev);
+      const now = Date.now();
+      discoveredIds.forEach((id, i) => {
+        if (!next.has(id)) next.set(id, now + i);
+      });
+      return next;
+    });
+    setInvestigatedHotspotIds((prev) => {
+      const next = new Set(prev);
+      for (const h of runtimeDef.hotspots) {
+        if (h.revealsEvidenceIds.length && h.revealsEvidenceIds.every((e) => discoveredSet.has(e))) {
+          next.add(h.id);
+        }
+      }
+      return next;
+    });
+    prevSceneIdRef.current = runtimeState.currentScene;
+    // Runs once, on the first hydrated commit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runtimeHydrated]);
+
   // Track newly-discovered evidence coming from runtime → discovery queue.
   const seenRef = useRef<Set<string>>(new Set());
   useEffect(() => {
+    if (!runtimeHydrated || !primedRef.current) return;
     const added: string[] = [];
     for (const id of discoveredIds) {
       if (!seenRef.current.has(id) && evidenceById.has(id)) {
@@ -237,7 +271,7 @@ function InvestigateWorkspace() {
         return fresh.length ? [...q, ...fresh] : q;
       });
     }
-  }, [discoveredIds, evidenceById]);
+  }, [discoveredIds, evidenceById, runtimeHydrated]);
 
   // Cooldown between two modals so the first fully unmounts before the next
   // appears (150ms, per spec). Set to false during dismiss and flipped back
@@ -423,6 +457,7 @@ function InvestigateWorkspace() {
     newObjective: string | null;
   } | null>(null);
   useEffect(() => {
+    if (!runtimeHydrated || !primedRef.current) return;
     const prevId = prevSceneIdRef.current;
     const curId = runtimeState.currentScene;
     if (prevId && curId && prevId !== curId) {
@@ -438,7 +473,12 @@ function InvestigateWorkspace() {
       }
     }
     prevSceneIdRef.current = curId;
-  }, [runtimeState.currentScene, runtimeState.currentObjective, runtimeDef.scenes]);
+  }, [
+    runtimeState.currentScene,
+    runtimeState.currentObjective,
+    runtimeDef.scenes,
+    runtimeHydrated,
+  ]);
 
   // Discovery modals always take priority over the scene-transition modal
   // (spec: show all discoveries first, then transition, then objective).
@@ -568,6 +608,19 @@ function InvestigateWorkspace() {
 
   const interviewMode = !!interviewPack && showSuspects;
 
+  /** Suspects the runtime requires before the case can advance. */
+  const requiredInterviewIds = useMemo(
+    () => currentScene?.completionCondition?.requiresInterviewedSuspectIds ?? [],
+    [currentScene],
+  );
+  const remainingRequiredNames = useMemo(
+    () =>
+      requiredInterviewIds
+        .filter((id) => !runtimeState.interviewedSuspects.includes(id))
+        .map((id) => suspectById.get(id)?.name ?? id),
+    [requiredInterviewIds, runtimeState.interviewedSuspects, suspectById],
+  );
+
   const hubRooms = useMemo(
     () =>
       interviews.rooms
@@ -610,35 +663,25 @@ function InvestigateWorkspace() {
     if (!activeInterview) return [];
     const presented = new Set(activeInterview.state.presentedEvidenceIds);
     return discoveredEvidence
-      .filter((e) => readIds.has(e.id))
+      .filter((e) => isPresentable(e.id, discoveredSet, readIds))
       .map((e) => ({
         id: e.id,
         title: e.title,
         category: e.category,
         presented: presented.has(e.id),
       }));
-  }, [activeInterview, discoveredEvidence, readIds]);
+  }, [activeInterview, discoveredEvidence, discoveredSet, readIds]);
 
+
+  /** Discovered AND read evidence — decisive-evidence candidates. */
+  const readEvidence = useMemo(
+    () => discoveredEvidence.filter((e) => isPresentable(e.id, discoveredSet, readIds)),
+    [discoveredEvidence, discoveredSet, readIds],
+  );
 
   const sceneIndex = Math.max(
     0,
     runtimeDef.scenes.findIndex((s) => s.id === runtimeState.currentScene),
-  );
-
-  const accuseBlock = canAccuse ? (
-    <Link
-      to="/case/$caseId/accuse"
-      params={{ caseId: data.slug }}
-      className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)]"
-    >
-      <Gavel className="h-4 w-4" />
-      범인 지목하기
-    </Link>
-  ) : (
-    <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/60 bg-surface-elevated/50 p-3 text-xs text-muted-foreground">
-      <Lock className="h-4 w-4" />
-      SCENE 04에 도달하면 범인 지목이 가능해집니다.
-    </div>
   );
 
   return (
@@ -780,7 +823,11 @@ function InvestigateWorkspace() {
                 onBack={interviews.closeRoom}
               />
             ) : (
-              <InterviewHub rooms={hubRooms} onOpen={interviews.openRoom} />
+              <InterviewHub
+                rooms={hubRooms}
+                onOpen={interviews.openRoom}
+                remainingRequiredNames={remainingRequiredNames}
+              />
             )
           ) : (
             <ConversationSurface
@@ -949,10 +996,19 @@ function InvestigateWorkspace() {
               icon={Gavel}
               title="최종 추리"
               subtitle={
-                canAccuse ? "충분히 조사했다면 범인을 지목하세요" : "아직 조사가 부족합니다"
+                canAccuse
+                  ? "한 화면에 한 가지 결정 — 여섯 단계로 결론을 제출합니다"
+                  : "SCENE 04에 도달하면 제출이 열립니다"
               }
             >
-              {accuseBlock}
+              <div className="-mx-4">
+                <MobileDeduction
+                  case={data}
+                  readEvidence={readEvidence}
+                  discoveredEvidenceIds={discoveredSet}
+                  canAccuse={canAccuse}
+                />
+              </div>
             </InvestigationSection>
           </div>
         )}

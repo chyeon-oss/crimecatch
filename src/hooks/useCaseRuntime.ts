@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { CaseRuntime } from "@/engine/CaseRuntime";
 import type {
   CaseDefinition,
@@ -6,6 +6,7 @@ import type {
   RuntimeAction,
 } from "@/types/runtime";
 import type { NotebookSectionId } from "@/lib/notebook";
+import { clearLog, isReplayable, loadLog, saveLog } from "@/lib/runtimeSession";
 
 /**
  * React binding for the Case Runtime. Owns the reducer and, optionally,
@@ -18,6 +19,46 @@ export function useCaseRuntime(def: CaseDefinition) {
     (s: CaseRuntimeState, a: RuntimeAction) => CaseRuntime.reduce(def, s, a),
     def,
     CaseRuntime.create,
+  );
+
+  // ---------------------------------------------------------------------
+  // Session restore: replay the persisted action log through the very same
+  // reducer, so progression stays deterministic across reloads.
+  // ---------------------------------------------------------------------
+  const logRef = useRef<RuntimeAction[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+  const restoredRef = useRef(false);
+
+  useEffect(() => {
+    const stored = loadLog(def.id);
+    logRef.current = stored;
+    restoredRef.current = stored.length > 0;
+    for (const action of stored) dispatch(action);
+    setHydrated(true);
+    // Re-hydrate only when the case changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [def.id]);
+
+  const record = useCallback(
+    (action: RuntimeAction) => {
+      if (action.type === "RESET") {
+        logRef.current = [];
+        clearLog(def.id);
+        return;
+      }
+      if (!isReplayable(action)) return;
+      logRef.current = [...logRef.current, action];
+      saveLog(def.id, logRef.current);
+    },
+    [def.id],
+  );
+
+  const commit = useCallback(
+    (action: RuntimeAction) => {
+      record(action);
+      dispatch(action);
+    },
+    [record],
   );
 
   // Auto-forward notebook queue entries into localStorage-backed notebook.
@@ -61,27 +102,32 @@ export function useCaseRuntime(def: CaseDefinition) {
   const actions = useMemo(
     () => ({
       investigateHotspot: (hotspotId: string) =>
-        dispatch({ type: "INVESTIGATE_HOTSPOT", hotspotId }),
+        commit({ type: "INVESTIGATE_HOTSPOT", hotspotId }),
       discoverEvidence: (evidenceId: string) =>
-        dispatch({ type: "DISCOVER_EVIDENCE", evidenceId }),
+        commit({ type: "DISCOVER_EVIDENCE", evidenceId }),
       readEvidence: (evidenceId: string) =>
-        dispatch({ type: "READ_EVIDENCE", evidenceId }),
+        commit({ type: "READ_EVIDENCE", evidenceId }),
       interviewSuspect: (suspectId: string) =>
-        dispatch({ type: "INTERVIEW_SUSPECT", suspectId }),
+        commit({ type: "INTERVIEW_SUSPECT", suspectId }),
       solveQuestion: (questionId: string) =>
-        dispatch({ type: "SOLVE_QUESTION", questionId }),
-      advanceScene: () => dispatch({ type: "ADVANCE_SCENE" }),
+        commit({ type: "SOLVE_QUESTION", questionId }),
+      advanceScene: () => commit({ type: "ADVANCE_SCENE" }),
       submitAccusation: (correct: boolean) =>
         dispatch({ type: "SUBMIT_ACCUSATION", correct }),
-      reset: () => dispatch({ type: "RESET" }),
+      reset: () => commit({ type: "RESET" }),
     }),
-    [],
+    [commit],
   );
 
-  const dispatchAction = useCallback(
-    (a: RuntimeAction) => dispatch(a),
-    [],
-  );
+  const dispatchAction = useCallback((a: RuntimeAction) => commit(a), [commit]);
 
-  return { state, currentScene, availableHotspots, actions, dispatch: dispatchAction };
+  return {
+    state,
+    currentScene,
+    availableHotspots,
+    actions,
+    dispatch: dispatchAction,
+    hydrated,
+    restored: restoredRef.current,
+  };
 }

@@ -28,14 +28,13 @@ export const Route = createFileRoute("/")({
 
 const TOTAL_CASES = 12;
 
+/** Ordered playable roster: case id → displayed file number. */
+const CASE_NUMBERS: { caseId: string; caseNumber: string }[] = [
+  { caseId: "midnight-office", caseNumber: "CASE 001" },
+  { caseId: "inheritance-party", caseNumber: "CASE 002" },
+];
+
 const LOCKED_ROSTER: Omit<CaseRosterItem & { locked: true }, "locked">[] = [
-  {
-    caseNumber: "CASE 002",
-    title: "유산 상속 파티 살인사건",
-    subtitle: "화려한 별장에서 열린 상속 파티. 유언장이 공개되는 순간, 주인공이 무너졌다.",
-    difficulty: "보통",
-    estimatedMinutes: 40,
-  },
   {
     caseNumber: "CASE 003",
     title: "실종된 연습생",
@@ -52,41 +51,37 @@ const LOCKED_ROSTER: Omit<CaseRosterItem & { locked: true }, "locked">[] = [
   },
 ];
 
-function buildRoster(): CaseRosterItem[] {
-  const cases = CaseEngine.list();
-  const firstCase = cases[0];
-
-  const roster: CaseRosterItem[] = [];
-
-  if (firstCase) {
-    roster.push({
-      caseNumber: "CASE 001",
-      locked: false,
-      data: firstCase,
-      completed: false,
-    });
-  }
-
-  roster.push(...LOCKED_ROSTER.map((item) => ({ ...item, locked: true as const })));
-
-  return roster;
-}
-
 function CaseSelectionPage() {
   const progress = useProgress();
-  const baseRoster = buildRoster();
 
-  const roster: CaseRosterItem[] = baseRoster.map((item) => {
-    if (item.locked) return item;
-    const record = progress.caseResults[item.data.id];
-    const completed =
-      !!record?.solved || progress.profile.solvedCaseIds.includes(item.data.id);
-    return {
-      ...item,
-      completed,
+  const roster: CaseRosterItem[] = [];
+  for (const entry of CASE_NUMBERS) {
+    const data = CaseEngine.get(entry.caseId);
+    if (!data) continue;
+    const access = caseAccess(progress, data.id);
+    if (!access.unlocked) {
+      roster.push({
+        caseNumber: entry.caseNumber,
+        locked: true,
+        title: data.title,
+        subtitle: data.subtitle,
+        difficulty: data.difficulty,
+        estimatedMinutes: data.estimatedMinutes,
+        lockReason: access.reason ?? undefined,
+      });
+      continue;
+    }
+    const record = progress.caseResults[data.id];
+    roster.push({
+      caseNumber: entry.caseNumber,
+      locked: false,
+      data,
+      completed: isCaseSolved(progress, data.id),
       bestRank: record?.bestRank ?? null,
-    };
-  });
+    });
+  }
+  roster.push(...LOCKED_ROSTER.map((item) => ({ ...item, locked: true as const })));
+
 
   const playable = roster.filter(
     (item): item is Extract<CaseRosterItem, { locked: false }> => !item.locked,

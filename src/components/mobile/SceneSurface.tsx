@@ -116,6 +116,7 @@ export function SceneSurface({
 
   return (
     <section className="px-4">
+      <h2 className="sr-only">{`${sceneTitle} — ${objective}`}</h2>
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-border/70 bg-surface-elevated">
         {/* Backdrop */}
         <div

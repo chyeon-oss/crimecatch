@@ -74,7 +74,7 @@ export function DeductionResult({
   const correct = score ? score.breakdown.suspect.hit : null;
 
   return (
-    <section className="px-4 py-5 pb-8">
+    <section className="px-4 py-5 pb-8" data-testid="deduction-result">
       <header className="text-center">
         <p className="text-[10px] uppercase tracking-[0.24em] text-primary/80">DEDUCTION RESULT</p>
         <h2 className="mt-1 font-display text-[22px] text-foreground">
@@ -220,6 +220,7 @@ export function DeductionResult({
       <button
         type="button"
         onClick={() => setReconstruction(true)}
+        data-testid="reconstruction-open"
         className="mt-5 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-primary text-[13px] font-semibold text-primary-foreground shadow-[var(--shadow-gold)]"
       >
         <FileSearch className="h-4 w-4" />
@@ -287,7 +288,10 @@ function ReconstructionView({
   const allShown = revealed >= beats.length;
 
   return (
-    <div className="fixed inset-0 z-[58] flex justify-center bg-background/95 backdrop-blur">
+    <div
+      className="fixed inset-0 z-[58] flex justify-center bg-background/95 backdrop-blur"
+      data-testid="reconstruction-view"
+    >
       <div className="flex h-full w-full max-w-[460px] flex-col border-border/60 sm:border-x">
         <header className="flex items-start justify-between gap-3 border-b border-border/60 px-4 py-3">
           <div className="min-w-0">
@@ -411,6 +415,7 @@ function ReconstructionView({
             <button
               type="button"
               onClick={() => setRevealed((r) => r + 1)}
+              data-testid="reconstruction-next"
               className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg bg-primary text-[13px] font-semibold text-primary-foreground shadow-[var(--shadow-gold)]"
             >
               다음 장면 ({Math.min(revealed, beats.length)}/{beats.length})

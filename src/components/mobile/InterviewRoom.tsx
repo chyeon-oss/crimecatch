@@ -66,6 +66,7 @@ export function InterviewRoom({
           <button
             type="button"
             onClick={onBack}
+            data-testid="interview-back"
             aria-label="인터뷰 목록으로"
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border/60 text-muted-foreground"
           >
@@ -179,6 +180,7 @@ export function InterviewRoom({
               <button
                 key={c.id}
                 type="button"
+                data-testid="interview-choice"
                 onClick={() => onChoose(c.id)}
                 className="flex min-h-[48px] w-full items-center rounded-lg border border-primary/35 bg-primary/5 px-3 py-2.5 text-left text-[13px] leading-snug text-foreground transition-colors hover:border-primary/60"
               >
@@ -195,6 +197,8 @@ export function InterviewRoom({
                   <button
                     key={topic.id}
                     type="button"
+                    data-testid="interview-topic"
+                    data-available={available ? "true" : "false"}
                     disabled={!available || isTyping}
                     onClick={() => onAsk(topic.id)}
                     className={`flex min-h-[48px] w-full items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-[13px] leading-snug transition-colors ${

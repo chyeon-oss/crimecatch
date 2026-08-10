@@ -143,6 +143,8 @@ export function SceneSurface({
               key={h.id}
               type="button"
               onClick={() => run(h)}
+              data-testid={`hotspot-${h.id}`}
+              data-investigated={done ? "true" : "false"}
               disabled={busy || disabled}
               aria-label={`${h.title} 조사`}
               className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 ${

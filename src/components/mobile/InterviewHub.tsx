@@ -58,6 +58,8 @@ export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [] }: Pro
           <li key={r.suspectId}>
             <button
               type="button"
+              data-testid={`interview-room-${r.suspectId}`}
+              data-complete={r.complete ? "true" : "false"}
               onClick={() => onOpen(r.suspectId)}
               className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-3 text-left transition-colors hover:border-primary/40"
             >

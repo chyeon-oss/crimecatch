@@ -52,6 +52,7 @@ export function MobileInvestigationShell({ header, active, onChange, badges, chi
                   <button
                     type="button"
                     onClick={() => onChange(t.id)}
+                    data-testid={`shell-tab-${t.id}`}
                     aria-current={isActive ? "page" : undefined}
                     className={`relative flex min-h-[56px] w-full flex-col items-center justify-center gap-1 text-[10px] tracking-wide transition-colors ${
                       isActive ? "text-primary" : "text-muted-foreground"

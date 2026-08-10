@@ -112,6 +112,8 @@ export function ConversationSurface({
             <button
               key={choice.id}
               type="button"
+              data-testid="dialogue-choice"
+              data-available={available ? "true" : "false"}
               disabled={!available}
               onClick={() => onChoose(choice.id)}
               className={`flex min-h-[44px] w-full items-center rounded-lg border px-3.5 py-2.5 text-left text-[13px] leading-snug transition-colors ${

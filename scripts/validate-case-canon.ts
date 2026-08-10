@@ -99,8 +99,14 @@ const PLAYER_DIRS = [
   "src/state",
   "src/data",
 ];
+/**
+ * Final evaluation / result / truth infrastructure is the one allowed
+ * consumer of the private layers (same boundary CASE001 uses).
+ */
+const PRIVATE_CONSUMER_ALLOWLIST = ["src/routes/case.$caseId.accuse.tsx"];
 for (const dir of PLAYER_DIRS) {
   for (const file of walk(dir)) {
+    if (PRIVATE_CONSUMER_ALLOWLIST.some((allowed) => file.endsWith(allowed))) continue;
     const src = readFileSync(file, "utf8");
     for (const priv of PRIVATE_FILES) {
       if (src.includes(`inheritance-party/${priv}`)) {
@@ -109,6 +115,7 @@ for (const dir of PLAYER_DIRS) {
     }
   }
 }
+
 
 console.log("=== spoiler isolation ===");
 console.log("clean:", isolationErrors.length === 0);

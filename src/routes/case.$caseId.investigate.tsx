@@ -178,6 +178,7 @@ function InvestigateWorkspace() {
     currentScene,
     availableHotspots,
     actions,
+    hydrated: runtimeHydrated,
   } = useCaseRuntime(runtimeDef);
 
   const [openEvidence, setOpenEvidence] = useState<Evidence | null>(null);
@@ -207,9 +208,40 @@ function InvestigateWorkspace() {
     activeDiscoveryIdRef.current = activeDiscoveryId;
   }, [activeDiscoveryId]);
 
+  // A restored session must not replay its discovery modals. This effect is
+  // declared before the enqueue effect so the same commit sees primed ids.
+  const primedRef = useRef(false);
+  useEffect(() => {
+    if (!runtimeHydrated || primedRef.current) return;
+    primedRef.current = true;
+    for (const id of discoveredIds) seenRef.current.add(id);
+    setDiscoveredAt((prev) => {
+      if (discoveredIds.length === 0) return prev;
+      const next = new Map(prev);
+      const now = Date.now();
+      discoveredIds.forEach((id, i) => {
+        if (!next.has(id)) next.set(id, now + i);
+      });
+      return next;
+    });
+    setInvestigatedHotspotIds((prev) => {
+      const next = new Set(prev);
+      for (const h of runtimeDef.hotspots) {
+        if (h.revealsEvidenceIds.length && h.revealsEvidenceIds.every((e) => discoveredSet.has(e))) {
+          next.add(h.id);
+        }
+      }
+      return next;
+    });
+    prevSceneIdRef.current = runtimeState.currentScene;
+    // Runs once, on the first hydrated commit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runtimeHydrated]);
+
   // Track newly-discovered evidence coming from runtime → discovery queue.
   const seenRef = useRef<Set<string>>(new Set());
   useEffect(() => {
+    if (!runtimeHydrated || !primedRef.current) return;
     const added: string[] = [];
     for (const id of discoveredIds) {
       if (!seenRef.current.has(id) && evidenceById.has(id)) {
@@ -237,7 +269,7 @@ function InvestigateWorkspace() {
         return fresh.length ? [...q, ...fresh] : q;
       });
     }
-  }, [discoveredIds, evidenceById]);
+  }, [discoveredIds, evidenceById, runtimeHydrated]);
 
   // Cooldown between two modals so the first fully unmounts before the next
   // appears (150ms, per spec). Set to false during dismiss and flipped back
@@ -423,6 +455,7 @@ function InvestigateWorkspace() {
     newObjective: string | null;
   } | null>(null);
   useEffect(() => {
+    if (!runtimeHydrated || !primedRef.current) return;
     const prevId = prevSceneIdRef.current;
     const curId = runtimeState.currentScene;
     if (prevId && curId && prevId !== curId) {
@@ -438,7 +471,12 @@ function InvestigateWorkspace() {
       }
     }
     prevSceneIdRef.current = curId;
-  }, [runtimeState.currentScene, runtimeState.currentObjective, runtimeDef.scenes]);
+  }, [
+    runtimeState.currentScene,
+    runtimeState.currentObjective,
+    runtimeDef.scenes,
+    runtimeHydrated,
+  ]);
 
   // Discovery modals always take priority over the scene-transition modal
   // (spec: show all discoveries first, then transition, then objective).

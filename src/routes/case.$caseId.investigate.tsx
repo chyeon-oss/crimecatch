@@ -474,9 +474,11 @@ function InvestigateWorkspace() {
       {showIntro && (
         <CaseIntro
           caseId={data.id}
+          caseCode={caseCode(data.id)}
           caseTitle={(data.title ?? "").toUpperCase()}
           onDone={() => setShowIntro(false)}
         />
+
       )}
 
       <TopBar

@@ -684,6 +684,33 @@ function InvestigateWorkspace() {
     runtimeDef.scenes.findIndex((s) => s.id === runtimeState.currentScene),
   );
 
+  /**
+   * Final-deduction block. Once the runtime reaches SCENE 04 this becomes the
+   * first thing on the 추리 tab — at 390–430px the submit flow must be the
+   * primary content, not something buried under the notebook and the board.
+   */
+  const deductionSection = (
+    <InvestigationSection
+      icon={Gavel}
+      title="최종 추리"
+      subtitle={
+        canAccuse
+          ? "한 화면에 한 가지 결정 — 여섯 단계로 결론을 제출합니다"
+          : "SCENE 04에 도달하면 제출이 열립니다"
+      }
+    >
+      <div className="-mx-4" data-testid="deduction-host">
+        <MobileDeduction
+          case={data}
+          readEvidence={readEvidence}
+          discoveredEvidenceIds={discoveredSet}
+          canAccuse={canAccuse}
+        />
+      </div>
+    </InvestigationSection>
+  );
+
+
   return (
     <div className="noir-grain">
       {showIntro && (
@@ -936,8 +963,11 @@ function InvestigateWorkspace() {
 
         {tab === "deduce" && (
           <div className="space-y-4 px-4 py-4 pb-8">
+            {canAccuse && deductionSection}
+
             <InvestigationSection
               icon={NotebookPen}
+
               title="수사 노트"
               subtitle="증거·의문·용의자를 정리하고 추리 보드를 연결하세요"
             >
@@ -992,25 +1022,9 @@ function InvestigateWorkspace() {
               <TheoriesPanel state={boardState} onChange={setBoardState} />
             </InvestigationSection>
 
-            <InvestigationSection
-              icon={Gavel}
-              title="최종 추리"
-              subtitle={
-                canAccuse
-                  ? "한 화면에 한 가지 결정 — 여섯 단계로 결론을 제출합니다"
-                  : "SCENE 04에 도달하면 제출이 열립니다"
-              }
-            >
-              <div className="-mx-4">
-                <MobileDeduction
-                  case={data}
-                  readEvidence={readEvidence}
-                  discoveredEvidenceIds={discoveredSet}
-                  canAccuse={canAccuse}
-                />
-              </div>
-            </InvestigationSection>
+            {!canAccuse && deductionSection}
           </div>
+
         )}
       </MobileInvestigationShell>
 

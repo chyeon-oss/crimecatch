@@ -167,7 +167,7 @@ export function DeductionFlow({ caseId, suspects, evidence, connections, onSubmi
   };
 
   return (
-    <section className="px-4 py-4 pb-8">
+    <section className="px-4 py-4 pb-8" data-testid="deduction-flow" data-step={step}>
       {/* progress rail */}
       <ol className="flex items-center gap-1.5">
         {STEPS.map((s) => {
@@ -313,6 +313,7 @@ export function DeductionFlow({ caseId, suspects, evidence, connections, onSubmi
         <button
           type="button"
           onClick={goBack}
+          data-testid="deduction-back"
           disabled={step === 1}
           className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-lg border border-border/70 bg-surface-elevated text-[13px] text-foreground disabled:opacity-40"
         >
@@ -323,6 +324,7 @@ export function DeductionFlow({ caseId, suspects, evidence, connections, onSubmi
           <button
             type="button"
             onClick={goNext}
+            data-testid="deduction-next"
             disabled={!complete[step]}
             className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-lg bg-primary text-[13px] font-semibold text-primary-foreground shadow-[var(--shadow-gold)] disabled:opacity-40 disabled:shadow-none"
           >
@@ -333,6 +335,7 @@ export function DeductionFlow({ caseId, suspects, evidence, connections, onSubmi
           <button
             type="button"
             onClick={() => setConfirming(true)}
+            data-testid="deduction-submit"
             disabled={!allSet}
             className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-lg bg-primary text-[13px] font-semibold text-primary-foreground shadow-[var(--shadow-gold)] disabled:opacity-40 disabled:shadow-none"
           >
@@ -381,6 +384,7 @@ export function DeductionFlow({ caseId, suspects, evidence, connections, onSubmi
               <button
                 type="button"
                 onClick={doSubmit}
+                data-testid="deduction-confirm"
                 className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-lg bg-primary text-[13px] font-semibold text-primary-foreground shadow-[var(--shadow-gold)]"
               >
                 <Check className="h-4 w-4" />
@@ -410,6 +414,7 @@ function PickRow({
   return (
     <button
       type="button"
+      data-testid="deduction-option"
       onClick={onSelect}
       aria-pressed={selected}
       className={`relative flex min-h-[56px] w-full flex-col items-start gap-1 rounded-xl border px-3.5 py-3 pr-10 text-left transition-colors ${

@@ -80,6 +80,7 @@ export function SceneSurface({
   const posOf = (id: string, i: number) => layout[id] ?? FALLBACK_POS[i % FALLBACK_POS.length];
 
   const run = async (h: SurfaceHotspot) => {
+    console.log("[scene] run", h.id, stage, disabled);
     if (stage !== "IDLE" || disabled) return;
     const list = beatsFor(h.id);
     setActiveId(h.id);
@@ -88,6 +89,7 @@ export function SceneSurface({
     setStage("ZOOM");
     await wait(420);
     if (!aliveRef.current) return;
+    console.log("[scene] search", list.length);
     setStage("SEARCH");
     await wait(800);
     for (let i = 0; i < list.length; i += 1) {

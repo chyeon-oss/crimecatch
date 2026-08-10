@@ -39,11 +39,23 @@ const PRIVATE_FILES = ["_spoilers", "_truth", "AUTHOR_BIBLE"];
 /** Field assignments that would leak the spoiler layer into public modules. */
 const FORBIDDEN_PUBLIC_TOKENS = ["isCulprit:", "hiddenTruth:"];
 /**
- * Culprit identity must not be *labelled* in public modules. The suspect name
- * itself is player-facing by design (it is one of four names on the board), so
- * we forbid the phrases that would mark it as the answer.
+ * Canonical solution text that must never appear in public modules. The four
+ * suspect names are player-facing by design, so we instead assert that no
+ * public module reproduces the private solution/truth prose that identifies
+ * the culprit.
  */
-const FORBIDDEN_CULPRIT_MARKERS = ["진범", "범인은", "culprit"];
+const FORBIDDEN_SOLUTION_TEXT = [
+  solution.motive,
+  solution.murderMethod,
+  solution.murderTime,
+  inheritancePartyTruth.summary.motive,
+  inheritancePartyTruth.summary.method,
+  inheritancePartyTruth.summary.lockedRoomTrick,
+  inheritancePartyTruth.summary.closing,
+  `${inheritancePartyTruth.summary.culpritName}이 범인`,
+  `${inheritancePartyTruth.summary.culpritName}은 진범`,
+];
+
 const PUBLIC_CONTENT_FILES = [
   "briefing.ts",
   "victim.ts",
@@ -63,9 +75,9 @@ for (const file of PUBLIC_CONTENT_FILES) {
       isolationErrors.push(`${file} contains forbidden token "${token}"`);
     }
   }
-  for (const marker of FORBIDDEN_CULPRIT_MARKERS) {
-    if (src.toLowerCase().includes(marker.toLowerCase())) {
-      isolationErrors.push(`${file} contains culprit marker "${marker}"`);
+  for (const text of FORBIDDEN_SOLUTION_TEXT) {
+    if (text && src.includes(text)) {
+      isolationErrors.push(`${file} reproduces private solution text`);
     }
   }
 }

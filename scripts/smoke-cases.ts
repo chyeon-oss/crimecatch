@@ -26,8 +26,8 @@ function check(name: string, ok: boolean, extra?: unknown) {
 /** Play a case runtime to the end by exhausting hotspots + interviews. */
 function playThrough(def: CaseDefinition) {
   let state: CaseRuntimeState = CaseRuntime.create(def);
-  const visited: string[] = [state.currentScene];
-  for (let guard = 0; guard < 60; guard++) {
+  const visited: string[] = state.currentScene ? [state.currentScene] : [];
+  for (let guard = 0; guard < 80; guard++) {
     const scene = CaseRuntime.currentScene(def, state);
     if (!scene) break;
     for (const h of CaseRuntime.availableHotspots(def, state)) {
@@ -45,10 +45,12 @@ function playThrough(def: CaseDefinition) {
         suspectId: sid,
       });
     }
-    const before = state.currentScene;
-    state = CaseRuntime.reduce(def, state, { type: "ADVANCE_SCENE" });
-    if (state.currentScene === before) break;
-    visited.push(state.currentScene);
+    if (state.currentScene === scene.id) {
+      // Scenes auto-advance when complete; try an explicit advance otherwise.
+      state = CaseRuntime.reduce(def, state, { type: "ADVANCE_SCENE" });
+    }
+    if (state.currentScene === scene.id) break;
+    if (state.currentScene) visited.push(state.currentScene);
   }
   return { state, visited };
 }

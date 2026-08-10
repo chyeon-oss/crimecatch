@@ -39,6 +39,10 @@ import { SceneStageTimeline, type SceneStage } from "@/components/SceneStageTime
 import { SceneTransitionModal } from "@/components/SceneTransitionModal";
 import { RuntimeDebugPanel } from "@/components/RuntimeDebugPanel";
 import { CaseIntro, shouldShowIntro } from "@/components/CaseIntro";
+import { CaseLockedGuard } from "@/components/CaseLockedGuard";
+import { caseAccess, caseCode } from "@/lib/caseAccess";
+import { useProgress } from "@/state/progressStore";
+
 
 import {
   CaseEngine,
@@ -127,6 +131,17 @@ function buildFallbackRuntime(c: Case): CaseDefinition {
 }
 
 function InvestigatePage() {
+  const { data } = Route.useLoaderData() as { data: Case };
+  const progress = useProgress();
+  const access = caseAccess(progress, data.id);
+  if (!access.unlocked) {
+    return <CaseLockedGuard title={data.title} reason={access.reason ?? ""} />;
+  }
+  return <InvestigateWorkspace />;
+}
+
+function InvestigateWorkspace() {
+
   const { data } = Route.useLoaderData() as { data: Case };
 
   const [showIntro, setShowIntro] = useState(false);
@@ -459,9 +474,11 @@ function InvestigatePage() {
       {showIntro && (
         <CaseIntro
           caseId={data.id}
+          caseCode={caseCode(data.id)}
           caseTitle={(data.title ?? "").toUpperCase()}
           onDone={() => setShowIntro(false)}
         />
+
       )}
 
       <TopBar

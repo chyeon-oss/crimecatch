@@ -34,6 +34,7 @@ import type { Case, Evidence, Suspect } from "@/types";
 import type { DeductionCommitOutcome } from "@/types/progress";
 import { readBoard, type BoardEndpoint } from "@/lib/detectiveBoard";
 import { answerKey as midnightOfficeAnswerKey } from "@/content/cases/midnight-office/_spoilers";
+import { answerKey as inheritancePartyAnswerKey } from "@/content/cases/inheritance-party/_spoilers";
 import {
   scoreDeduction,
   type DeductionScore,
@@ -43,6 +44,9 @@ import type { CaseAnswerKey } from "@/content/cases/midnight-office/_spoilers";
 import { META_ACHIEVEMENTS } from "@/data/achievements";
 import type { TruthPack } from "@/types/truth";
 import { midnightOfficeTruth } from "@/content/cases/midnight-office/_truth";
+import { inheritancePartyTruth } from "@/content/cases/inheritance-party/_truth";
+import { CaseLockedGuard } from "@/components/CaseLockedGuard";
+import { caseAccess } from "@/lib/caseAccess";
 
 const ACHIEVEMENT_TITLES: Record<string, string> = Object.fromEntries(
   META_ACHIEVEMENTS.map((a) => [a.id, a.title]),
@@ -50,6 +54,7 @@ const ACHIEVEMENT_TITLES: Record<string, string> = Object.fromEntries(
 
 const CASE_ANSWER_KEYS: Record<string, CaseAnswerKey> = {
   "midnight-office": midnightOfficeAnswerKey,
+  "inheritance-party": inheritancePartyAnswerKey,
 };
 
 
@@ -86,6 +91,7 @@ const STEPS: { id: StepId; label: string; short: string }[] = [
 function AccusePage() {
   const { data } = CaseRoute.useLoaderData() as { data: Case };
   const progress = useProgress();
+  const access = caseAccess(progress, data.id);
 
   const discoveredEvidence = useMemo<Evidence[]>(() => {
     const readIds = new Set(progress.perCaseEvidenceRead[data.id] ?? []);
@@ -186,7 +192,12 @@ function AccusePage() {
   const evidenceByIdLocal = (id: string | null) =>
     data.evidence.find((e) => e.id === id) ?? null;
 
+  if (!access.unlocked) {
+    return <CaseLockedGuard title={data.title} reason={access.reason ?? ""} />;
+  }
+
   if (submitted) {
+
     return (
       <>
         <SubmittedScreen
@@ -870,6 +881,7 @@ const BEAT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
 /** Truth Packs are spoiler content — keyed here, used only after submission. */
 const CASE_TRUTH_PACKS: Record<string, TruthPack> = {
   "midnight-office": midnightOfficeTruth,
+  "inheritance-party": inheritancePartyTruth,
 };
 
 function ReconstructionModal({

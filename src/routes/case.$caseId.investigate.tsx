@@ -64,6 +64,12 @@ import {
 } from "@/components/mobile/MobileInvestigationShell";
 import { SceneSurface } from "@/components/mobile/SceneSurface";
 import { ConversationSurface } from "@/components/mobile/ConversationSurface";
+import { InterviewHub } from "@/components/mobile/InterviewHub";
+import { InterviewRoom } from "@/components/mobile/InterviewRoom";
+import { EvidenceSheet } from "@/components/mobile/EvidenceSheet";
+import { useInterviewRuntime } from "@/hooks/useInterviewRuntime";
+import { getCaseInterviews } from "@/data/interviews";
+import { meetsRequirement } from "@/lib/dialogueRuntime";
 import { validateCasePair } from "@/engine/CaseValidation";
 import type { Case, Evidence, CrimeScene as CrimeSceneData, BoardState } from "@/types";
 import type { DialogueEffect } from "@/types/dialogue";
@@ -521,6 +527,99 @@ function InvestigateWorkspace() {
     if (threadId) dialogue.logThread(threadId);
   };
 
+  // Hotspot investigation → runtime reveal, then the authored "after" beat
+  // (Scene 02 analysis reactions) is appended to the transcript.
+  const investigateWithBeats = (h: { id: string }) => {
+    handleInvestigate(h);
+    const after = dialoguePack?.hotspotAfterThreadIds?.[h.id];
+    if (after) dialogue.logThread(after);
+  };
+
+  // Scene-entry and requirement-gated auto threads (Scene 02 opening +
+  // the "same time window" analysis once e2/e6/e7 are all in hand).
+  useEffect(() => {
+    if (!dialogue.hydrated || !dialoguePack?.autoThreads) return;
+    for (const auto of dialoguePack.autoThreads) {
+      if (auto.sceneId && auto.sceneId !== runtimeState.currentScene) continue;
+      if (dialogue.completedThreadIds.includes(auto.threadId)) continue;
+      if (!meetsRequirement(auto.requirement, requirementContext)) continue;
+      dialogue.startThread(auto.threadId, { once: true });
+      break;
+    }
+  }, [dialogue, dialoguePack, runtimeState.currentScene, requirementContext]);
+
+  // ---------------------------------------------------------------------
+  // Scene 03 — authored suspect interviews
+  // ---------------------------------------------------------------------
+  const interviewPack = useMemo(() => getCaseInterviews(data.id), [data.id]);
+  const [evidenceSheetOpen, setEvidenceSheetOpen] = useState(false);
+
+  const interviews = useInterviewRuntime({
+    caseId: data.id,
+    pack: interviewPack,
+    requirementContext,
+    onInterviewComplete: (suspectId) => actions.interviewSuspect(suspectId),
+  });
+
+  const suspectById = useMemo(
+    () => new Map(data.suspects.map((s) => [s.id, s])),
+    [data.suspects],
+  );
+
+  const interviewMode = !!interviewPack && showSuspects;
+
+  const hubRooms = useMemo(
+    () =>
+      interviews.rooms
+        .filter((r) => sceneSuspectIds.has(r.suspectId))
+        .map((r) => {
+          const s = suspectById.get(r.suspectId);
+          const entries = interviews.stateOf(r.suspectId).entries;
+          const last = [...entries].reverse().find((e) => e.kind === "LINE");
+          return {
+            suspectId: r.suspectId,
+            name: s?.name ?? r.suspectId,
+            title: s?.occupation ?? "",
+            progress: r.progress,
+            complete: r.complete,
+            mood: r.mood,
+            contradictions: r.contradictions.length,
+            started: r.started,
+            lastLine: last?.text ?? null,
+          };
+        }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [interviews.rooms, interviews.stateOf, suspectById, currentScene?.id],
+  );
+
+  const activeInterview = useMemo(() => {
+    if (!interviews.roomId) return null;
+    const s = suspectById.get(interviews.roomId);
+    return {
+      suspectId: interviews.roomId,
+      name: s?.name ?? interviews.roomId,
+      role: s?.occupation ?? "",
+      relationship: s?.relationship ?? "",
+      state: interviews.stateOf(interviews.roomId),
+      room: interviews.rooms.find((r) => r.suspectId === interviews.roomId) ?? null,
+    };
+  }, [interviews, suspectById]);
+
+  /** Only discovered AND read evidence can be presented in an interview. */
+  const presentableEvidence = useMemo(() => {
+    if (!activeInterview) return [];
+    const presented = new Set(activeInterview.state.presentedEvidenceIds);
+    return discoveredEvidence
+      .filter((e) => readIds.has(e.id))
+      .map((e) => ({
+        id: e.id,
+        title: e.title,
+        category: e.category,
+        presented: presented.has(e.id),
+      }));
+  }, [activeInterview, discoveredEvidence, readIds]);
+
+
   const sceneIndex = Math.max(
     0,
     runtimeDef.scenes.findIndex((s) => s.id === runtimeState.currentScene),
@@ -557,7 +656,11 @@ function InvestigateWorkspace() {
         active={tab}
         onChange={setTab}
         badges={{
-          talk: dialogue.awaitingChoice ? 1 : 0,
+          talk: interviewMode
+            ? hubRooms.filter((r) => !r.complete).length
+            : dialogue.awaitingChoice
+              ? 1
+              : 0,
           scene: totalHotspots - investigatedCount,
           deduce: canAccuse ? 1 : 0,
         }}
@@ -608,7 +711,7 @@ function InvestigateWorkspace() {
                 layout={hotspotLayout}
                 beatsFor={beatsFor}
                 onBeatsPlayed={logBeats}
-                onInvestigate={(id) => handleInvestigate({ id })}
+                onInvestigate={(id) => investigateWithBeats({ id })}
               />
             ) : (
               <div className="px-4">
@@ -656,16 +759,40 @@ function InvestigateWorkspace() {
           </div>
         )}
 
-        {tab === "talk" && (
-          <ConversationSurface
-            entries={dialogue.entries}
-            isTyping={dialogue.isTyping}
-            choices={dialogue.availableChoices}
-            onChoose={dialogue.choose}
-            onSkip={dialogue.skip}
-            threadTitle={dialogue.activeThreadTitle}
-          />
-        )}
+        {tab === "talk" &&
+          (interviewMode ? (
+            activeInterview ? (
+              <InterviewRoom
+                name={activeInterview.name}
+                role={activeInterview.role}
+                relationship={activeInterview.relationship}
+                mood={activeInterview.state.mood}
+                progress={activeInterview.room?.progress ?? { done: 0, total: 0 }}
+                contradictions={activeInterview.state.contradictions}
+                entries={activeInterview.state.entries}
+                topics={interviews.topics(activeInterview.suspectId)}
+                choices={interviews.activeChoices}
+                isTyping={interviews.isTyping}
+                onAsk={(topicId) => interviews.ask(activeInterview.suspectId, topicId)}
+                onChoose={(choiceId) => interviews.choose(activeInterview.suspectId, choiceId)}
+                onPresentEvidence={() => setEvidenceSheetOpen(true)}
+                onSkip={interviews.skip}
+                onBack={interviews.closeRoom}
+              />
+            ) : (
+              <InterviewHub rooms={hubRooms} onOpen={interviews.openRoom} />
+            )
+          ) : (
+            <ConversationSurface
+              entries={dialogue.entries}
+              isTyping={dialogue.isTyping}
+              choices={dialogue.availableChoices}
+              onChoose={dialogue.choose}
+              onSkip={dialogue.skip}
+              threadTitle={dialogue.activeThreadTitle}
+            />
+          ))}
+
 
         {tab === "file" && (
           <div className="space-y-4 px-4 py-4 pb-8">
@@ -846,6 +973,19 @@ function InvestigateWorkspace() {
           onContinue={dismissDiscovery}
         />
       )}
+
+      <EvidenceSheet
+        open={evidenceSheetOpen && !!activeInterview}
+        items={presentableEvidence}
+        onSelect={(evidenceId) => {
+          const e = evidenceById.get(evidenceId);
+          if (activeInterview && e) {
+            interviews.presentEvidence(activeInterview.suspectId, e.id, e.title);
+          }
+          setEvidenceSheetOpen(false);
+        }}
+        onClose={() => setEvidenceSheetOpen(false)}
+      />
 
       <SuspectProfileModal dossier={openSuspect} onClose={() => setOpenSuspect(null)} />
 

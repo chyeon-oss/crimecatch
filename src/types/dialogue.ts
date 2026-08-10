@@ -94,7 +94,19 @@ export interface CaseDialoguePack {
   threads: DialogueThread[];
   /** hotspotId → thread played right before the evidence reveal. */
   hotspotThreadIds: Record<string, string>;
+  /** hotspotId → thread logged right after the evidence reveal. */
+  hotspotAfterThreadIds?: Record<string, string>;
+  /**
+   * Threads the host starts automatically once their gate is satisfied.
+   * Fully generic: the engine only checks scene id + requirement.
+   */
+  autoThreads?: Array<{
+    threadId: string;
+    sceneId?: string;
+    requirement?: DialogueRequirement;
+  }>;
 }
+
 
 /** A rendered message in the conversation transcript. */
 export type TranscriptKind = "LINE" | "CHOICE" | "SYSTEM";

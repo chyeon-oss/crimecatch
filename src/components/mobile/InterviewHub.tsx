@@ -1,0 +1,96 @@
+import { AlertTriangle, Check, ChevronRight, MessageSquare } from "lucide-react";
+import type { SuspectMood } from "@/types/interview";
+import { MOOD_LABEL } from "@/lib/interviewRuntime";
+
+export interface HubRoom {
+  suspectId: string;
+  name: string;
+  title: string;
+  progress: { done: number; total: number };
+  complete: boolean;
+  mood: SuspectMood;
+  contradictions: number;
+  started: boolean;
+  lastLine: string | null;
+}
+
+interface Props {
+  rooms: HubRoom[];
+  onOpen: (suspectId: string) => void;
+}
+
+const MOOD_TONE: Record<SuspectMood, string> = {
+  calm: "border-border/60 text-muted-foreground",
+  guarded: "border-primary/40 text-primary",
+  shaken: "border-destructive/40 text-destructive",
+};
+
+/**
+ * Scene 03 interview hub — a messenger-style room list. Each suspect is a
+ * chat room with progress, current mood, and captured contradictions.
+ */
+export function InterviewHub({ rooms, onOpen }: Props) {
+  const remaining = rooms.filter((r) => !r.complete).length;
+
+  return (
+    <section className="space-y-3 px-4 py-4">
+      <header>
+        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">진술 조사</p>
+        <h2 className="text-[15px] font-semibold text-foreground">용의자 인터뷰</h2>
+        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+          {remaining > 0
+            ? `${remaining}명의 진술을 아직 다 듣지 않았습니다. 네 명 모두 들어야 진술을 비교할 수 있습니다.`
+            : "네 명의 진술을 모두 확보했습니다. 모순을 다시 확인해 보세요."}
+        </p>
+      </header>
+
+      <ul className="space-y-2">
+        {rooms.map((r) => (
+          <li key={r.suspectId}>
+            <button
+              type="button"
+              onClick={() => onOpen(r.suspectId)}
+              className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-3 text-left transition-colors hover:border-primary/40"
+            >
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border/70 bg-surface-elevated text-[13px] font-semibold text-foreground">
+                {r.name.slice(0, 1)}
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2">
+                  <span className="truncate text-[13px] font-medium text-foreground">{r.name}</span>
+                  <span
+                    className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] tracking-wide ${MOOD_TONE[r.mood]}`}
+                  >
+                    {MOOD_LABEL[r.mood]}
+                  </span>
+                  {r.complete && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
+                </span>
+                <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                  {r.title}
+                </span>
+                <span className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                  <MessageSquare className="h-3 w-3" />
+                  {r.started ? `질문 ${r.progress.done}/${r.progress.total}` : "아직 조사하지 않음"}
+                  {r.contradictions > 0 && (
+                    <span className="inline-flex items-center gap-1 text-destructive">
+                      <AlertTriangle className="h-3 w-3" />
+                      모순 {r.contradictions}
+                    </span>
+                  )}
+                </span>
+                {r.lastLine && (
+                  <span className="mt-1 block truncate text-[11px] text-foreground/70">
+                    “{r.lastLine}”
+                  </span>
+                )}
+              </span>
+
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

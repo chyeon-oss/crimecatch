@@ -3,6 +3,8 @@ import { Shield } from "lucide-react";
 import { CaseSelectionCard, type CaseRosterItem } from "@/components/CaseSelectionCard";
 import { CaseEngine } from "@/engine";
 import { useProgress } from "@/state/progressStore";
+import { caseAccess, isCaseSolved } from "@/lib/caseAccess";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({

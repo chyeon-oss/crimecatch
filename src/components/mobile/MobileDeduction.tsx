@@ -18,6 +18,8 @@ interface Props {
   discoveredEvidenceIds: Set<string>;
   /** True only once the runtime has reached the ACCUSATION scene. */
   canAccuse: boolean;
+  /** Jump to the case-file tab so the player can read evidence. */
+  onOpenCaseFile?: () => void;
 }
 
 interface Submission {
@@ -38,6 +40,7 @@ export function MobileDeduction({
   readEvidence,
   discoveredEvidenceIds,
   canAccuse,
+  onOpenCaseFile,
 }: Props) {
   const board = useDetectiveBoard(c.id);
   const [submission, setSubmission] = useState<Submission | null>(null);
@@ -172,6 +175,7 @@ export function MobileDeduction({
         summary: e.summary,
       }))}
       connections={connections}
+      onOpenCaseFile={onOpenCaseFile}
       onSubmit={handleSubmit}
     />
   );

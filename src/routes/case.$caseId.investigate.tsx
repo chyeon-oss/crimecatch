@@ -68,6 +68,8 @@ import { InterviewHub } from "@/components/mobile/InterviewHub";
 import { InterviewRoom } from "@/components/mobile/InterviewRoom";
 import { EvidenceSheet } from "@/components/mobile/EvidenceSheet";
 import { MobileDeduction } from "@/components/mobile/MobileDeduction";
+import { loadReadIds, saveReadIds } from "@/lib/readEvidence";
+
 import { useInterviewRuntime } from "@/hooks/useInterviewRuntime";
 import { getCaseInterviews } from "@/data/interviews";
 import { meetsRequirement } from "@/lib/dialogueRuntime";

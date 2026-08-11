@@ -57,7 +57,7 @@ import { useCaseRuntime } from "@/hooks/useCaseRuntime";
 import { useDialogueRuntime } from "@/hooks/useDialogueRuntime";
 import { getRuntimeDefinition } from "@/data/runtime";
 import { getCaseDialogue } from "@/data/dialogue";
-import { hotspotLayout } from "@/content/cases/midnight-office/hotspotLayout";
+import { getScenePresentation } from "@/data/scenePresentation";
 import {
   MobileInvestigationShell,
   type ShellTab,
@@ -695,6 +695,8 @@ function InvestigateWorkspace() {
     [discoveredEvidence, discoveredSet, readIds],
   );
 
+  const presentation = useMemo(() => getScenePresentation(data.id), [data.id]);
+
   const sceneIndex = Math.max(
     0,
     runtimeDef.scenes.findIndex((s) => s.id === runtimeState.currentScene),
@@ -796,7 +798,8 @@ function InvestigateWorkspace() {
                 }))}
                 investigatedIds={investigatedHotspotIds}
                 focusedHotspotId={focusedHotspot}
-                layout={hotspotLayout}
+                layout={presentation.layout}
+                renderBackdrop={presentation.renderBackdrop}
                 beatsFor={beatsFor}
                 onBeatsPlayed={logBeats}
                 onInvestigate={(id) => investigateWithBeats({ id })}

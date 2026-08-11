@@ -57,7 +57,7 @@ import { useCaseRuntime } from "@/hooks/useCaseRuntime";
 import { useDialogueRuntime } from "@/hooks/useDialogueRuntime";
 import { getRuntimeDefinition } from "@/data/runtime";
 import { getCaseDialogue } from "@/data/dialogue";
-import { hotspotLayout } from "@/content/cases/midnight-office/hotspotLayout";
+import { getScenePresentation } from "@/data/scenePresentation";
 import {
   MobileInvestigationShell,
   type ShellTab,
@@ -695,6 +695,8 @@ function InvestigateWorkspace() {
     [discoveredEvidence, discoveredSet, readIds],
   );
 
+  const presentation = useMemo(() => getScenePresentation(data.id), [data.id]);
+
   const sceneIndex = Math.max(
     0,
     runtimeDef.scenes.findIndex((s) => s.id === runtimeState.currentScene),
@@ -796,7 +798,8 @@ function InvestigateWorkspace() {
                 }))}
                 investigatedIds={investigatedHotspotIds}
                 focusedHotspotId={focusedHotspot}
-                layout={hotspotLayout}
+                layout={presentation.layout}
+                renderBackdrop={presentation.renderBackdrop}
                 beatsFor={beatsFor}
                 onBeatsPlayed={logBeats}
                 onInvestigate={(id) => investigateWithBeats({ id })}
@@ -822,9 +825,43 @@ function InvestigateWorkspace() {
                   }
                 >
                   <SuspectDatabase dossiers={suspectDossiers} onOpen={openSuspectAndInterview} />
+
+                  {/* Cases without authored interview trees still need a
+                      deterministic, explicit way to record that a statement was
+                      heard. Opening a profile never counts — the detective has
+                      to log it. */}
+                  {!interviewPack && requiredInterviewIds.length > 0 && (
+                    <div className="mt-3 space-y-2 rounded-lg border border-border/60 bg-surface-elevated/50 p-3">
+                      <p className="text-[11px] text-muted-foreground">
+                        프로필을 열어 진술을 확인한 뒤, 청취를 마친 상대를 직접 기록하세요.
+                      </p>
+                      {requiredInterviewIds.map((id) => {
+                        const done = runtimeState.interviewedSuspects.includes(id);
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            data-testid={`statement-log-${id}`}
+                            data-logged={done ? "true" : "false"}
+                            disabled={done}
+                            onClick={() => actions.interviewSuspect(id)}
+                            className={`flex min-h-[44px] w-full items-center justify-between rounded-lg border px-3 text-[12px] transition-colors ${
+                              done
+                                ? "border-primary/40 bg-primary/10 text-primary"
+                                : "border-border/70 bg-background/60 text-foreground hover:bg-primary/10"
+                            }`}
+                          >
+                            <span>{suspectById.get(id)?.name ?? id}</span>
+                            <span>{done ? "청취 완료" : "진술 청취 완료로 기록"}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </InvestigationSection>
               </div>
             )}
+
 
             <div className="px-4">
               <InvestigationSection

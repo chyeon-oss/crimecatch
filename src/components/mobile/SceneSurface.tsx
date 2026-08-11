@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Fingerprint, ScanSearch } from "lucide-react";
-import sceneHallway from "@/assets/intro/scene-hallway.jpg";
-import sceneDoor from "@/assets/intro/scene-door.jpg";
-import sceneExterior from "@/assets/intro/scene-exterior.jpg";
+
 
 export interface SurfaceHotspot {
   id: string;
@@ -22,6 +20,8 @@ interface Props {
   investigatedIds: Set<string>;
   focusedHotspotId?: string | null;
   layout: Record<string, { x: number; y: number }>;
+  /** Per-case backdrop dressing, injected by the scene presentation registry. */
+  renderBackdrop: (sceneIndex: number) => ReactNode;
   /** Authored monologue beats played before the evidence reveal. */
   beatsFor: (hotspotId: string) => Beat[];
   /** Runs the actual runtime investigation (evidence reveal). */
@@ -31,7 +31,6 @@ interface Props {
   disabled?: boolean;
 }
 
-const BACKDROPS = [sceneHallway, sceneDoor, sceneExterior];
 const FALLBACK_POS = [
   { x: 28, y: 58 },
   { x: 62, y: 70 },
@@ -58,6 +57,7 @@ export function SceneSurface({
   investigatedIds,
   focusedHotspotId,
   layout,
+  renderBackdrop,
   beatsFor,
   onInvestigate,
   onBeatsPlayed,
@@ -97,8 +97,6 @@ export function SceneSurface({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const backdrop = BACKDROPS[sceneIndex % BACKDROPS.length];
 
   const posOf = (id: string, i: number) => layout[id] ?? FALLBACK_POS[i % FALLBACK_POS.length];
 
@@ -147,16 +145,17 @@ export function SceneSurface({
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-border/70 bg-surface-elevated">
         {/* Backdrop */}
         <div
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out"
+          className="absolute inset-0 transition-transform duration-700 ease-out"
           style={{
-            backgroundImage: `url(${backdrop})`,
             transform:
               busy && activePos
                 ? `scale(1.5) translate(${(50 - activePos.x) * 0.6}%, ${(50 - activePos.y) * 0.6}%)`
                 : "scale(1.02)",
             filter: busy ? "brightness(0.5) saturate(0.7)" : "brightness(0.62)",
           }}
-        />
+        >
+          {renderBackdrop(sceneIndex)}
+        </div>
         <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/25 to-background/90" />
 
         {/* Hotspots */}

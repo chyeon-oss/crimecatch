@@ -12,6 +12,7 @@ export interface HubRoom {
   contradictions: number;
   started: boolean;
   lastLine: string | null;
+  portrait?: string;
 }
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
   onOpen: (suspectId: string) => void;
   /** Suspects the runtime still needs before the case can advance. */
   remainingRequiredNames?: string[];
+  heroImage?: string;
 }
 
 const MOOD_TONE: Record<SuspectMood, string> = {
@@ -32,12 +34,19 @@ const MOOD_TONE: Record<SuspectMood, string> = {
  * chat room with progress, current mood, and captured contradictions.
  * Mood is a reaction reading only; it never implies guilt.
  */
-export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [] }: Props) {
+export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [], heroImage }: Props) {
   const remaining = rooms.filter((r) => !r.complete).length;
   const required = remainingRequiredNames.length;
 
   return (
     <section className="space-y-3 px-4 py-4">
+      {heroImage && (
+        <div className="relative -mx-4 -mt-4 h-40 overflow-hidden border-b border-border/60">
+          <img src={heroImage} alt="사건 관계자 네 명" className="h-full w-full object-cover object-[center_40%]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+          <p className="absolute bottom-3 left-4 text-[10px] uppercase tracking-[0.28em] text-white/70">Persons of interest · 4</p>
+        </div>
+      )}
       <header>
         <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">진술 조사</p>
         <h2 className="text-[15px] font-semibold text-foreground">용의자 인터뷰</h2>
@@ -65,8 +74,8 @@ export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [] }: Pro
               onClick={() => onOpen(r.suspectId)}
               className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-3 text-left transition-colors hover:border-primary/40"
             >
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border/70 bg-surface-elevated text-[13px] font-semibold text-foreground">
-                {r.name.slice(0, 1)}
+              <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-border/70 bg-surface-elevated text-[13px] font-semibold text-foreground">
+                {r.portrait ? <img src={r.portrait} alt="" className="h-full w-full object-cover object-top" /> : r.name.slice(0, 1)}
               </span>
 
               <span className="min-w-0 flex-1">

@@ -34,6 +34,7 @@ interface Props {
   onPresentEvidence: () => void;
   onSkip: () => void;
   onBack: () => void;
+  portrait?: string;
 }
 
 
@@ -66,6 +67,7 @@ export function InterviewRoom({
   onPresentEvidence,
   onSkip,
   onBack,
+  portrait,
 }: Props) {
   const endRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -76,6 +78,13 @@ export function InterviewRoom({
 
   return (
     <section className="flex min-h-full flex-col">
+      {portrait && (
+        <div className="relative h-48 shrink-0 overflow-hidden border-b border-border/60 bg-black">
+          <img src={portrait} alt={`${name} 인터뷰`} className="h-full w-full object-cover object-[center_22%]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/20" />
+          <p className="absolute bottom-3 left-4 text-[10px] uppercase tracking-[0.25em] text-white/65">Live interview · reaction analysis</p>
+        </div>
+      )}
       {/* Profile header */}
       <header className="sticky top-0 z-10 border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">

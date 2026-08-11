@@ -10,6 +10,7 @@ type Props = {
   emergencyTime?: string;
   arrivalTime?: string;
   onDone: () => void;
+  storyImages?: string[];
 };
 
 const STORAGE_PREFIX = "crimecatch:intro-seen:";
@@ -37,6 +38,7 @@ export function CaseIntro({
   emergencyTime = "22:41",
   arrivalTime = "22:57",
   onDone,
+  storyImages = [],
 }: Props) {
   const [step, setStep] = useState(0);
   const [closing, setClosing] = useState(false);
@@ -144,7 +146,7 @@ export function CaseIntro({
       </Scene>
 
       {/* 1 · Case title */}
-      <Scene visible={step === 1}>
+      <Scene visible={step === 1} image={storyImages[0]} dim={0.68}>
         <div className="text-center">
           <div className="text-xs md:text-sm tracking-[0.6em] text-primary/80">
             {caseCode}
@@ -169,7 +171,7 @@ export function CaseIntro({
       </Scene>
 
       {/* 3 · Detective arrived */}
-      <Scene visible={step === 3}>
+      <Scene visible={step === 3} image={storyImages[1]} dim={0.7}>
         <div className="text-center">
           <div className="font-mono text-4xl md:text-6xl text-white/95 tabular-nums">
             {arrivalTime}

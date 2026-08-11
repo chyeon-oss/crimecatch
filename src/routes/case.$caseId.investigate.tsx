@@ -58,6 +58,7 @@ import { useDialogueRuntime } from "@/hooks/useDialogueRuntime";
 import { getRuntimeDefinition } from "@/data/runtime";
 import { getCaseDialogue } from "@/data/dialogue";
 import { getScenePresentation } from "@/data/scenePresentation";
+import { getCaseVisuals } from "@/data/caseVisuals";
 import {
   MobileInvestigationShell,
   type ShellTab,
@@ -621,6 +622,7 @@ function InvestigateWorkspace() {
     () => new Map(data.suspects.map((s) => [s.id, s])),
     [data.suspects],
   );
+  const caseVisuals = useMemo(() => getCaseVisuals(data.id), [data.id]);
 
   const interviewMode = !!interviewPack && showSuspects;
 
@@ -655,10 +657,11 @@ function InvestigateWorkspace() {
             contradictions: r.contradictions.length,
             started: r.started,
             lastLine: last?.text ?? null,
+            portrait: caseVisuals.suspectPortraits[r.suspectId],
           };
         }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [interviews.rooms, interviews.stateOf, suspectById, currentScene?.id],
+    [interviews.rooms, interviews.stateOf, suspectById, currentScene?.id, caseVisuals],
   );
 
   const activeInterview = useMemo(() => {
@@ -740,6 +743,7 @@ function InvestigateWorkspace() {
           caseId={data.id}
           caseCode={caseCode(data.id)}
           caseTitle={(data.title ?? "").toUpperCase()}
+          storyImages={caseVisuals.introImages}
           onDone={() => setShowIntro(false)}
         />
       )}
@@ -893,6 +897,7 @@ function InvestigateWorkspace() {
                 name={activeInterview.name}
                 role={activeInterview.role}
                 relationship={activeInterview.relationship}
+                portrait={caseVisuals.suspectPortraits[activeInterview.suspectId]}
                 mood={activeInterview.state.mood}
                 progress={activeInterview.room?.progress ?? { done: 0, total: 0 }}
                 contradictions={activeInterview.state.contradictions}
@@ -913,6 +918,7 @@ function InvestigateWorkspace() {
                 rooms={hubRooms}
                 onOpen={interviews.openRoom}
                 remainingRequiredNames={remainingRequiredNames}
+                heroImage={caseVisuals.interviewHero}
               />
             )
           ) : (

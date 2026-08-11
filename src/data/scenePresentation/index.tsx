@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import sceneHallway from "@/assets/intro/scene-hallway.jpg";
 import sceneDoor from "@/assets/intro/scene-door.jpg";
 import sceneExterior from "@/assets/intro/scene-exterior.jpg";
+import evidencePhone from "@/assets/cases/midnight-office/evidence-phone.jpg";
+import officeWitness from "@/assets/cases/midnight-office/office-witness.jpg";
+import suspectLineup from "@/assets/cases/midnight-office/suspect-lineup.jpg";
 import { hotspotLayout as midnightOfficeLayout } from "@/content/cases/midnight-office/hotspotLayout";
 import { hotspotLayout as inheritancePartyLayout } from "@/content/cases/inheritance-party/hotspotLayout";
 
@@ -19,7 +22,7 @@ const imageBackdrop = (src: string) => (
   <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${src})` }} />
 );
 
-const OFFICE_IMAGES = [sceneHallway, sceneDoor, sceneExterior];
+const OFFICE_IMAGES = [evidencePhone, officeWitness, suspectLineup, sceneHallway, sceneDoor, sceneExterior];
 
 /** CASE002 has no photography yet; the mansion is dressed with CSS layers. */
 const MANSION_LAYERS: Array<{ base: string; glow: string }> = [

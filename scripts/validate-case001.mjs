@@ -9,6 +9,7 @@ const publicFiles = [
   "src/content/cases/midnight-office/victim.ts",
   "src/content/cases/midnight-office/timeline.ts",
   "src/content/cases/midnight-office/scene.ts",
+  "src/content/cases/midnight-office/dialogue/scene01.ts",
   "src/components/CaseIntro.tsx",
 ];
 const combined = publicFiles.map(read).join("\n");

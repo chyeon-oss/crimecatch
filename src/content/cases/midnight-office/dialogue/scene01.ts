@@ -18,7 +18,7 @@ export const scene01Threads: DialogueThread[] = [
           {
             id: "l2",
             speakerId: "partner",
-            text: "신고는 22시 31분. 회의실 근처에서 사람이 쓰러져 있다는 내용이었습니다.",
+            text: "신고는 23시 52분. 기획전략실 안에 한 팀장님이 쓰러져 있다는 내용이었습니다.",
           },
           {
             id: "l3",

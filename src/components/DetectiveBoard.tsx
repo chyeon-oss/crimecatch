@@ -10,10 +10,15 @@ import {
 } from "lucide-react";
 import {
   MEMO_MAX,
+  relationLabel,
+  relationTone,
   useDetectiveBoard,
   type BoardEndpoint,
   type BoardNodeKind,
 } from "@/lib/detectiveBoard";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileLinkBoard } from "@/components/board/MobileLinkBoard";
+
 
 export interface BoardItem {
   id: string;
@@ -54,7 +59,13 @@ const KIND_META: Record<
 
 const DRAG_MIME = "application/x-detective-board-endpoint";
 
-export function DetectiveBoard({
+export function DetectiveBoard(props: Props) {
+  const isMobile = useIsMobile();
+  if (isMobile) return <MobileLinkBoard {...props} />;
+  return <DesktopDetectiveBoard {...props} />;
+}
+
+function DesktopDetectiveBoard({
   caseId,
   evidence,
   questions,
@@ -62,6 +73,7 @@ export function DetectiveBoard({
 }: Props) {
   const { data, addConnection, updateMemo, removeConnection } =
     useDetectiveBoard(caseId);
+
   const [pending, setPending] = useState<BoardEndpoint | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
@@ -261,6 +273,12 @@ export function DetectiveBoard({
                         {labelOf(c.to)}
                       </span>
                     </span>
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] ${relationTone(c.relation)}`}
+                    >
+                      {relationLabel(c.relation)}
+                    </span>
+
                     <div className="ml-auto flex items-center gap-1">
                       <button
                         type="button"

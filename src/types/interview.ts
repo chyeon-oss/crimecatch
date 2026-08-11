@@ -95,10 +95,16 @@ export interface InterviewSuspectState {
   notes: string[];
   /** New authored lines the player has not opened yet. */
   unread: boolean;
+  /**
+   * Topic whose authored reply has been played but whose response choice the
+   * detective has not picked yet. Owned per suspect (never global) and
+   * persisted, so leaving the room or reloading cannot orphan the topic.
+   */
+  awaitingTopicId?: string | null;
 }
 
 export interface InterviewSession {
-  version: 1;
+  version: 2;
   /** Chat room the player was last in, restored on reload. */
   roomId: string | null;
   suspects: Record<string, InterviewSuspectState>;

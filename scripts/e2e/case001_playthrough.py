@@ -26,12 +26,21 @@ def log(msg: str) -> None:
 
 
 async def dismiss_modals(page) -> int:
-    """Discovery + scene-transition modals both close on Escape."""
+    """Close discovery + scene-transition modals through their own buttons."""
     closed = 0
     for _ in range(20):
+        for tid in ("discovery-continue", "transition-continue"):
+            btn = page.get_by_test_id(tid)
+            if await btn.count():
+                try:
+                    await btn.first.click(timeout=1500)
+                    await page.wait_for_timeout(280)
+                    closed += 1
+                except Exception:
+                    pass
         if await page.locator('[role="dialog"]').count():
             await page.keyboard.press("Escape")
-            await page.wait_for_timeout(300)
+            await page.wait_for_timeout(280)
             closed += 1
             continue
         break
@@ -78,6 +87,19 @@ async def drain_dialogue(page) -> None:
         await page.wait_for_timeout(500)
 
 
+async def wait_scene_idle(page, timeout_ms: int = 20000) -> None:
+    """Hotspot reveals are ~4.5s; never leave the tab mid-animation."""
+    waited = 0
+    surface = page.get_by_test_id("scene-surface")
+    while waited < timeout_ms:
+        if not await surface.count():
+            return
+        if await surface.first.get_attribute("data-stage") in (None, "IDLE"):
+            return
+        await page.wait_for_timeout(300)
+        waited += 300
+
+
 async def play_hotspots(page) -> int:
     """Investigate every not-yet-investigated hotspot in the current scene."""
     done = 0
@@ -88,43 +110,75 @@ async def play_hotspots(page) -> int:
             break
         if not await click_when_ready(page, spots.first):
             break
-        await page.wait_for_timeout(2600)
+        await wait_scene_idle(page)
         await settle(page)
         done += 1
     return done
 
 
+async def finish_topic(page, topic_id: str) -> bool:
+    """Ask one topic, flush typing, answer a choice if any, assert completion."""
+    btn = page.locator(f'[data-testid="interview-topic"][data-topic-id="{topic_id}"]')
+    if not await btn.count():
+        return False
+    if await btn.first.get_attribute("data-topic-done") == "true":
+        return True
+    if await btn.first.get_attribute("data-available") != "true":
+        return False
+    if not await click_when_ready(page, btn.first):
+        return False
+    # Flush typing cadence by tapping the transcript, then answer if asked.
+    for _ in range(24):
+        await dismiss_modals(page)
+        choice = page.locator('[data-testid="interview-choice"]')
+        if await choice.count():
+            if not await click_when_ready(page, choice.first):
+                return False
+            await page.wait_for_timeout(400)
+            continue
+        marker = page.locator(f'[data-testid="interview-topic"][data-topic-id="{topic_id}"]')
+        if await marker.count() and await marker.first.get_attribute("data-topic-done") == "true":
+            return True
+        await page.mouse.click(210, 700)  # tap-to-skip the typing queue
+        await page.wait_for_timeout(450)
+    return False
+
+
 async def play_interviews(page) -> int:
-    """Exhaust every askable topic in every suspect room."""
+    """Complete every required topic of every incomplete suspect room."""
     rooms_done = 0
     for _ in range(8):
         await dismiss_modals(page)
         rooms = page.locator('[data-testid^="interview-room-"][data-complete="false"]')
         if not await rooms.count():
             break
-        if not await click_when_ready(page, rooms.first):
+        room = rooms.first
+        if not await click_when_ready(page, room):
             break
-        await page.wait_for_timeout(700)
-        for _ in range(24):
-            choice = page.locator('[data-testid="interview-choice"]')
-            if await choice.count():
-                if not await click_when_ready(page, choice.first):
-                    break
-                await page.wait_for_timeout(500)
-                continue
-            topic = page.locator('[data-testid="interview-topic"][data-available="true"]')
-            if not await topic.count():
+        await page.wait_for_timeout(600)
+        for _ in range(12):
+            pending = page.locator(
+                '[data-testid="interview-topic"][data-topic-done="false"][data-available="true"]'
+            )
+            if not await pending.count():
                 break
-            if not await click_when_ready(page, topic.first):
+            topic_id = await pending.first.get_attribute("data-topic-id")
+            if not topic_id or not await finish_topic(page, topic_id):
                 break
-            await page.wait_for_timeout(700)
+        progress = page.get_by_test_id("interview-progress")
+        if await progress.count():
+            log(
+                "room progress "
+                + f"{await progress.first.get_attribute('data-done')}/"
+                + f"{await progress.first.get_attribute('data-total')}"
+            )
         back = page.get_by_test_id("interview-back")
         if await back.count():
             await back.click()
             await page.wait_for_timeout(400)
         rooms_done += 1
         log(
-            "room closed; remaining incomplete="
+            "remaining incomplete rooms="
             + str(await page.locator('[data-testid^="interview-room-"][data-complete="false"]').count())
         )
     return rooms_done

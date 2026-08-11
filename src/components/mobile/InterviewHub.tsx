@@ -60,6 +60,8 @@ export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [] }: Pro
               type="button"
               data-testid={`interview-room-${r.suspectId}`}
               data-complete={r.complete ? "true" : "false"}
+              data-required-done={r.progress.done}
+              data-required-total={r.progress.total}
               onClick={() => onOpen(r.suspectId)}
               className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-3 text-left transition-colors hover:border-primary/40"
             >
@@ -82,7 +84,9 @@ export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [] }: Pro
                 </span>
                 <span className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
                   <MessageSquare className="h-3 w-3" />
-                  {r.started ? `질문 ${r.progress.done}/${r.progress.total}` : "아직 조사하지 않음"}
+                  {r.started
+                    ? `필수 질문 ${r.progress.done}/${r.progress.total}`
+                    : "아직 조사하지 않음"}
                   {r.contradictions > 0 && (
                     <span className="inline-flex items-center gap-1 text-destructive">
                       <AlertTriangle className="h-3 w-3" />
@@ -90,6 +94,7 @@ export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [] }: Pro
                     </span>
                   )}
                 </span>
+
                 {r.lastLine && (
                   <span className="mt-1 block truncate text-[11px] text-foreground/70">
                     “{r.lastLine}”

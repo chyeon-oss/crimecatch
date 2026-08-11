@@ -1,5 +1,13 @@
 import { useEffect, useRef } from "react";
-import { AlertTriangle, ArrowLeft, FileText, HelpCircle, Lock, Paperclip } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Check,
+  FileText,
+  HelpCircle,
+  Lock,
+  Paperclip,
+} from "lucide-react";
 import type { TranscriptEntry } from "@/types/dialogue";
 import type { InterviewChoice, SuspectMood } from "@/types/interview";
 import type { TopicAvailability } from "@/lib/interviewRuntime";
@@ -10,11 +18,14 @@ interface Props {
   role: string;
   relationship: string;
   mood: SuspectMood;
+  /** Required-question progress — same source as the hub and the scene gate. */
   progress: { done: number; total: number };
   contradictions: Array<{ id: string; title: string; detail: string }>;
   entries: TranscriptEntry[];
   topics: TopicAvailability[];
   choices: InterviewChoice[];
+  /** Topic waiting for a response choice, if any. */
+  awaitingTopicId?: string | null;
   isTyping: boolean;
   onAsk: (topicId: string) => void;
   onChoose: (choiceId: string) => void;
@@ -22,6 +33,7 @@ interface Props {
   onSkip: () => void;
   onBack: () => void;
 }
+
 
 const MOOD_TONE: Record<SuspectMood, string> = {
   calm: "border-border/60 text-muted-foreground",
@@ -44,6 +56,7 @@ export function InterviewRoom({
   entries,
   topics,
   choices,
+  awaitingTopicId = null,
   isTyping,
   onAsk,
   onChoose,
@@ -56,7 +69,7 @@ export function InterviewRoom({
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [entries.length, isTyping, choices.length]);
 
-  const askable = topics.filter((t) => !t.done);
+
 
   return (
     <section className="flex min-h-full flex-col">
@@ -84,10 +97,16 @@ export function InterviewRoom({
             {MOOD_LABEL[mood]}
           </span>
         </div>
-        <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-          질문 {progress.done}/{progress.total}
+        <p
+          className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground"
+          data-testid="interview-progress"
+          data-done={progress.done}
+          data-total={progress.total}
+        >
+          필수 질문 {progress.done}/{progress.total}
           {contradictions.length > 0 && ` · 모순 ${contradictions.length}`}
         </p>
+
       </header>
 
       {/* Transcript */}
@@ -176,6 +195,12 @@ export function InterviewRoom({
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
               어떻게 대응하시겠습니까
             </p>
+            <p
+              className="text-[11px] leading-relaxed text-primary"
+              data-testid="interview-awaiting-notice"
+            >
+              응답을 선택해야 이 질문이 완료됩니다.
+            </p>
             {choices.map((c) => (
               <button
                 key={c.id}
@@ -190,40 +215,55 @@ export function InterviewRoom({
           </>
         ) : (
           <>
-            {askable.length > 0 ? (
+            {topics.length > 0 ? (
               <>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">질문</p>
-                {askable.map(({ topic, available }) => (
-                  <button
-                    key={topic.id}
-                    type="button"
-                    data-testid="interview-topic"
-                    data-available={available ? "true" : "false"}
-                    disabled={!available || isTyping}
-                    onClick={() => onAsk(topic.id)}
-                    className={`flex min-h-[48px] w-full items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-[13px] leading-snug transition-colors ${
-                      available
-                        ? topic.kind === "PRESSURE"
-                          ? "border-destructive/40 bg-destructive/5 text-foreground hover:border-destructive/60"
-                          : "border-border/70 bg-surface-elevated text-foreground hover:border-primary/40"
-                        : "border-border/40 bg-background text-muted-foreground"
-                    }`}
-                  >
-                    {topic.kind === "PRESSURE" ? (
-                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />
-                    ) : (
-                      <HelpCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    )}
-                    <span className="min-w-0 flex-1">{topic.label}</span>
-                    {!available && <Lock className="h-3.5 w-3.5 shrink-0" />}
-                  </button>
-                ))}
+                {topics.map(({ topic, available, done }) => {
+                  const awaiting = !done && awaitingTopicId === topic.id;
+                  const status = done ? "done" : awaiting ? "awaiting" : "open";
+                  return (
+                    <button
+                      key={topic.id}
+                      type="button"
+                      data-testid="interview-topic"
+                      data-topic-id={topic.id}
+                      data-topic-done={done ? "true" : "false"}
+                      data-topic-status={status}
+                      data-available={available && !done ? "true" : "false"}
+                      disabled={!available || done || isTyping}
+                      onClick={() => onAsk(topic.id)}
+                      className={`flex min-h-[48px] w-full items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-[13px] leading-snug transition-colors ${
+                        done
+                          ? "border-border/40 bg-background text-muted-foreground"
+                          : available
+                            ? topic.kind === "PRESSURE"
+                              ? "border-destructive/40 bg-destructive/5 text-foreground hover:border-destructive/60"
+                              : "border-border/70 bg-surface-elevated text-foreground hover:border-primary/40"
+                            : "border-border/40 bg-background text-muted-foreground"
+                      }`}
+                    >
+                      {done ? (
+                        <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+                      ) : topic.kind === "PRESSURE" ? (
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />
+                      ) : (
+                        <HelpCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      )}
+                      <span className="min-w-0 flex-1">{topic.label}</span>
+                      <span className="shrink-0 text-[10px] tracking-wide text-muted-foreground">
+                        {done ? "완료" : awaiting ? "응답 선택 중" : "미진행"}
+                      </span>
+                      {!available && !done && <Lock className="h-3.5 w-3.5 shrink-0" />}
+                    </button>
+                  );
+                })}
               </>
             ) : (
               <p className="text-[11px] leading-relaxed text-muted-foreground">
                 더 물을 것이 없습니다. 증거를 제시하면 다른 반응이 나올 수 있습니다.
               </p>
             )}
+
 
             <button
               type="button"

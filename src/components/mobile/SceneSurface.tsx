@@ -68,11 +68,34 @@ export function SceneSurface({
   const [beatIndex, setBeatIndex] = useState(0);
   const [beats, setBeats] = useState<Beat[]>([]);
   const aliveRef = useRef(true);
+
+  /**
+   * The staged reveal must never be lost when the surface unmounts (tab
+   * switch, scene advance). We keep the in-flight hotspot in a ref and commit
+   * it on teardown, so investigating is deterministic once it has started.
+   */
+  const inFlightRef = useRef<{ id: string; beatsLogged: boolean } | null>(null);
+  const commitRef = useRef({ onInvestigate, onBeatsPlayed });
+  useEffect(() => {
+    commitRef.current = { onInvestigate, onBeatsPlayed };
+  }, [onInvestigate, onBeatsPlayed]);
+
+  const commit = (id: string) => {
+    const flight = inFlightRef.current;
+    if (!flight || flight.id !== id) return;
+    inFlightRef.current = null;
+    if (!flight.beatsLogged) commitRef.current.onBeatsPlayed?.(id);
+    commitRef.current.onInvestigate(id);
+  };
+
   useEffect(() => {
     aliveRef.current = true;
     return () => {
       aliveRef.current = false;
+      const flight = inFlightRef.current;
+      if (flight) commit(flight.id);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const backdrop = BACKDROPS[sceneIndex % BACKDROPS.length];
@@ -80,8 +103,9 @@ export function SceneSurface({
   const posOf = (id: string, i: number) => layout[id] ?? FALLBACK_POS[i % FALLBACK_POS.length];
 
   const run = async (h: SurfaceHotspot) => {
-    if (stage !== "IDLE" || disabled) return;
+    if (stage !== "IDLE" || disabled || inFlightRef.current) return;
     const list = beatsFor(h.id);
+    inFlightRef.current = { id: h.id, beatsLogged: false };
     setActiveId(h.id);
     setBeats(list);
     setBeatIndex(0);
@@ -97,14 +121,16 @@ export function SceneSurface({
     }
     if (!aliveRef.current) return;
     onBeatsPlayed?.(h.id);
+    if (inFlightRef.current) inFlightRef.current.beatsLogged = true;
     setStage("REVEAL");
     await wait(260);
     if (!aliveRef.current) return;
-    onInvestigate(h.id);
+    commit(h.id);
     setStage("IDLE");
     setActiveId(null);
     setBeats([]);
   };
+
 
   const busy = stage !== "IDLE";
   const activePos = activeId
@@ -115,8 +141,9 @@ export function SceneSurface({
     : null;
 
   return (
-    <section className="px-4">
+    <section className="px-4" data-testid="scene-surface" data-stage={stage}>
       <h2 className="sr-only">{`${sceneTitle} — ${objective}`}</h2>
+
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-border/70 bg-surface-elevated">
         {/* Backdrop */}
         <div

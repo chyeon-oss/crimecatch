@@ -23,8 +23,7 @@ RUNTIME_LOG = {
                 ("e1", "e2", "e3", "e4", "e5", "e6")]
     + [{"type": "READ_EVIDENCE", "evidenceId": e} for e in
        ("e1", "e2", "e3", "e4", "e5", "e6")]
-    + [{"type": "ADVANCE_SCENE", "sceneId": "scene-02"},
-       {"type": "ADVANCE_SCENE", "sceneId": "scene-03"}],
+    + [{"type": "ADVANCE_SCENE"}, {"type": "ADVANCE_SCENE"}],
 }
 
 

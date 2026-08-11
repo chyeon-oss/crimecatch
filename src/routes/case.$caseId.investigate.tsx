@@ -1052,22 +1052,27 @@ function InvestigateWorkspace() {
               />
             </InvestigationSection>
 
-            <InvestigationSection
-              icon={LayoutGrid}
-              title="관계도"
-              subtitle={
-                boardState.pins.length
-                  ? `${boardState.pins.length}개 핀 · ${boardState.connections.length}개 연결`
-                  : "증거·용의자·시간대를 핀 하여 관계를 시각화하세요"
-              }
-            >
-              <InvestigationBoard
-                case={data}
-                state={boardState}
-                onChange={setBoardState}
-                discoveredEvidenceIds={discoveredSet}
-              />
-            </InvestigationSection>
+            {/* Free-placement corkboard is a desktop experience: on phones the
+                tap-to-link board inside the notebook replaces it so drag never
+                fights with scrolling. */}
+            <div className="hidden md:block">
+              <InvestigationSection
+                icon={LayoutGrid}
+                title="관계도"
+                subtitle={
+                  boardState.pins.length
+                    ? `${boardState.pins.length}개 핀 · ${boardState.connections.length}개 연결`
+                    : "증거·용의자·시간대를 핀 하여 관계를 시각화하세요"
+                }
+              >
+                <InvestigationBoard
+                  case={data}
+                  state={boardState}
+                  onChange={setBoardState}
+                  discoveredEvidenceIds={discoveredSet}
+                />
+              </InvestigationSection>
+            </div>
 
             <InvestigationSection
               icon={Lightbulb}
@@ -1080,6 +1085,7 @@ function InvestigateWorkspace() {
             >
               <TheoriesPanel state={boardState} onChange={setBoardState} />
             </InvestigationSection>
+
 
             {!canAccuse && deductionSection}
           </div>

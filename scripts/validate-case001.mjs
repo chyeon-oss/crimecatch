@@ -44,4 +44,9 @@ if (!progressEngine.includes("migrate(raw: unknown)")) {
   throw new Error("Legacy progress migration is missing");
 }
 
+const dialogueRuntime = read("src/lib/dialogueRuntime.ts");
+if (!dialogueRuntime.includes("LEGACY_TRANSCRIPT_REWRITES")) {
+  throw new Error("Legacy CASE001 dialogue migration is missing");
+}
+
 console.log("CASE001 canonical content and save-compatibility checks passed");

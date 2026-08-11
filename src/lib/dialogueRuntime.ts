@@ -78,6 +78,11 @@ export function makeEntry(entry: Omit<TranscriptEntry, "id" | "at">): Transcript
 
 const KEY = (caseId: string) => `dialogue:${caseId}`;
 
+const LEGACY_TRANSCRIPT_REWRITES: Record<string, string> = {
+  "신고는 22시 31분. 회의실 근처에서 사람이 쓰러져 있다는 내용이었습니다.":
+    "신고는 23시 52분. 기획전략실 안에 한 팀장님이 쓰러져 있다는 내용이었습니다.",
+};
+
 export function loadSession(caseId: string): DialogueSession | null {
   if (typeof window === "undefined") return null;
   try {
@@ -85,7 +90,13 @@ export function loadSession(caseId: string): DialogueSession | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as DialogueSession;
     if (parsed?.version !== 1 || !Array.isArray(parsed.entries)) return null;
-    return parsed;
+    return {
+      ...parsed,
+      entries: parsed.entries.map((entry) => ({
+        ...entry,
+        text: LEGACY_TRANSCRIPT_REWRITES[entry.text] ?? entry.text,
+      })),
+    };
   } catch {
     return null;
   }

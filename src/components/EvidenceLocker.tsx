@@ -322,6 +322,10 @@ function EvidenceDossierCard({
   return (
     <button
       onClick={onOpen}
+      data-testid="evidence-card"
+      data-evidence-id={evidence.id}
+      data-evidence-state={state}
+      data-read={state !== "NEW"}
       className={[
         "evidence-folder group relative flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card p-0 text-left shadow-[var(--shadow-noir)]",
         opening ? "evidence-opening pointer-events-none" : "",

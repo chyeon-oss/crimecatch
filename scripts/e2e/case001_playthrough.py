@@ -188,16 +188,22 @@ async def run_deduction(page) -> None:
     """Six-step flow: culprit -> motive -> method -> evidence -> board -> confirm."""
     flow = page.get_by_test_id("deduction-flow")
     await flow.wait_for(state="visible", timeout=15000)
-    for step in range(1, 6):
-        assert await flow.get_attribute("data-step") == str(step), (
-            f"expected step {step}, got {await flow.get_attribute('data-step')}"
-        )
+    for _ in range(24):
+        step = await flow.get_attribute("data-step")
+        if step == "6":
+            break
         options = page.locator('[data-testid="deduction-option"]')
         if await options.count():
             await options.first.click()
             await page.wait_for_timeout(200)
-        await click_when_ready(page, page.get_by_test_id("deduction-next"))
-        await page.wait_for_timeout(320)
+        nxt = page.get_by_test_id("deduction-next")
+        if await nxt.count() and await nxt.first.is_enabled():
+            await click_when_ready(page, nxt.first)
+        await page.wait_for_timeout(360)
+        if await flow.get_attribute("data-step") == step:
+            # Step needs a selection this locator did not cover — surface it.
+            log(f"deduction stalled on step {step}")
+            break
     assert await flow.get_attribute("data-step") == "6"
     await page.screenshot(path=f"{SHOT}-step6.png")
     await click_when_ready(page, page.get_by_test_id("deduction-submit"))

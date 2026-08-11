@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Fingerprint, ScanSearch } from "lucide-react";
-import sceneHallway from "@/assets/intro/scene-hallway.jpg";
-import sceneDoor from "@/assets/intro/scene-door.jpg";
-import sceneExterior from "@/assets/intro/scene-exterior.jpg";
+
 
 export interface SurfaceHotspot {
   id: string;

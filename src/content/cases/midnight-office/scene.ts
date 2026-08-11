@@ -1,7 +1,7 @@
 import type { CrimeScene } from "@/types/hotspot";
 
 export const crimeScene: CrimeScene = {
-  imagePrompt: "심야의 12층 개발팀 사무실, 어질러진 책상과 깜빡이는 형광등",
+  imagePrompt: "심야의 12층 기획전략실, 어질러진 책상과 깜빡이는 형광등",
   hotspots: [
     {
       id: "desk",

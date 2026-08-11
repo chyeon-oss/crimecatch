@@ -7,6 +7,7 @@ import suspectS4 from "@/assets/cases/midnight-office/suspect-s4.jpg";
 
 export interface CaseVisuals {
   introImages?: string[];
+  detailHero?: string;
   interviewHero?: string;
   suspectPortraits: Record<string, string>;
 }
@@ -14,6 +15,7 @@ export interface CaseVisuals {
 const REGISTRY: Record<string, CaseVisuals> = {
   "midnight-office": {
     introImages: [officeWitness, lineup],
+    detailHero: officeWitness,
     interviewHero: lineup,
     suspectPortraits: { s1: suspectS1, s2: suspectS2, s3: suspectS3, s4: suspectS4 },
   },

@@ -9,6 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "lint:recovery": "eslint src/components/CaseDetail.tsx src/components/CaseIntro.tsx src/components/mobile/SceneSurface.tsx src/data/caseVisuals/index.ts 'src/routes/case.$caseId.investigate.tsx' src/content/cases/midnight-office/briefing.ts src/content/cases/midnight-office/victim.ts src/content/cases/midnight-office/timeline.ts src/content/cases/midnight-office/scene.ts",
+    "typecheck": "tsc --noEmit",
+    "validate:case001": "node scripts/validate-case001.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {

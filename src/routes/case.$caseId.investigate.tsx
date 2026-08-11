@@ -8,7 +8,6 @@ import {
   HelpCircle,
   LayoutGrid,
   Lightbulb,
-  ListChecks,
   Clock,
   Users,
 } from "lucide-react";
@@ -26,10 +25,6 @@ import { ActiveQuestions } from "@/components/ActiveQuestions";
 import { EvidenceSortBar } from "@/components/EvidenceSortBar";
 import { InvestigationBoard } from "@/components/InvestigationBoard";
 import { TheoriesPanel } from "@/components/TheoriesPanel";
-import { CaseSidebar } from "@/components/workspace/CaseSidebar";
-import { PartnerPanel } from "@/components/workspace/PartnerPanel";
-import { InvestigationHUD } from "@/components/InvestigationHUD";
-import { ObjectivesPanel } from "@/components/ObjectivesPanel";
 import { SuspectDatabase } from "@/components/SuspectDatabase";
 import { SuspectProfileModal } from "@/components/SuspectProfileModal";
 import { InvestigationTimeline } from "@/components/InvestigationTimeline";
@@ -45,8 +40,6 @@ import { useProgress } from "@/state/progressStore";
 import {
   CaseEngine,
   IntelligenceEngine,
-  ObjectivesEngine,
-  StoryRuntime,
   SuspectIntelEngine,
   TimelineEngine,
   createBoardState,
@@ -246,7 +239,10 @@ function InvestigateWorkspace() {
     setInvestigatedHotspotIds((prev) => {
       const next = new Set(prev);
       for (const h of runtimeDef.hotspots) {
-        if (h.revealsEvidenceIds.length && h.revealsEvidenceIds.every((e) => discoveredSet.has(e))) {
+        if (
+          h.revealsEvidenceIds.length &&
+          h.revealsEvidenceIds.every((e) => discoveredSet.has(e))
+        ) {
           next.add(h.id);
         }
       }
@@ -391,31 +387,6 @@ function InvestigateWorkspace() {
 
   const activeQuestionsCount = runtimeState.activeQuestions.length;
 
-  const storyState = useMemo(
-    () =>
-      StoryRuntime.derive({
-        case: data,
-        discoveredIds: discoveredSet,
-        readIds,
-        investigatedHotspotIds,
-        board: boardState,
-      }),
-    [data, discoveredSet, readIds, investigatedHotspotIds, boardState],
-  );
-
-  const objectives = useMemo(
-    () =>
-      ObjectivesEngine.derive({
-        case: data,
-        discoveredIds: discoveredSet,
-        readIds,
-        investigatedHotspotIds,
-        board: boardState,
-      }),
-    [data, discoveredSet, readIds, investigatedHotspotIds, boardState],
-  );
-  const objectivesSummary = ObjectivesEngine.summary(objectives);
-
   const allSuspectDossiers = useMemo(
     () =>
       SuspectIntelEngine.all({
@@ -432,7 +403,6 @@ function InvestigateWorkspace() {
     (currentScene?.status === "INTERROGATION" ||
       currentScene?.status === "ACCUSATION" ||
       currentScene?.status === "RECONSTRUCTION");
-  const primeSuspectCount = suspectDossiers.filter((d) => d.status === "PRIME_SUSPECT").length;
 
   const timelineEntries = useMemo(
     () => TimelineEngine.derive({ case: data, discoveredIds: discoveredSet }),
@@ -618,10 +588,7 @@ function InvestigateWorkspace() {
     onInterviewComplete: (suspectId) => actions.interviewSuspect(suspectId),
   });
 
-  const suspectById = useMemo(
-    () => new Map(data.suspects.map((s) => [s.id, s])),
-    [data.suspects],
-  );
+  const suspectById = useMemo(() => new Map(data.suspects.map((s) => [s.id, s])), [data.suspects]);
   const caseVisuals = useMemo(() => getCaseVisuals(data.id), [data.id]);
 
   const interviewMode = !!interviewPack && showSuspects;
@@ -693,7 +660,6 @@ function InvestigateWorkspace() {
       }));
   }, [activeInterview, discoveredEvidence, discoveredSet, readIds]);
 
-
   /** Discovered AND read evidence — decisive-evidence candidates. */
   const readEvidence = useMemo(
     () => discoveredEvidence.filter((e) => isPresentable(e.id, discoveredSet, readIds)),
@@ -729,12 +695,10 @@ function InvestigateWorkspace() {
           discoveredEvidenceIds={discoveredSet}
           canAccuse={canAccuse}
           onOpenCaseFile={() => setTab("file")}
-
         />
       </div>
     </InvestigationSection>
   );
-
 
   return (
     <div className="noir-grain">
@@ -819,66 +783,6 @@ function InvestigateWorkspace() {
               </div>
             )}
 
-            {showSuspects && (
-              <div className="px-4">
-                <InvestigationSection
-                  icon={Users}
-                  title="용의자"
-                  subtitle={
-                    primeSuspectCount > 0
-                      ? `${suspectDossiers.length}명 · 유력 용의자 ${primeSuspectCount}명`
-                      : `${suspectDossiers.length}명 프로파일`
-                  }
-                >
-                  <SuspectDatabase dossiers={suspectDossiers} onOpen={openSuspectAndInterview} />
-
-                  {/* Cases without authored interview trees still need a
-                      deterministic, explicit way to record that a statement was
-                      heard. Opening a profile never counts — the detective has
-                      to log it. */}
-                  {!interviewPack && requiredInterviewIds.length > 0 && (
-                    <div className="mt-3 space-y-2 rounded-lg border border-border/60 bg-surface-elevated/50 p-3">
-                      <p className="text-[11px] text-muted-foreground">
-                        프로필을 열어 진술을 확인한 뒤, 청취를 마친 상대를 직접 기록하세요.
-                      </p>
-                      {requiredInterviewIds.map((id) => {
-                        const done = runtimeState.interviewedSuspects.includes(id);
-                        return (
-                          <button
-                            key={id}
-                            type="button"
-                            data-testid={`statement-log-${id}`}
-                            data-logged={done ? "true" : "false"}
-                            disabled={done}
-                            onClick={() => actions.interviewSuspect(id)}
-                            className={`flex min-h-[44px] w-full items-center justify-between rounded-lg border px-3 text-[12px] transition-colors ${
-                              done
-                                ? "border-primary/40 bg-primary/10 text-primary"
-                                : "border-border/70 bg-background/60 text-foreground hover:bg-primary/10"
-                            }`}
-                          >
-                            <span>{suspectById.get(id)?.name ?? id}</span>
-                            <span>{done ? "청취 완료" : "진술 청취 완료로 기록"}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </InvestigationSection>
-              </div>
-            )}
-
-
-            <div className="px-4">
-              <InvestigationSection
-                icon={ListChecks}
-                title="현재 목표"
-                subtitle={`${objectivesSummary.completed} / ${objectivesSummary.total} 완료`}
-              >
-                <ObjectivesPanel objectives={objectives} />
-              </InvestigationSection>
-            </div>
-
             {import.meta.env.DEV && (
               <div className="px-4">
                 <RuntimeDebugPanel
@@ -931,7 +835,6 @@ function InvestigateWorkspace() {
               threadTitle={dialogue.activeThreadTitle}
             />
           ))}
-
 
         {tab === "file" && (
           <div className="space-y-4 px-4 py-4 pb-8">
@@ -1005,24 +908,6 @@ function InvestigateWorkspace() {
                 </div>
               )}
             </InvestigationSection>
-
-            <div className="overflow-hidden rounded-xl border border-border/60">
-              <CaseSidebar
-                case={data}
-                storyState={storyState}
-                objectiveText={runtimeState.currentObjective ?? undefined}
-                discoveredCount={discoveredIds.length}
-                totalEvidence={data.evidence.length}
-              />
-            </div>
-
-            <div className="overflow-hidden rounded-xl border border-border/60">
-              <PartnerPanel
-                case={data}
-                intelligenceState={intelligenceState}
-                storyState={storyState}
-              />
-            </div>
           </div>
         )}
 
@@ -1092,10 +977,8 @@ function InvestigateWorkspace() {
               <TheoriesPanel state={boardState} onChange={setBoardState} />
             </InvestigationSection>
 
-
             {!canAccuse && deductionSection}
           </div>
-
         )}
       </MobileInvestigationShell>
 

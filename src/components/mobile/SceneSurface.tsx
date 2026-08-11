@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Fingerprint, ScanSearch } from "lucide-react";
 
-
 export interface SurfaceHotspot {
   id: string;
   title: string;
@@ -40,7 +39,7 @@ const FALLBACK_POS = [
   { x: 22, y: 76 },
 ];
 
-type Stage = "IDLE" | "ZOOM" | "SEARCH" | "REVEAL";
+type Stage = "IDLE" | "ZOOM" | "SEARCH" | "DECIDE" | "REVEAL";
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -95,7 +94,6 @@ export function SceneSurface({
       const flight = inFlightRef.current;
       if (flight) commit(flight.id);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const posOf = (id: string, i: number) => layout[id] ?? FALLBACK_POS[i % FALLBACK_POS.length];
@@ -118,17 +116,29 @@ export function SceneSurface({
       await wait(1150);
     }
     if (!aliveRef.current) return;
-    onBeatsPlayed?.(h.id);
+    setStage("DECIDE");
+  };
+
+  const recordClue = async () => {
+    if (!activeId || stage !== "DECIDE") return;
+    onBeatsPlayed?.(activeId);
     if (inFlightRef.current) inFlightRef.current.beatsLogged = true;
     setStage("REVEAL");
     await wait(260);
     if (!aliveRef.current) return;
-    commit(h.id);
+    commit(activeId);
     setStage("IDLE");
     setActiveId(null);
     setBeats([]);
   };
 
+  const inspectAgain = () => {
+    if (stage !== "DECIDE") return;
+    inFlightRef.current = null;
+    setStage("IDLE");
+    setActiveId(null);
+    setBeats([]);
+  };
 
   const busy = stage !== "IDLE";
   const activePos = activeId
@@ -231,7 +241,7 @@ export function SceneSurface({
         )}
 
         {/* Beat subtitles */}
-        {busy && beats.length > 0 && stage !== "ZOOM" && (
+        {busy && beats.length > 0 && stage !== "ZOOM" && stage !== "DECIDE" && (
           <div className="absolute inset-x-0 bottom-0 border-t border-border/60 bg-background/85 px-4 py-3">
             <p className="text-[10px] uppercase tracking-widest text-primary">
               {beats[Math.min(beatIndex, beats.length - 1)].speaker}
@@ -239,6 +249,31 @@ export function SceneSurface({
             <p className="mt-1 text-[13px] leading-relaxed text-foreground">
               {beats[Math.min(beatIndex, beats.length - 1)].text}
             </p>
+          </div>
+        )}
+
+        {stage === "DECIDE" && activeId && (
+          <div className="absolute inset-x-0 bottom-0 border-t border-border/60 bg-background/95 p-3 backdrop-blur">
+            <p className="text-[10px] uppercase tracking-widest text-primary">관찰 결과</p>
+            <p className="mt-1 text-[13px] leading-relaxed text-foreground">
+              이 흔적을 사건의 단서로 기록할까요?
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={inspectAgain}
+                className="min-h-[44px] rounded-lg border border-border/70 bg-surface-elevated text-xs text-muted-foreground"
+              >
+                주변을 더 살핀다
+              </button>
+              <button
+                type="button"
+                onClick={recordClue}
+                className="min-h-[44px] rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground"
+              >
+                단서로 기록한다
+              </button>
+            </div>
           </div>
         )}
       </div>

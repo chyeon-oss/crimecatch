@@ -9,12 +9,15 @@ type Props = {
   caseTitle: string;
   emergencyTime?: string;
   arrivalTime?: string;
+  corridorLabel?: string;
   onDone: () => void;
   storyImages?: string[];
 };
 
 const STORAGE_PREFIX = "crimecatch:intro-seen:";
 
+// Kept beside the component so the storage key and intro lifecycle cannot drift.
+// eslint-disable-next-line react-refresh/only-export-components
 export function shouldShowIntro(caseId: string): boolean {
   if (typeof window === "undefined") return false;
   try {
@@ -35,8 +38,9 @@ export function CaseIntro({
   caseId,
   caseCode = "CASE001",
   caseTitle,
-  emergencyTime = "22:41",
-  arrivalTime = "22:57",
+  emergencyTime = "23:52",
+  arrivalTime = "00:08",
+  corridorLabel = "12F · CORRIDOR",
   onDone,
   storyImages = [],
 }: Props) {
@@ -65,9 +69,7 @@ export function CaseIntro({
       [6, 8600], // → taped door
       [7, 10000], // → final CTA (hold)
     ];
-    const timers = schedule.map(([s, t]) =>
-      window.setTimeout(() => setStep(s), t),
-    );
+    const timers = schedule.map(([s, t]) => window.setTimeout(() => setStep(s), t));
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, []);
 
@@ -111,16 +113,11 @@ export function CaseIntro({
               transition: "transform 6s ease-out",
             }}
           />
-          <div
-            className="absolute inset-0 bg-black"
-            style={{ opacity: dim }}
-          />
+          <div className="absolute inset-0 bg-black" style={{ opacity: dim }} />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/80" />
         </>
       )}
-      <div className="relative flex h-full w-full items-center justify-center">
-        {children}
-      </div>
+      <div className="relative flex h-full w-full items-center justify-center">{children}</div>
     </div>
   );
 
@@ -148,9 +145,7 @@ export function CaseIntro({
       {/* 1 · Case title */}
       <Scene visible={step === 1} image={storyImages[0]} dim={0.68}>
         <div className="text-center">
-          <div className="text-xs md:text-sm tracking-[0.6em] text-primary/80">
-            {caseCode}
-          </div>
+          <div className="text-xs md:text-sm tracking-[0.6em] text-primary/80">{caseCode}</div>
           <div className="mt-4 text-3xl md:text-6xl font-light tracking-[0.25em] text-white">
             {caseTitle}
           </div>
@@ -198,7 +193,7 @@ export function CaseIntro({
       <Scene visible={step === 5} image={hallwayImg} dim={0.5}>
         <div className="absolute bottom-16 left-0 right-0 text-center">
           <div className="text-[10px] md:text-xs tracking-[0.5em] uppercase text-white/50">
-            14F · CORRIDOR
+            {corridorLabel}
           </div>
           <div className="mt-2 text-xl md:text-3xl font-light tracking-[0.2em] text-white/90">
             복도 끝, 조용한 발소리.

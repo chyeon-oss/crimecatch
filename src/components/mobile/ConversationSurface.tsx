@@ -107,7 +107,10 @@ export function ConversationSurface({
       </div>
 
       {choices.length > 0 && (
-        <div className="sticky bottom-0 space-y-2 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur">
+        <div
+          className="sticky z-20 space-y-2 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur"
+          style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }}
+        >
           {choices.map(({ choice, available }) => (
             <button
               key={choice.id}

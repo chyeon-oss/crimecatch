@@ -118,11 +118,29 @@ async def play_hotspots(page) -> int:
 
 async def finish_topic(page, topic_id: str) -> bool:
     """Ask one topic, flush typing, answer a choice if any, assert completion."""
-    btn = page.locator(f'[data-testid="interview-topic"][data-topic-id="{topic_id}"]')
+    sel = f'[data-testid="interview-topic"][data-topic-id="{topic_id}"]'
+    btn = page.locator(sel)
+    if not await btn.count():
+        # A previously asked topic may still be awaiting its response choice,
+        # which replaces the question list. Answer it, then retry.
+        for _ in range(6):
+            choice = page.locator('[data-testid="interview-choice"]')
+            if not await choice.count():
+                break
+            await click_when_ready(page, choice.first)
+            await page.wait_for_timeout(500)
+        await page.mouse.click(210, 700)
+        await page.wait_for_timeout(500)
     if not await btn.count():
         return False
     if await btn.first.get_attribute("data-topic-done") == "true":
         return True
+    # The rail sits above the fixed tab bar, but the button may still be below
+    # the fold on a 390px screen — always bring it into view before clicking.
+    try:
+        await btn.first.scroll_into_view_if_needed(timeout=3000)
+    except Exception:
+        pass
     if await btn.first.get_attribute("data-available") != "true":
         return False
     if not await click_when_ready(page, btn.first):
@@ -136,7 +154,7 @@ async def finish_topic(page, topic_id: str) -> bool:
                 return False
             await page.wait_for_timeout(400)
             continue
-        marker = page.locator(f'[data-testid="interview-topic"][data-topic-id="{topic_id}"]')
+        marker = page.locator(sel)
         if await marker.count() and await marker.first.get_attribute("data-topic-done") == "true":
             return True
         await page.mouse.click(210, 700)  # tap-to-skip the typing queue
@@ -145,7 +163,7 @@ async def finish_topic(page, topic_id: str) -> bool:
 
 
 async def play_interviews(page) -> int:
-    """Complete every required topic of every incomplete suspect room."""
+    """Complete every authored required topic of every incomplete suspect room."""
     rooms_done = 0
     for _ in range(8):
         await dismiss_modals(page)
@@ -156,16 +174,21 @@ async def play_interviews(page) -> int:
         if not await click_when_ready(page, room):
             break
         await page.wait_for_timeout(600)
-        for _ in range(12):
-            pending = page.locator(
-                '[data-testid="interview-topic"][data-topic-done="false"][data-available="true"]'
-            )
-            if not await pending.count():
-                break
-            topic_id = await pending.first.get_attribute("data-topic-id")
-            if not topic_id or not await finish_topic(page, topic_id):
-                break
         progress = page.get_by_test_id("interview-progress")
+        required: list[str] = []
+        if await progress.count():
+            ids = await progress.first.get_attribute("data-required-ids") or ""
+            required = [i for i in ids.split(",") if i]
+        if not required:
+            required = [
+                await page.locator('[data-testid="interview-topic"]').nth(i).get_attribute("data-topic-id")
+                for i in range(await page.locator('[data-testid="interview-topic"]').count())
+            ]
+        # Drive the authored required ids explicitly; one failure must not abort
+        # the remaining topics.
+        for topic_id in required:
+            if topic_id:
+                await finish_topic(page, topic_id)
         if await progress.count():
             log(
                 "room progress "

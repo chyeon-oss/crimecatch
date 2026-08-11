@@ -354,7 +354,7 @@ async def main() -> int:
             problems.append(f"expected 5 truth beats, revealed {beats}")
         if bleed:
             problems.append(f"CASE001 content leaked into CASE002 truth: {bleed}")
-        if await page.get_by_test_id("interview-statement-log").count():
+        if await page.locator("[data-testid^=\"statement-log-\"]").count():
             problems.append("statement-log fallback rendered despite authored pack")
         if modal_count:
             problems.append(f"{modal_count} modal(s) replayed after reload")

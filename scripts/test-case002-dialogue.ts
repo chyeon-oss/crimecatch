@@ -35,7 +35,7 @@ check("a3) pack caseId matches runtime case", pack.caseId === CASE_ID);
 const threadIds = new Set(pack.threads.map((t) => t.id));
 check("b1) opening thread exists", threadIds.has(pack.openingThreadId));
 
-const hotspotIds = new Set(def.scenes.flatMap((s) => s.hotspots.map((h) => h.id)));
+const hotspotIds = new Set(def.hotspots.map((h) => h.id));
 const evidenceIds = new Set(inheritanceParty.evidence.map((e) => e.id));
 
 for (const [hs, tid] of Object.entries(pack.hotspotThreadIds)) {
@@ -96,7 +96,7 @@ check("e2) analysis thread opens with evidence", meetsRequirement(analysis.requi
 
 // Presentation registry covers every runtime hotspot for the migrated scenes.
 const presentation = getScenePresentation(CASE_ID);
-const migrated = def.scenes.slice(0, 2).flatMap((s) => s.hotspots.map((h) => h.id));
+const migrated = def.scenes.slice(0, 2).flatMap((s) => s.availableHotspotIds);
 const missingLayout = migrated.filter((id) => !presentation.layout[id]);
 check("f1) scene 01~02 hotspots have layout", missingLayout.length === 0, missingLayout.join(","));
 check("f2) presentation registry supplies a backdrop", typeof presentation.renderBackdrop === "function");

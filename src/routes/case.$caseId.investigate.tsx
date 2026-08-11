@@ -336,10 +336,10 @@ function InvestigateWorkspace() {
   };
 
   const openSuspectAndInterview = (d: SuspectDossier) => {
+    // Opening a dossier is reading, not interviewing. The scene gate is driven
+    // solely by authored interview completion (useInterviewRuntime →
+    // actions.interviewSuspect), so UI progress and runtime never disagree.
     setOpenSuspect(d);
-    // Interviewing happens the moment the detective opens the profile —
-    // for now that IS the interrogation surface.
-    actions.interviewSuspect(d.suspect.id);
   };
 
   const currentDiscovery = activeDiscoveryId ? (evidenceById.get(activeDiscoveryId) ?? null) : null;
@@ -616,9 +616,9 @@ function InvestigateWorkspace() {
   const remainingRequiredNames = useMemo(
     () =>
       requiredInterviewIds
-        .filter((id) => !runtimeState.interviewedSuspects.includes(id))
+        .filter((id) => !interviews.rooms.find((r) => r.suspectId === id)?.complete)
         .map((id) => suspectById.get(id)?.name ?? id),
-    [requiredInterviewIds, runtimeState.interviewedSuspects, suspectById],
+    [requiredInterviewIds, interviews.rooms, suspectById],
   );
 
   const hubRooms = useMemo(
@@ -842,6 +842,7 @@ function InvestigateWorkspace() {
                 entries={activeInterview.state.entries}
                 topics={interviews.topics(activeInterview.suspectId)}
                 choices={interviews.activeChoices}
+                awaitingTopicId={interviews.awaitingTopicId}
                 isTyping={interviews.isTyping}
                 onAsk={(topicId) => interviews.ask(activeInterview.suspectId, topicId)}
                 onChoose={(choiceId) => interviews.choose(activeInterview.suspectId, choiceId)}

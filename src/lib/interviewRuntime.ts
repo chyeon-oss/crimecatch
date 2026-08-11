@@ -23,11 +23,12 @@ export function emptySuspectState(): InterviewSuspectState {
     contradictions: [],
     notes: [],
     unread: false,
+    awaitingTopicId: null,
   };
 }
 
 export function emptySession(): InterviewSession {
-  return { version: 1, roomId: null, suspects: {} };
+  return { version: 2, roomId: null, suspects: {} };
 }
 
 export function suspectStateOf(session: InterviewSession, suspectId: string): InterviewSuspectState {
@@ -81,6 +82,20 @@ export function isInterviewComplete(
   return interview.requiredTopicIds.every((id) => state.completedTopicIds.includes(id));
 }
 
+/**
+ * Required-topic progress — the single source of truth behind the completion
+ * gate, the room header, and the hub list.
+ */
+export function requiredProgress(
+  interview: SuspectInterview,
+  state: InterviewSuspectState,
+): { done: number; total: number } {
+  return {
+    done: interview.requiredTopicIds.filter((id) => state.completedTopicIds.includes(id)).length,
+    total: interview.requiredTopicIds.length,
+  };
+}
+
 export function interviewProgress(
   interview: SuspectInterview,
   state: InterviewSuspectState,
@@ -102,6 +117,31 @@ export const MOOD_LABEL: Record<InterviewSuspectState["mood"], string> = {
   shaken: "동요",
 };
 
+/**
+ * v1 sessions had no per-suspect `awaitingTopicId` (the pending choice lived in
+ * volatile React state). Migrating simply normalises every suspect record and
+ * drops the orphaned awaiting state, so the topic can be asked again.
+ */
+export function migrateSession(raw: unknown): InterviewSession | null {
+  const parsed = raw as
+    | (Omit<InterviewSession, "version"> & { version?: number })
+    | null;
+  if (!parsed || typeof parsed !== "object") return null;
+  const version = parsed.version;
+  if (version !== 1 && version !== 2) return null;
+  if (!parsed.suspects || typeof parsed.suspects !== "object") return null;
+  const suspects: Record<string, InterviewSuspectState> = {};
+  for (const [id, st] of Object.entries(parsed.suspects)) {
+    const base = emptySuspectState();
+    suspects[id] = {
+      ...base,
+      ...st,
+      awaitingTopicId: version === 2 ? (st.awaitingTopicId ?? null) : null,
+    };
+  }
+  return { version: 2, roomId: parsed.roomId ?? null, suspects };
+}
+
 const KEY = (caseId: string) => `interview:${caseId}`;
 
 export function loadSession(caseId: string): InterviewSession | null {
@@ -109,9 +149,8 @@ export function loadSession(caseId: string): InterviewSession | null {
   try {
     const raw = window.localStorage.getItem(KEY(caseId));
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as InterviewSession;
-    if (parsed?.version !== 1 || typeof parsed.suspects !== "object") return null;
-    return parsed;
+    const parsed = JSON.parse(raw) as InterviewSession & { version: number };
+    return migrateSession(parsed);
   } catch {
     return null;
   }

@@ -93,6 +93,7 @@ export function SceneTransitionModal({
 
           <button
             type="button"
+            data-testid="transition-continue"
             onClick={onContinue}
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)] transition-transform hover:scale-[1.01]"
           >

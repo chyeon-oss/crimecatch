@@ -68,6 +68,7 @@ export function DiscoveryModal({ evidence, remaining, onContinue }: Props) {
           </p>
 
           <button
+            data-testid="discovery-continue"
             onClick={onContinue}
             className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-gold)] transition-transform hover:scale-[1.01]"
           >

@@ -13,6 +13,7 @@ import {
   emptySuspectState,
   findInterview,
   interviewProgress,
+  requiredProgress,
   isInterviewComplete,
   loadSession,
   reactionFor,
@@ -32,6 +33,8 @@ interface Options {
 
 interface Pending {
   suspectId: string;
+  /** Topic (or reaction) the queued lines belong to. */
+  topicId: string | null;
   lines: DialogueLine[];
 }
 
@@ -57,7 +60,6 @@ export function useInterviewRuntime({
   const [session, setSession] = useState<InterviewSession>(emptySession);
   const [hydrated, setHydrated] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
-  const [awaitingTopicId, setAwaitingTopicId] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = loadSession(caseId);
@@ -76,27 +78,21 @@ export function useInterviewRuntime({
   }, [onInterviewComplete]);
 
   const notifiedRef = useRef<Set<string>>(new Set());
-  const notifyIfComplete = useCallback(
-    (suspectId: string, next: InterviewSuspectState) => {
-      const interview = findInterview(pack, suspectId);
-      if (!interview) return;
-      if (notifiedRef.current.has(suspectId)) return;
-      if (!isInterviewComplete(interview, next)) return;
-      notifiedRef.current.add(suspectId);
-      completeRef.current?.(suspectId);
-    },
-    [pack],
-  );
 
-  // Report interviews already completed in a restored session.
+  /**
+   * Completion is reported from a single effect over the session, so a
+   * completion committed inline and a completion restored from storage take
+   * exactly the same path — and each suspect fires at most once per mount.
+   */
   useEffect(() => {
     if (!hydrated || !pack) return;
     for (const iv of pack.suspects) {
-      notifyIfComplete(iv.suspectId, suspectStateOf(session, iv.suspectId));
+      if (notifiedRef.current.has(iv.suspectId)) continue;
+      if (!isInterviewComplete(iv, suspectStateOf(session, iv.suspectId))) continue;
+      notifiedRef.current.add(iv.suspectId);
+      completeRef.current?.(iv.suspectId);
     }
-    // Only on hydration / pack change — later completions are reported inline.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, pack]);
+  }, [hydrated, pack, session]);
 
   const patch = useCallback(
     (suspectId: string, fn: (prev: InterviewSuspectState) => InterviewSuspectState) => {
@@ -133,7 +129,9 @@ export function useInterviewRuntime({
     const [head, ...rest] = pending.lines;
     const t = setTimeout(() => {
       appendLine(pending.suspectId, head);
-      setPending(rest.length ? { suspectId: pending.suspectId, lines: rest } : null);
+      setPending(
+        rest.length ? { suspectId: pending.suspectId, topicId: pending.topicId, lines: rest } : null,
+      );
     }, lineDelay(head.text, head.delayMs));
     return () => clearTimeout(t);
   }, [pending, appendLine]);
@@ -172,54 +170,58 @@ export function useInterviewRuntime({
     [patch],
   );
 
-  const markTopicDone = useCallback(
-    (suspectId: string, topicId: string) => {
-      setSession((s) => {
-        const prev = s.suspects[suspectId] ?? emptySuspectState();
-        if (prev.completedTopicIds.includes(topicId)) return s;
-        const next: InterviewSuspectState = {
-          ...prev,
-          completedTopicIds: [...prev.completedTopicIds, topicId],
-        };
-        notifyIfComplete(suspectId, next);
-        return { ...s, suspects: { ...s.suspects, [suspectId]: next } };
-      });
-    },
-    [notifyIfComplete],
-  );
+  const markTopicDone = useCallback((suspectId: string, topicId: string) => {
+    setSession((s) => {
+      const prev = s.suspects[suspectId] ?? emptySuspectState();
+      const already = prev.completedTopicIds.includes(topicId);
+      if (already && prev.awaitingTopicId !== topicId) return s;
+      const next: InterviewSuspectState = {
+        ...prev,
+        completedTopicIds: already ? prev.completedTopicIds : [...prev.completedTopicIds, topicId],
+        awaitingTopicId: prev.awaitingTopicId === topicId ? null : prev.awaitingTopicId,
+      };
+      return { ...s, suspects: { ...s.suspects, [suspectId]: next } };
+    });
+  }, []);
 
   const ask = useCallback(
     (suspectId: string, topicId: string) => {
       const interview = findInterview(pack, suspectId);
       const topic = interview?.topics.find((t) => t.id === topicId);
       if (!interview || !topic) return;
+      const current = suspectStateOf(session, suspectId);
+      // Idempotent: a double tap, or re-asking a finished / awaiting topic,
+      // must not duplicate the transcript, note or completion.
+      if (current.completedTopicIds.includes(topicId)) return;
+      if (current.awaitingTopicId === topicId) return;
       patch(suspectId, (prev) => ({
         ...prev,
         entries: [...prev.entries, makeEntry({ kind: "CHOICE", text: topic.label })],
+        awaitingTopicId: topic.choices?.length ? topicId : (prev.awaitingTopicId ?? null),
       }));
-      setPending({ suspectId, lines: topic.lines });
+      setPending({ suspectId, topicId, lines: topic.lines });
       applyEffects(suspectId, { mood: topic.mood, note: topic.note });
-      if (topic.choices?.length) {
-        setAwaitingTopicId(topicId);
-      } else {
+      if (!topic.choices?.length) {
+        // No response to pick — the question is answered the moment it is
+        // asked, regardless of how the lines are revealed.
         markTopicDone(suspectId, topicId);
       }
     },
-    [pack, patch, applyEffects, markTopicDone],
+    [pack, session, patch, applyEffects, markTopicDone],
   );
 
   const choose = useCallback(
     (suspectId: string, choiceId: string) => {
       const interview = findInterview(pack, suspectId);
-      const topic = interview?.topics.find((t) => t.id === awaitingTopicId);
+      const awaiting = suspectStateOf(session, suspectId).awaitingTopicId ?? null;
+      const topic = interview?.topics.find((t) => t.id === awaiting);
       const choice = topic?.choices?.find((c) => c.id === choiceId);
       if (!interview || !topic || !choice) return;
       patch(suspectId, (prev) => ({
         ...prev,
         entries: [...prev.entries, makeEntry({ kind: "CHOICE", text: choice.text })],
       }));
-      setAwaitingTopicId(null);
-      setPending({ suspectId, lines: choice.reply });
+      setPending({ suspectId, topicId: topic.id, lines: choice.reply });
       applyEffects(suspectId, {
         mood: choice.mood,
         note: choice.note,
@@ -228,7 +230,7 @@ export function useInterviewRuntime({
       });
       markTopicDone(suspectId, topic.id);
     },
-    [pack, awaitingTopicId, patch, applyEffects, markTopicDone],
+    [pack, session, patch, applyEffects, markTopicDone],
   );
 
   const presentEvidence = useCallback(
@@ -248,7 +250,7 @@ export function useInterviewRuntime({
           }),
         ],
       }));
-      setPending({ suspectId, lines: reaction?.lines ?? interview.genericReaction });
+      setPending({ suspectId, topicId: null, lines: reaction?.lines ?? interview.genericReaction });
       if (reaction) {
         applyEffects(suspectId, {
           mood: reaction.mood,
@@ -292,14 +294,14 @@ export function useInterviewRuntime({
           [suspectId]: { ...(s.suspects[suspectId] ?? emptySuspectState()), unread: false },
         },
       }));
-      setAwaitingTopicId(null);
     },
     [],
   );
 
   const closeRoom = useCallback(() => {
+    // Skip only flushes the queued lines. A topic awaiting a response stays
+    // awaiting, so re-entering the room shows the same choices.
     skip();
-    setAwaitingTopicId(null);
     setSession((s) => ({ ...s, roomId: null }));
   }, [skip]);
 
@@ -315,8 +317,10 @@ export function useInterviewRuntime({
       const st = suspectStateOf(session, iv.suspectId);
       return {
         suspectId: iv.suspectId,
-        progress: interviewProgress(iv, st),
+        progress: requiredProgress(iv, st),
+        allTopicsProgress: interviewProgress(iv, st),
         complete: isInterviewComplete(iv, st),
+        awaitingTopicId: st.awaitingTopicId ?? null,
         mood: st.mood,
         contradictions: st.contradictions,
         notes: st.notes,
@@ -334,6 +338,8 @@ export function useInterviewRuntime({
     },
     [pack, session, requirementContext],
   );
+
+  const awaitingTopicId = roomId ? (suspectStateOf(session, roomId).awaitingTopicId ?? null) : null;
 
   const activeChoices = useMemo(() => {
     if (!roomId || !awaitingTopicId || pending) return [];
@@ -353,6 +359,7 @@ export function useInterviewRuntime({
     activeChoices,
     isTyping: !!pending && pending.lines.length > 0,
     incompleteCount,
+    awaitingTopicId,
     openRoom,
     closeRoom,
     ask,

@@ -55,8 +55,11 @@ interface Props {
   /** Only evidence the detective discovered AND read. */
   evidence: FlowEvidence[];
   connections: FlowConnection[];
+  /** Jump to the case-file tab so the player can read evidence. */
+  onOpenCaseFile?: () => void;
   onSubmit: (selection: DeductionSelection) => void;
 }
+
 
 type StepId = 1 | 2 | 3 | 4 | 5 | 6;
 

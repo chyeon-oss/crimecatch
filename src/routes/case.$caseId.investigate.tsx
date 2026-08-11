@@ -664,15 +664,17 @@ function InvestigateWorkspace() {
   const activeInterview = useMemo(() => {
     if (!interviews.roomId) return null;
     const s = suspectById.get(interviews.roomId);
+    const iv = interviewPack?.suspects.find((x) => x.suspectId === interviews.roomId) ?? null;
     return {
       suspectId: interviews.roomId,
       name: s?.name ?? interviews.roomId,
       role: s?.occupation ?? "",
       relationship: s?.relationship ?? "",
+      requiredTopicIds: iv?.requiredTopicIds ?? [],
       state: interviews.stateOf(interviews.roomId),
       room: interviews.rooms.find((r) => r.suspectId === interviews.roomId) ?? null,
     };
-  }, [interviews, suspectById]);
+  }, [interviews, suspectById, interviewPack]);
 
   /** Only discovered AND read evidence can be presented in an interview. */
   const presentableEvidence = useMemo(() => {
@@ -896,6 +898,7 @@ function InvestigateWorkspace() {
                 contradictions={activeInterview.state.contradictions}
                 entries={activeInterview.state.entries}
                 topics={interviews.topics(activeInterview.suspectId)}
+                requiredTopicIds={activeInterview.requiredTopicIds}
                 choices={interviews.activeChoices}
                 awaitingTopicId={interviews.awaitingTopicId}
                 isTyping={interviews.isTyping}

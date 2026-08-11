@@ -23,6 +23,8 @@ interface Props {
   contradictions: Array<{ id: string; title: string; detail: string }>;
   entries: TranscriptEntry[];
   topics: TopicAvailability[];
+  /** Authored required topics — surfaced as DOM metadata for tests/QA. */
+  requiredTopicIds?: string[];
   choices: InterviewChoice[];
   /** Topic waiting for a response choice, if any. */
   awaitingTopicId?: string | null;
@@ -55,6 +57,7 @@ export function InterviewRoom({
   contradictions,
   entries,
   topics,
+  requiredTopicIds = [],
   choices,
   awaitingTopicId = null,
   isTyping,
@@ -102,6 +105,9 @@ export function InterviewRoom({
           data-testid="interview-progress"
           data-done={progress.done}
           data-total={progress.total}
+          data-required-ids={requiredTopicIds.join(",")}
+          data-awaiting={awaitingTopicId ?? ""}
+          data-typing={isTyping ? "true" : "false"}
         >
           필수 질문 {progress.done}/{progress.total}
           {contradictions.length > 0 && ` · 모순 ${contradictions.length}`}
@@ -189,7 +195,14 @@ export function InterviewRoom({
       </div>
 
       {/* Action rail */}
-      <div className="sticky bottom-0 space-y-2 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur">
+      {/* The shell's tab bar is fixed at the viewport bottom, so the rail must
+          stick above it — otherwise the last question button sits underneath
+          the navigation and cannot be tapped. */}
+      <div
+        className="sticky z-20 space-y-2 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur"
+        style={{ bottom: "calc(76px + env(safe-area-inset-bottom))" }}
+        data-testid="interview-action-rail"
+      >
         {choices.length > 0 ? (
           <>
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -230,6 +243,8 @@ export function InterviewRoom({
                       data-topic-done={done ? "true" : "false"}
                       data-topic-status={status}
                       data-available={available && !done ? "true" : "false"}
+                      data-required={requiredTopicIds.includes(topic.id) ? "true" : "false"}
+                      style={{ scrollMarginBottom: "96px" }}
                       disabled={!available || done || isTyping}
                       onClick={() => onAsk(topic.id)}
                       className={`flex min-h-[48px] w-full items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-[13px] leading-snug transition-colors ${

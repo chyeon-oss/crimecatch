@@ -6,6 +6,7 @@ import {
   Check,
   CheckCircle2,
   FileSearch,
+  FolderOpen,
   Flame,
   Gavel,
   Link2,
@@ -55,8 +56,11 @@ interface Props {
   /** Only evidence the detective discovered AND read. */
   evidence: FlowEvidence[];
   connections: FlowConnection[];
+  /** Jump to the case-file tab so the player can read evidence. */
+  onOpenCaseFile?: () => void;
   onSubmit: (selection: DeductionSelection) => void;
 }
+
 
 type StepId = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -109,7 +113,14 @@ const STEP_META: Record<
  * Scene 04 — mobile, one-decision-per-screen final deduction.
  * Selections are persisted as a draft so a reload resumes the same step.
  */
-export function DeductionFlow({ caseId, suspects, evidence, connections, onSubmit }: Props) {
+export function DeductionFlow({
+  caseId,
+  suspects,
+  evidence,
+  connections,
+  onOpenCaseFile,
+  onSubmit,
+}: Props) {
   const [draft, setDraft] = useState<DeductionDraft>(emptyDraft);
   const [hydrated, setHydrated] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -237,7 +248,20 @@ export function DeductionFlow({ caseId, suspects, evidence, connections, onSubmi
 
         {step === 4 &&
           (evidence.length === 0 ? (
-            <EmptyPanel text="읽어서 확인한 증거가 없습니다. 사건파일에서 증거를 열어 내용을 확인하세요." />
+            <div className="space-y-2" data-testid="deduction-no-evidence">
+              <EmptyPanel text="읽어서 확인한 증거가 없습니다. 사건파일 탭에서 증거를 열어 내용을 확인하면 이 목록에 나타납니다." />
+              {onOpenCaseFile && (
+                <button
+                  type="button"
+                  onClick={onOpenCaseFile}
+                  data-testid="deduction-open-casefile"
+                  className="flex min-h-[48px] w-full items-center justify-center gap-1.5 rounded-lg border border-primary/45 bg-primary/10 text-[13px] font-medium text-primary"
+                >
+                  <FolderOpen className="h-4 w-4" />
+                  사건파일에서 증거 확인하기
+                </button>
+              )}
+            </div>
           ) : (
             evidence.map((e) => (
               <PickRow

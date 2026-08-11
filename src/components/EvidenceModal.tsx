@@ -57,6 +57,8 @@ export function EvidenceModal({
     >
       <div
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-card shadow-[var(--shadow-noir)] sm:rounded-2xl"
+        data-testid="evidence-detail"
+        data-evidence-id={evidence.id}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 border-b border-border/60 p-5">
@@ -80,6 +82,7 @@ export function EvidenceModal({
             onClick={onClose}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
             aria-label="닫기"
+            data-testid="evidence-detail-close"
           >
             <X className="h-5 w-5" />
           </button>

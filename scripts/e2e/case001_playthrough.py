@@ -184,6 +184,31 @@ async def play_interviews(page) -> int:
     return rooms_done
 
 
+async def read_all_evidence(page) -> int:
+    """Open every discovered evidence card so it counts as read."""
+    await tab(page, "file")
+    await page.wait_for_timeout(400)
+    cards = page.locator('[data-testid="evidence-card"]')
+    total = await cards.count()
+    read = 0
+    for i in range(total):
+        card = cards.nth(i)
+        if await card.get_attribute("data-read") == "true":
+            read += 1
+            continue
+        await click_when_ready(page, card)
+        detail = page.get_by_test_id("evidence-detail")
+        try:
+            await detail.wait_for(state="visible", timeout=6000)
+        except Exception:
+            continue
+        await page.get_by_test_id("evidence-detail-close").click()
+        await detail.wait_for(state="hidden", timeout=6000)
+        read += 1
+    log(f"evidence read {read}/{total}")
+    return read
+
+
 async def run_deduction(page) -> None:
     """Six-step flow: culprit -> motive -> method -> evidence -> board -> confirm."""
     flow = page.get_by_test_id("deduction-flow")
@@ -192,6 +217,11 @@ async def run_deduction(page) -> None:
         step = await flow.get_attribute("data-step")
         if step == "6":
             break
+        if await page.get_by_test_id("deduction-open-casefile").count():
+            await read_all_evidence(page)
+            await tab(page, "deduce")
+            await page.wait_for_timeout(400)
+            continue
         options = page.locator('[data-testid="deduction-option"]')
         if await options.count():
             await options.first.click()

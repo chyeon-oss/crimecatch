@@ -188,6 +188,20 @@ function InvestigateWorkspace() {
 
   const [discoveredAt, setDiscoveredAt] = useState<Map<string, number>>(() => new Map());
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [readHydrated, setReadHydrated] = useState(false);
+
+  // Reading records survive reload alongside the runtime action log, so the
+  // decisive-evidence step keeps its candidates after a refresh.
+  useEffect(() => {
+    setReadIds(new Set(loadReadIds(data.id)));
+    setReadHydrated(true);
+  }, [data.id]);
+
+  useEffect(() => {
+    if (!readHydrated) return;
+    saveReadIds(data.id, readIds);
+  }, [data.id, readIds, readHydrated]);
+
   const [investigatedHotspotIds, setInvestigatedHotspotIds] = useState<Set<string>>(new Set());
   const [discoveryQueue, setDiscoveryQueue] = useState<string[]>([]);
   const [sortMode, setSortMode] = useState<EvidenceSortMode>("discovery");

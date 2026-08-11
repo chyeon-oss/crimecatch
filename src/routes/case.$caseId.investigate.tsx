@@ -721,6 +721,8 @@ function InvestigateWorkspace() {
           readEvidence={readEvidence}
           discoveredEvidenceIds={discoveredSet}
           canAccuse={canAccuse}
+          onOpenCaseFile={() => setTab("file")}
+
         />
       </div>
     </InvestigationSection>

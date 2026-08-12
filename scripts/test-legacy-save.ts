@@ -40,7 +40,7 @@ const localStorageStub = {
 (globalThis as Record<string, unknown>).window = globalThis;
 
 const { loadSession } = await import("../src/lib/dialogueRuntime");
-const { loadInterviewSession } = await import("../src/lib/interviewRuntime");
+const { loadSession: loadInterviewSession } = await import("../src/lib/interviewRuntime");
 
 const CASE = "midnight-office";
 
@@ -51,7 +51,7 @@ const CASE = "midnight-office";
   const legacyLine = "신고는 22시 31분. 회의실 근처에서 사람이 쓰러져 있다는 내용이었습니다.";
   store.clear();
   store.set(
-    `cc:dialogue:${CASE}`,
+    `dialogue:${CASE}`,
     JSON.stringify({
       version: 1,
       completedThreads: ["s1-open"],
@@ -75,9 +75,9 @@ const CASE = "midnight-office";
 // ---------------------------------------------------------------------------
 {
   store.clear();
-  store.set(`cc:dialogue:${CASE}`, "{not json");
+  store.set(`dialogue:${CASE}`, "{not json");
   check("corrupt dialogue payload yields null", loadSession(CASE) === null);
-  store.set(`cc:dialogue:${CASE}`, JSON.stringify([1, 2, 3]));
+  store.set(`dialogue:${CASE}`, JSON.stringify([1, 2, 3]));
   const arr = loadSession(CASE);
   check("array dialogue payload is rejected or empty", arr === null || arr.transcript.length === 0);
 }
@@ -102,18 +102,27 @@ const CASE = "midnight-office";
 {
   store.clear();
   store.set(
-    `cc:interview:${CASE}`,
+    `interview:${CASE}`,
     JSON.stringify({
       version: 1,
-      rooms: {
-        s1: { askedTopicIds: ["t-alibi"], transcript: [], presentedEvidenceIds: [] },
+      roomId: "s1",
+      suspects: {
+        s1: {
+          completedTopicIds: ["t-alibi"],
+          askedTopicIds: ["t-alibi"],
+          transcript: [],
+          presentedEvidenceIds: [],
+          mood: "guarded",
+          awaitingTopicId: "t-alibi",
+        },
       },
     }),
   );
   const s = loadInterviewSession(CASE);
   check("v1 interview session loads", !!s);
-  check("asked topics preserved", s?.rooms.s1?.askedTopicIds.includes("t-alibi") === true);
-  check("awaiting topic normalised", (s?.rooms.s1 as { awaitingTopicId?: unknown })?.awaitingTopicId == null);
+  check("completed topics preserved", s?.suspects.s1?.completedTopicIds.includes("t-alibi") === true);
+  check("session upgraded to v2", s?.version === 2);
+  check("orphaned awaiting topic cleared", s?.suspects.s1?.awaitingTopicId === null);
 }
 
 console.log(`\nlegacy save migration: ${pass} passed, ${fail} failed`);

@@ -971,7 +971,6 @@ function InvestigateWorkspace() {
                   )}
                 </>
               ) : (
-              ) : (
                 <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/60 bg-surface-elevated/50 p-3 text-xs text-muted-foreground">
                   <Lock className="h-4 w-4" />
                   SCENE 03에서 진술 조사가 열립니다.

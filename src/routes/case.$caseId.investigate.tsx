@@ -700,6 +700,22 @@ function InvestigateWorkspace() {
     </InvestigationSection>
   );
 
+  /**
+   * The single next required action, derived from the same gates the runtime
+   * uses. Replaces the removed desktop objectives panel.
+   */
+  const nextAction = canAccuse
+    ? "최종 추리 제출"
+    : interviewMode && remainingRequiredNames.length > 0
+      ? `진술 ${remainingRequiredNames.length}명 남음`
+      : totalHotspots > investigatedCount
+        ? `현장 ${totalHotspots - investigatedCount}곳 조사`
+        : dialogue.awaitingChoice
+          ? "대화 선택 필요"
+          : activeQuestionsCount > 0
+            ? `의문 ${activeQuestionsCount}개`
+            : "다음 단계 준비";
+
   return (
     <div className="noir-grain">
       {showIntro && (
@@ -741,6 +757,24 @@ function InvestigateWorkspace() {
               currentSceneId={runtimeState.currentScene}
               completedSceneIds={runtimeState.completedScenes}
             />
+            {/* The old objectives panel lived on a desktop rail. On mobile the
+                current objective and the single remaining action belong in the
+                header so they are readable from every tab. */}
+            <div
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border/60 bg-background/80 px-4 py-2"
+              data-testid="objective-strip"
+              data-next-action={nextAction}
+            >
+              <p className="min-w-0 truncate text-[11px] text-foreground">
+                <span className="mr-2 text-[10px] uppercase tracking-widest text-primary">
+                  목표
+                </span>
+                {runtimeState.currentObjective ?? currentScene?.objective ?? "수사를 계속하세요."}
+              </p>
+              <span className="shrink-0 rounded-full border border-border/70 bg-surface-elevated px-2 py-0.5 text-[10px] text-muted-foreground">
+                {nextAction}
+              </span>
+            </div>
           </>
         }
       >
@@ -900,7 +934,42 @@ function InvestigateWorkspace() {
               }
             >
               {showSuspects ? (
-                <SuspectDatabase dossiers={suspectDossiers} onOpen={openSuspectAndInterview} />
+                <>
+                  <SuspectDatabase dossiers={suspectDossiers} onOpen={openSuspectAndInterview} />
+
+                  {/* Cases without an authored interview tree still need a
+                      deterministic way to record that a statement was heard,
+                      or Scene 03 would deadlock. Opening a profile never
+                      counts — the detective logs it explicitly. */}
+                  {!interviewPack && requiredInterviewIds.length > 0 && (
+                    <div className="mt-3 space-y-2 rounded-lg border border-border/60 bg-surface-elevated/50 p-3">
+                      <p className="text-[11px] text-muted-foreground">
+                        프로필을 열어 진술을 확인한 뒤, 청취를 마친 상대를 직접 기록하세요.
+                      </p>
+                      {requiredInterviewIds.map((id) => {
+                        const done = runtimeState.interviewedSuspects.includes(id);
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            data-testid={`statement-log-${id}`}
+                            data-logged={done ? "true" : "false"}
+                            disabled={done}
+                            onClick={() => actions.interviewSuspect(id)}
+                            className={`flex min-h-[44px] w-full items-center justify-between rounded-lg border px-3 text-[12px] transition-colors ${
+                              done
+                                ? "border-primary/40 bg-primary/10 text-primary"
+                                : "border-border/70 bg-background/60 text-foreground hover:bg-primary/10"
+                            }`}
+                          >
+                            <span>{suspectById.get(id)?.name ?? id}</span>
+                            <span>{done ? "청취 완료" : "진술 청취 완료로 기록"}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/60 bg-surface-elevated/50 p-3 text-xs text-muted-foreground">
                   <Lock className="h-4 w-4" />
@@ -917,7 +986,6 @@ function InvestigateWorkspace() {
 
             <InvestigationSection
               icon={NotebookPen}
-
               title="수사 노트"
               subtitle="증거·의문·용의자를 정리하고 추리 보드를 연결하세요"
             >

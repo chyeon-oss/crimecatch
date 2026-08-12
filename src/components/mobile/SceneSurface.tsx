@@ -99,7 +99,9 @@ export function SceneSurface({
   const posOf = (id: string, i: number) => layout[id] ?? FALLBACK_POS[i % FALLBACK_POS.length];
 
   const run = async (h: SurfaceHotspot) => {
-    if (stage !== "IDLE" || disabled || inFlightRef.current) return;
+    // An already-investigated hotspot must never replay beats or re-open the
+    // DECIDE prompt — the clue is recorded exactly once.
+    if (stage !== "IDLE" || disabled || inFlightRef.current || investigatedIds.has(h.id)) return;
     const list = beatsFor(h.id);
     inFlightRef.current = { id: h.id, beatsLogged: false };
     setActiveId(h.id);
@@ -120,9 +122,12 @@ export function SceneSurface({
   };
 
   const recordClue = async () => {
-    if (!activeId || stage !== "DECIDE") return;
-    onBeatsPlayed?.(activeId);
-    if (inFlightRef.current) inFlightRef.current.beatsLogged = true;
+    // Rapid taps land in the same render, so the `stage` closure alone cannot
+    // de-dupe: latch on the in-flight ref instead.
+    const flight = inFlightRef.current;
+    if (!activeId || stage !== "DECIDE" || !flight || flight.beatsLogged) return;
+    flight.beatsLogged = true;
+    commitRef.current.onBeatsPlayed?.(activeId);
     setStage("REVEAL");
     await wait(260);
     if (!aliveRef.current) return;
@@ -132,6 +137,10 @@ export function SceneSurface({
     setBeats([]);
   };
 
+  /**
+   * Cancel: the hotspot stays uninvestigated and can be inspected again. No
+   * evidence is committed, so nothing is silently lost either way.
+   */
   const inspectAgain = () => {
     if (stage !== "DECIDE") return;
     inFlightRef.current = null;
@@ -181,7 +190,7 @@ export function SceneSurface({
               onClick={() => run(h)}
               data-testid={`hotspot-${h.id}`}
               data-investigated={done ? "true" : "false"}
-              disabled={busy || disabled}
+              disabled={busy || disabled || done}
               aria-label={`${h.title} 조사`}
               className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 ${
                 dim ? "pointer-events-none opacity-20" : "opacity-100"
@@ -262,6 +271,7 @@ export function SceneSurface({
               <button
                 type="button"
                 onClick={inspectAgain}
+                data-testid="scene-inspect-again"
                 className="min-h-[44px] rounded-lg border border-border/70 bg-surface-elevated text-xs text-muted-foreground"
               >
                 주변을 더 살핀다
@@ -269,6 +279,7 @@ export function SceneSurface({
               <button
                 type="button"
                 onClick={recordClue}
+                data-testid="scene-record-clue"
                 className="min-h-[44px] rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground"
               >
                 단서로 기록한다

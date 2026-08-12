@@ -94,8 +94,17 @@ async def wait_scene_idle(page, timeout_ms: int = 20000) -> None:
     while waited < timeout_ms:
         if not await surface.count():
             return
-        if await surface.first.get_attribute("data-stage") in (None, "IDLE"):
+        stage = await surface.first.get_attribute("data-stage")
+        if stage in (None, "IDLE"):
             return
+        if stage == "DECIDE":
+            # Clue recording is now an explicit player decision.
+            rec = page.get_by_test_id("scene-record-clue")
+            if await rec.count():
+                try:
+                    await rec.first.click(timeout=2000)
+                except Exception:
+                    pass
         await page.wait_for_timeout(300)
         waited += 300
 

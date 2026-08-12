@@ -79,10 +79,21 @@ export function InterviewRoom({
   return (
     <section className="flex min-h-full flex-col">
       {portrait && (
-        <div className="relative h-48 shrink-0 overflow-hidden border-b border-border/60 bg-black">
-          <img src={portrait} alt={`${name} 인터뷰`} className="h-full w-full object-cover object-[center_22%]" />
+        // Keep the portrait band short: at 390px the transcript, the third
+        // topic, the choices and the action rail all have to stay reachable.
+        <div className="relative h-24 shrink-0 overflow-hidden border-b border-border/60 bg-black">
+          <img
+            src={portrait}
+            alt={`${name} 인터뷰`}
+            onError={(e) => {
+              e.currentTarget.parentElement?.classList.add("hidden");
+            }}
+            className="h-full w-full object-cover object-[center_22%]"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/20" />
-          <p className="absolute bottom-3 left-4 text-[10px] uppercase tracking-[0.25em] text-white/65">Live interview · reaction analysis</p>
+          <p className="absolute bottom-2 left-4 text-[10px] uppercase tracking-[0.25em] text-white/65">
+            Live interview · reaction analysis
+          </p>
         </div>
       )}
       {/* Profile header */}

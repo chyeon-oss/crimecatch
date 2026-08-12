@@ -42,7 +42,14 @@ export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [], heroI
     <section className="space-y-3 px-4 py-4">
       {heroImage && (
         <div className="relative -mx-4 -mt-4 h-40 overflow-hidden border-b border-border/60">
-          <img src={heroImage} alt="사건 관계자 네 명" className="h-full w-full object-cover object-[center_40%]" />
+          <img
+            src={heroImage}
+            alt="사건 관계자"
+            onError={(e) => {
+              e.currentTarget.parentElement?.classList.add("hidden");
+            }}
+            className="h-full w-full object-cover object-[center_40%]"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
           <p className="absolute bottom-3 left-4 text-[10px] uppercase tracking-[0.28em] text-white/70">Persons of interest · 4</p>
         </div>
@@ -75,7 +82,18 @@ export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [], heroI
               className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-3 text-left transition-colors hover:border-primary/40"
             >
               <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-border/70 bg-surface-elevated text-[13px] font-semibold text-foreground">
-                {r.portrait ? <img src={r.portrait} alt="" className="h-full w-full object-cover object-top" /> : r.name.slice(0, 1)}
+                {r.portrait ? (
+                  <img
+                    src={r.portrait}
+                    alt=""
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                    className="h-full w-full object-cover object-top"
+                  />
+                ) : (
+                  r.name.slice(0, 1)
+                )}
               </span>
 
               <span className="min-w-0 flex-1">

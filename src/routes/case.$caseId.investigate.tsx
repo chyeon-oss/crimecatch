@@ -934,7 +934,43 @@ function InvestigateWorkspace() {
               }
             >
               {showSuspects ? (
-                <SuspectDatabase dossiers={suspectDossiers} onOpen={openSuspectAndInterview} />
+                <>
+                  <SuspectDatabase dossiers={suspectDossiers} onOpen={openSuspectAndInterview} />
+
+                  {/* Cases without an authored interview tree still need a
+                      deterministic way to record that a statement was heard,
+                      or Scene 03 would deadlock. Opening a profile never
+                      counts — the detective logs it explicitly. */}
+                  {!interviewPack && requiredInterviewIds.length > 0 && (
+                    <div className="mt-3 space-y-2 rounded-lg border border-border/60 bg-surface-elevated/50 p-3">
+                      <p className="text-[11px] text-muted-foreground">
+                        프로필을 열어 진술을 확인한 뒤, 청취를 마친 상대를 직접 기록하세요.
+                      </p>
+                      {requiredInterviewIds.map((id) => {
+                        const done = runtimeState.interviewedSuspects.includes(id);
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            data-testid={`statement-log-${id}`}
+                            data-logged={done ? "true" : "false"}
+                            disabled={done}
+                            onClick={() => actions.interviewSuspect(id)}
+                            className={`flex min-h-[44px] w-full items-center justify-between rounded-lg border px-3 text-[12px] transition-colors ${
+                              done
+                                ? "border-primary/40 bg-primary/10 text-primary"
+                                : "border-border/70 bg-background/60 text-foreground hover:bg-primary/10"
+                            }`}
+                          >
+                            <span>{suspectById.get(id)?.name ?? id}</span>
+                            <span>{done ? "청취 완료" : "진술 청취 완료로 기록"}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              ) : (
               ) : (
                 <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/60 bg-surface-elevated/50 p-3 text-xs text-muted-foreground">
                   <Lock className="h-4 w-4" />

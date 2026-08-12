@@ -59,13 +59,13 @@ async def main() -> int:
         )
 
         await page.goto(URL, wait_until="domcontentloaded")
-        await page.wait_for_timeout(1200)
+        await page.wait_for_timeout(2500)
         await page.keyboard.press("Escape")
-        await page.wait_for_timeout(600)
+        await page.wait_for_timeout(1200)
         await dismiss(page)
 
         await page.get_by_test_id("shell-tab-scene").click()
-        await page.wait_for_timeout(400)
+        await page.wait_for_timeout(1200)
 
         surface = page.get_by_test_id("scene-surface")
         check("scene surface renders", await surface.count() > 0)
@@ -125,7 +125,7 @@ async def main() -> int:
         modal_on_load = await page.locator('[role="dialog"]').count()
         await dismiss(page)
         await page.get_by_test_id("shell-tab-scene").click()
-        await page.wait_for_timeout(500)
+        await page.wait_for_timeout(1200)
         check("no discovery modal replays after reload", modal_on_load == 0)
         check(
             "investigated state survives reload",

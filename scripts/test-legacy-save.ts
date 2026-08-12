@@ -54,10 +54,12 @@ const CASE = "midnight-office";
     `dialogue:${CASE}`,
     JSON.stringify({
       version: 1,
-      completedThreads: ["s1-open"],
-      completedNodes: ["n1"],
-      chosen: ["c1"],
-      transcript: [
+      completedThreadIds: ["s1-open"],
+      threadId: null,
+      nodeId: null,
+      revealed: 2,
+      flags: ["scene01-seen"],
+      entries: [
         { id: "t1", at: 1, speaker: "partner", text: legacyLine },
         { id: "t2", at: 2, speaker: "partner", text: "그대로 두었습니다." },
       ],
@@ -65,9 +67,9 @@ const CASE = "midnight-office";
   );
   const s = loadSession(CASE);
   check("legacy dialogue session loads", !!s);
-  check("stale timestamp line rewritten", s?.transcript[0].text.includes("23시 52분") === true);
-  check("untouched line preserved", s?.transcript[1].text === "그대로 두었습니다.");
-  check("progress fields preserved", s?.completedThreads.includes("s1-open") === true);
+  check("stale timestamp line rewritten", s?.entries[0].text.includes("23시 52분") === true);
+  check("untouched line preserved", s?.entries[1].text === "그대로 두었습니다.");
+  check("progress fields preserved", s?.completedThreadIds.includes("s1-open") === true);
 }
 
 // ---------------------------------------------------------------------------
@@ -79,7 +81,7 @@ const CASE = "midnight-office";
   check("corrupt dialogue payload yields null", loadSession(CASE) === null);
   store.set(`dialogue:${CASE}`, JSON.stringify([1, 2, 3]));
   const arr = loadSession(CASE);
-  check("array dialogue payload is rejected or empty", arr === null || arr.transcript.length === 0);
+  check("array dialogue payload is rejected or empty", arr === null || arr.entries.length === 0);
 }
 
 // ---------------------------------------------------------------------------

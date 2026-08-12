@@ -190,7 +190,7 @@ export function SceneSurface({
               onClick={() => run(h)}
               data-testid={`hotspot-${h.id}`}
               data-investigated={done ? "true" : "false"}
-              disabled={busy || disabled}
+              disabled={busy || disabled || done}
               aria-label={`${h.title} 조사`}
               className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 ${
                 dim ? "pointer-events-none opacity-20" : "opacity-100"
@@ -271,6 +271,7 @@ export function SceneSurface({
               <button
                 type="button"
                 onClick={inspectAgain}
+                data-testid="scene-inspect-again"
                 className="min-h-[44px] rounded-lg border border-border/70 bg-surface-elevated text-xs text-muted-foreground"
               >
                 주변을 더 살핀다
@@ -278,6 +279,7 @@ export function SceneSurface({
               <button
                 type="button"
                 onClick={recordClue}
+                data-testid="scene-record-clue"
                 className="min-h-[44px] rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground"
               >
                 단서로 기록한다

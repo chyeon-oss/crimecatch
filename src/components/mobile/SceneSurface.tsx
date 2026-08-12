@@ -99,7 +99,9 @@ export function SceneSurface({
   const posOf = (id: string, i: number) => layout[id] ?? FALLBACK_POS[i % FALLBACK_POS.length];
 
   const run = async (h: SurfaceHotspot) => {
-    if (stage !== "IDLE" || disabled || inFlightRef.current) return;
+    // An already-investigated hotspot must never replay beats or re-open the
+    // DECIDE prompt — the clue is recorded exactly once.
+    if (stage !== "IDLE" || disabled || inFlightRef.current || investigatedIds.has(h.id)) return;
     const list = beatsFor(h.id);
     inFlightRef.current = { id: h.id, beatsLogged: false };
     setActiveId(h.id);
@@ -120,9 +122,12 @@ export function SceneSurface({
   };
 
   const recordClue = async () => {
-    if (!activeId || stage !== "DECIDE") return;
-    onBeatsPlayed?.(activeId);
-    if (inFlightRef.current) inFlightRef.current.beatsLogged = true;
+    // Rapid taps land in the same render, so the `stage` closure alone cannot
+    // de-dupe: latch on the in-flight ref instead.
+    const flight = inFlightRef.current;
+    if (!activeId || stage !== "DECIDE" || !flight || flight.beatsLogged) return;
+    flight.beatsLogged = true;
+    commitRef.current.onBeatsPlayed?.(activeId);
     setStage("REVEAL");
     await wait(260);
     if (!aliveRef.current) return;
@@ -132,6 +137,10 @@ export function SceneSurface({
     setBeats([]);
   };
 
+  /**
+   * Cancel: the hotspot stays uninvestigated and can be inspected again. No
+   * evidence is committed, so nothing is silently lost either way.
+   */
   const inspectAgain = () => {
     if (stage !== "DECIDE") return;
     inFlightRef.current = null;

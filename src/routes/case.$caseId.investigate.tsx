@@ -741,6 +741,22 @@ function InvestigateWorkspace() {
               currentSceneId={runtimeState.currentScene}
               completedSceneIds={runtimeState.completedScenes}
             />
+            {/* The old objectives panel lived on a desktop rail. On mobile the
+                current objective and the single remaining action belong in the
+                header so they are readable from every tab. */}
+            <div
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border/60 bg-background/80 px-4 py-2"
+              data-testid="objective-strip"
+              data-next-action={nextAction}
+            >
+              <p className="min-w-0 truncate text-[11px] text-foreground">
+                <span className="mr-2 text-[10px] uppercase tracking-widest text-primary">목표</span>
+                {runtimeState.currentObjective ?? currentScene?.objective ?? "수사를 계속하세요."}
+              </p>
+              <span className="shrink-0 rounded-full border border-border/70 bg-surface-elevated px-2 py-0.5 text-[10px] text-muted-foreground">
+                {nextAction}
+              </span>
+            </div>
           </>
         }
       >

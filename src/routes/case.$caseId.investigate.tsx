@@ -766,7 +766,9 @@ function InvestigateWorkspace() {
               data-next-action={nextAction}
             >
               <p className="min-w-0 truncate text-[11px] text-foreground">
-                <span className="mr-2 text-[10px] uppercase tracking-widest text-primary">목표</span>
+                <span className="mr-2 text-[10px] uppercase tracking-widest text-primary">
+                  목표
+                </span>
                 {runtimeState.currentObjective ?? currentScene?.objective ?? "수사를 계속하세요."}
               </p>
               <span className="shrink-0 rounded-full border border-border/70 bg-surface-elevated px-2 py-0.5 text-[10px] text-muted-foreground">
@@ -949,7 +951,6 @@ function InvestigateWorkspace() {
 
             <InvestigationSection
               icon={NotebookPen}
-
               title="수사 노트"
               subtitle="증거·의문·용의자를 정리하고 추리 보드를 연결하세요"
             >

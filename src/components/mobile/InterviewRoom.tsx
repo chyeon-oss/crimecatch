@@ -37,7 +37,6 @@ interface Props {
   portrait?: string;
 }
 
-
 const MOOD_TONE: Record<SuspectMood, string> = {
   calm: "border-border/60 text-muted-foreground",
   guarded: "border-primary/40 text-primary",
@@ -73,8 +72,6 @@ export function InterviewRoom({
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [entries.length, isTyping, choices.length]);
-
-
 
   return (
     <section className="flex min-h-full flex-col">
@@ -132,7 +129,6 @@ export function InterviewRoom({
           필수 질문 {progress.done}/{progress.total}
           {contradictions.length > 0 && ` · 모순 ${contradictions.length}`}
         </p>
-
       </header>
 
       {/* Transcript */}
@@ -298,7 +294,6 @@ export function InterviewRoom({
                 더 물을 것이 없습니다. 증거를 제시하면 다른 반응이 나올 수 있습니다.
               </p>
             )}
-
 
             <button
               type="button"

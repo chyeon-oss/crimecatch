@@ -51,7 +51,9 @@ export function InterviewHub({ rooms, onOpen, remainingRequiredNames = [], heroI
             className="h-full w-full object-cover object-[center_40%]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-          <p className="absolute bottom-3 left-4 text-[10px] uppercase tracking-[0.28em] text-white/70">Persons of interest · 4</p>
+          <p className="absolute bottom-3 left-4 text-[10px] uppercase tracking-[0.28em] text-white/70">
+            Persons of interest · 4
+          </p>
         </div>
       )}
       <header>

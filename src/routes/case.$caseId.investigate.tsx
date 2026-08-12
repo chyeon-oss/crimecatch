@@ -700,6 +700,22 @@ function InvestigateWorkspace() {
     </InvestigationSection>
   );
 
+  /**
+   * The single next required action, derived from the same gates the runtime
+   * uses. Replaces the removed desktop objectives panel.
+   */
+  const nextAction = canAccuse
+    ? "최종 추리 제출"
+    : interviewMode && remainingRequiredNames.length > 0
+      ? `진술 ${remainingRequiredNames.length}명 남음`
+      : totalHotspots > investigatedCount
+        ? `현장 ${totalHotspots - investigatedCount}곳 조사`
+        : dialogue.awaitingChoice
+          ? "대화 선택 필요"
+          : activeQuestionsCount > 0
+            ? `의문 ${activeQuestionsCount}개`
+            : "다음 단계 준비";
+
   return (
     <div className="noir-grain">
       {showIntro && (
